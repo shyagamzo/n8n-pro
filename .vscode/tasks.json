@@ -24,11 +24,6 @@
             "command": "yarn",
             "args": ["watch"],
             "group": "build",
-            "options": {
-                "env": {
-                    "NODE_OPTIONS": "--no-preload"
-                }
-            },
             "presentation": {
                 "echo": true,
                 "reveal": "always",
