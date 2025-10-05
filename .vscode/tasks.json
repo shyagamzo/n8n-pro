@@ -144,6 +144,76 @@
                 "panel": "shared"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Extension: Watch & Rebuild",
+            "type": "shell",
+            "command": "yarn",
+            "args": ["watch:script"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                {
+                    "owner": "vite",
+                    "source": "vite",
+                    "applyTo": "closedDocuments",
+                    "fileLocation": "relative",
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    },
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": ".*",
+                        "endsPattern": ".*"
+                    }
+                }
+            ],
+            "isBackground": true
+        },
+        {
+            "label": "Extension: Watch (Simple)",
+            "type": "shell",
+            "command": "yarn",
+            "args": ["watch"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                {
+                    "owner": "vite",
+                    "source": "vite",
+                    "applyTo": "closedDocuments",
+                    "fileLocation": "relative",
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    },
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": ".*",
+                        "endsPattern": ".*"
+                    }
+                }
+            ],
+            "isBackground": true
         }
     ]
 }

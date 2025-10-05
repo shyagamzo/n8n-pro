@@ -13,6 +13,8 @@
     "build:extension": "./scripts/build-extension.sh",
     "test:n8n": "./scripts/test-n8n.sh",
     "clean": "rm -rf dist/",
+    "watch": "vite build --watch",
+    "watch:script": "./scripts/watch.sh",
     "dev:watch": "vite --watch"
   },
   "dependencies": {
@@ -32,6 +34,7 @@
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "@vitejs/plugin-react": "^4.3.3",
+    "concurrently": "^9.2.1",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
