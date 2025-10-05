@@ -1,0 +1,25 @@
+---
+alwaysApply: true
+description: Maintain awareness of project context and decision history
+---
+
+# Project Context Awareness
+
+Always reference established context, decisions, and patterns for this n8n AI Assistant Extension.
+
+## Key Context:
+- **Chrome/Edge extension** for locally hosted n8n sites
+- **LLM chatbot** that creates/optimizes workflows via n8n API
+- **Multi-agent architecture**: Classifier, Enrichment, Planner, Executor, Orchestrator
+- **Tech stack**: Zustand, React + TypeScript, Vite
+- **Git workflow**: ✨ features, 🐛 hotfixes, 🚀 releases
+
+## Established Patterns:
+- Non-interruptive UX, one question at a time, step-by-step approach
+- Separation of concerns, fix root causes
+- All decisions documented in `decisions/` with incremental numbering
+
+## What NOT to do:
+- Make decisions without checking existing context
+- Assume defaults that contradict established patterns
+- Start from scratch when patterns exist

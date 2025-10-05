@@ -39,3 +39,8 @@ The extension should **never interrupt** the user's current workflow or thought 
 
 ## Application:
 This principle applies to all features: credential setup, workflow optimization suggestions, AI agent recommendations, and any other guidance the extension provides.
+
+## Integration with Other Rules:
+- Always reference [project-context-awareness.mdc](mdc:project-context-awareness.mdc) for project-specific context
+- Use [communication-clarity.mdc](mdc:communication-clarity.mdc) for clear user interaction design
+- Follow [ambiguity-handling.mdc](mdc:ambiguity-handling.mdc) for handling ambiguous user requests

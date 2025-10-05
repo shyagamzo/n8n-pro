@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+description: Guidelines for clear communication and avoiding miscommunications
+---
+
+# Communication Clarity Guidelines
+
+Prevent miscommunications through explicit confirmation and clear language.
+
+## Key Guidelines:
+- **Explicit Confirmation**: Ask "Should I proceed with..." before significant changes
+- **Context Preservation**: Reference previous decisions, explain reasoning
+- **Specific Language**: Use precise technical terms, avoid vague descriptions
+- **Response Patterns**: Clarify ambiguous responses, acknowledge corrections
+
+## Common Patterns to Avoid:
+- **Ambiguous Responses**: "5" → "Do you mean gpt-5 model?"
+- **Assumption Errors**: Don't assume preferences without confirmation
+- **Context Switching**: Don't jump topics without completion
+- **Technical Misunderstandings**: Always clarify technical terms
+
+## Response Templates:
+- **Clarification**: "When you say [X], do you mean [specific interpretation]?"
+- **Confirmation**: "Should I [specific action] with [specific details]?"
+- **Scope**: "Are we focusing on [specific area] or should I consider [related area]?"
+
+## What NOT to do:
+- Assume understanding from ambiguous responses
+- Proceed without explicit confirmation
+- Use vague language without context

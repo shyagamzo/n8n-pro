@@ -26,3 +26,8 @@ When a user request can be interpreted in multiple ways, do NOT assume defaults.
 ## UX Alignment
 - Follow non-interruptive UX: present optional buttons/links; never block main flow.
 
+## Integration with Other Rules:
+- Always reference [project-context-awareness.mdc](mdc:project-context-awareness.mdc) for project-specific context
+- Use [communication-clarity.mdc](mdc:communication-clarity.mdc) for clear question formulation
+- Follow [non-interruptive-ux.mdc](mdc:non-interruptive-ux.mdc) for UX implementation
+

@@ -1,0 +1,37 @@
+---
+alwaysApply: true
+description: Guidelines for determining when planning is complete and implementation can begin
+---
+
+# Implementation Readiness Guidelines
+
+Complete planning before implementation. Ensure all necessary decisions are made and documented.
+
+## Readiness Criteria:
+- **Decision Completeness**: All major architectural decisions documented
+- **Scope Clarity**: Clear MVP boundaries, acceptance criteria, dependencies
+- **Implementation Path**: Step-by-step plan, dev environment, testing strategy
+
+## Readiness Checklist:
+- [ ] Project scope and goals defined
+- [ ] Technical architecture specified
+- [ ] All major technical decisions made
+- [ ] Development environment setup defined
+- [ ] Coding standards established
+- [ ] Git workflow defined
+
+## When to Start:
+- **Green Light**: All planning complete, user approval, clear path
+- **Yellow Light**: Most planning done, minor decisions pending, clear scope
+- **Red Light**: Major decisions pending, unclear scope, no user approval
+
+## Start Process:
+1. **Confirm Readiness**: Review completion, verify user approval
+2. **Set Scope**: Define first components, establish boundaries
+3. **Begin Foundation**: Dev environment, core infrastructure, project structure
+
+## What NOT to do:
+- Start without completing planning
+- Code without clear specifications
+- Implement without user approval
+- Skip foundation setup
