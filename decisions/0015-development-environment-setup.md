@@ -1,0 +1,195 @@
+# Decision Record: Development Environment Setup
+
+## Package Manager & Build Tools
+
+### Package Manager
+- **yarn**: Use yarn as the package manager for faster, more reliable dependency management
+- **Node.js version**: Node 22 (latest LTS)
+- **Lock file**: Use yarn.lock for consistent dependency versions
+
+### Build Tool
+- **Vite**: Use Vite for fast development and building
+- **Browser extension support**: Vite has good support for Chrome/Edge extensions
+- **TypeScript**: Native TypeScript support without additional configuration
+- **Hot reload**: Fast development with HMR for React components
+
+## Core Dependencies
+
+### Extension Framework
+- **@types/chrome**: TypeScript definitions for Chrome extension APIs
+- **webextension-polyfill**: Cross-browser compatibility for extension APIs
+
+### React & UI
+- **React**: ^18.3.1 for UI components
+- **React DOM**: ^18.3.1 for rendering React components
+- **Zustand**: ^4.5.5 lightweight state management for panel UI
+
+### AI & Orchestration
+- **langchain**: ^0.3.0 for AI agent orchestration
+- **@langchain/openai**: ^0.3.0 OpenAI integration for LangChain
+- **@langchain/core**: ^0.3.0 Core LangChain functionality
+
+### Development Tools
+- **TypeScript**: ^5.5.4 for type safety
+- **Vite**: ^6.0.1 for build tooling
+- **@vitejs/plugin-react**: ^4.3.3 React support for Vite
+- **ESLint**: ^9.15.0 code linting and quality
+
+## Project Structure
+```
+n8n-pro/
+├── package.json
+├── yarn.lock
+├── tsconfig.json
+├── vite.config.ts
+├── .eslintrc.js
+├── manifest.json
+├── .vscode/
+│   ├── settings.json
+│   ├── tasks.json
+│   ├── launch.json
+│   └── extensions.json
+├── scripts/
+│   ├── dev-setup.sh
+│   ├── build-extension.sh
+│   └── test-n8n.sh
+├── src/
+│   ├── background/
+│   ├── content/
+│   ├── panel/
+│   ├── options/
+│   └── lib/
+├── public/
+└── dist/
+```
+
+## Build Configuration
+
+### Vite Config
+- **Entry points**: Separate builds for background, content, panel, options
+- **Output**: Chrome extension compatible format
+- **TypeScript**: Strict mode enabled
+- **Source maps**: Enabled for development
+
+### TypeScript Config
+- **Target**: ES2020 for modern browser support
+- **Module**: ESNext for modern module system
+- **Strict mode**: Enabled for type safety
+- **Path mapping**: Clean imports with @/ aliases
+
+## Development Workflow
+
+### Local Development
+- **Dev server**: Vite dev server for panel/options development
+- **Extension loading**: Load unpacked extension in Chrome/Edge
+- **Hot reload**: Automatic reload on file changes
+- **Debugging**: Chrome DevTools integration
+
+### Building
+- **Production build**: Optimized bundle for extension store
+- **Source maps**: Disabled for production
+- **Minification**: Enabled for smaller bundle size
+- **Tree shaking**: Remove unused code
+
+## Environment Setup
+
+### Prerequisites
+- **Node.js**: 22 (latest LTS)
+- **yarn**: Latest version
+- **Chrome/Edge**: For testing the extension
+- **n8n instance**: Local or cloud instance for testing
+
+### Installation
+```bash
+yarn install
+yarn dev      # Development mode
+yarn build    # Production build
+```
+
+## Quality Tools
+
+### Code Quality
+- **ESLint**: Enforce coding standards
+- **TypeScript**: Compile-time type checking
+- **Custom styling rules**: To be defined later (no Prettier)
+- **Husky**: Git hooks for pre-commit checks
+
+### Testing (Future)
+- **Jest**: Unit testing framework
+- **@testing-library/react**: React component testing
+- **Playwright**: E2E testing for extension
+
+## VSCode/Cursor Workspace Configuration
+
+### .vscode/settings.json
+- **TypeScript**: Enable strict mode and path mapping
+- **ESLint**: Auto-fix on save, format on save disabled
+- **File associations**: .mdc files for Cursor rules
+- **Extension-specific**: Chrome extension debugging settings
+
+### .vscode/tasks.json
+- **Build tasks**: yarn build, yarn dev, yarn lint
+- **Extension tasks**: Load unpacked extension, reload extension
+- **Problem matchers**: TypeScript, ESLint error parsing
+- **Watch tasks**: Auto-rebuild on file changes
+
+### .vscode/launch.json
+- **Extension debugging**: Attach to Chrome extension
+- **Panel debugging**: Debug React panel in browser
+- **Background worker**: Debug service worker
+- **n8n integration**: Debug with local n8n instance
+
+### .vscode/extensions.json
+- **Recommended extensions**: Chrome Extension, React, TypeScript
+- **Cursor-specific**: AI coding assistant extensions
+- **Development**: GitLens, Error Lens, Auto Rename Tag
+
+## Development Scripts
+
+### scripts/dev-setup.sh
+- **Extension setup**: Create development manifest with local URLs
+- **n8n check**: Verify local n8n instance accessibility and API connectivity
+- **Chrome setup**: Load unpacked extension in development profile
+
+### scripts/build-extension.sh
+- **Production build**: Optimized bundle creation
+- **Manifest validation**: Check manifest.json syntax
+- **Bundle analysis**: Size and dependency analysis
+- **Store preparation**: Package for Chrome Web Store
+
+### scripts/test-n8n.sh
+- **n8n health check**: Verify API accessibility
+- **Credential test**: Test API key authentication
+- **Workflow test**: Create/read test workflow
+- **Extension integration**: Test extension with n8n
+
+## Development Workflow Enhancements
+
+### Hot Reload & Debugging
+- **Extension reload**: Auto-reload extension on changes
+- **Panel hot reload**: React HMR for panel development
+- **Background worker**: Service worker debugging
+- **Source maps**: Full debugging support
+
+### Problem Detection
+- **TypeScript errors**: Real-time error highlighting
+- **ESLint warnings**: Code quality feedback
+- **Extension errors**: Chrome extension API issues
+- **Build errors**: Vite compilation problems
+
+### Productivity Features
+- **Code snippets**: Extension-specific snippets
+- **Auto-completion**: Chrome API and React completions
+- **Refactoring**: Safe renaming across extension files
+- **Git integration**: Visual diff and staging
+
+## Devcontainer Integration
+- **Environment**: Node.js 22, yarn, Chrome/Chromium pre-installed
+- **Extensions**: VSCode extensions pre-installed (.vscode/extensions.json)
+- **Port forwarding**: n8n localhost:5678 accessible from container
+- **Volume mounts**: Source code and node_modules persistence
+- **Development server**: Vite dev server accessible from host browser
+
+## Open Items
+- **CI/CD**: GitHub Actions for automated testing and building
+- **Extension store**: Preparation for Chrome Web Store submission

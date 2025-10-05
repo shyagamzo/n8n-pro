@@ -1,0 +1,45 @@
+# Decision Record: Use Case — Creating an Initial Workflow
+
+## Intent
+Enable experienced users to go from a single request to a runnable initial workflow with minimal friction.
+
+## Entry
+- User opens chatbot via trigger button.
+- Chatbot greets with an LLM-generated simple greeting.
+
+## Classification & Clarification
+- Classifier: determines if the request is straightforward or ambiguous; it never asks questions.
+- If ambiguous (e.g., missing trigger type, target service): Enrichment agent asks one clarifying question at a time until resolved.
+
+## Happy Path (Straightforward)
+1. User asks for a workflow (most common): includes goal; trigger may or may not be specified.
+2. Planner generates a plan: trigger (if needed), nodes, edges, parameters.
+3. Executor applies plan via n8n API and returns a diff preview; user can accept/apply.
+
+## Ambiguity Examples
+- Missing trigger type when creating a new workflow.
+- Unspecified target system for actions (e.g., "send email" without provider).
+- Vague success criteria.
+
+## Trigger-Specific Behavior
+- Primary scenario: user requests a workflow, not a trigger.
+- If adding a trigger to an existing workflow, the Planner determines the correct insertion/connection point and analyzes impact on existing nodes/logic.
+  - If impacts are detected (behavioral change, race conditions, activation semantics), propose a mitigation (branching, filter/IF gate, activation toggles) before applying.
+- If the user explicitly requests only a trigger on an empty canvas, create only that trigger node and stop (no assumptions about subsequent actions).
+
+## UX Principles
+- Non-interruptive: suggestions and credential guidance are optional buttons/links.
+- One-question-at-a-time during enrichment.
+
+## Credential Handling
+- Detect required credentials for planned nodes.
+- If missing, show a non-blocking "Set up [Service] credentials" button that opens a step-by-step guide in parallel.
+
+## Output
+- Runnable initial workflow (saved as draft), plus diff summary and status.
+
+## Open Items
+- Supported initial triggers list for MVP (for workflow creation).
+- Model/provider defaults for greetings and planning (configurable).
+
+

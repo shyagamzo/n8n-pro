@@ -1,0 +1,88 @@
+# Decision Record: Browser Extension Structure
+
+## Overall Architecture
+Chrome/Edge extension with three main components working together to provide AI-powered n8n workflow assistance.
+
+## Core Components
+
+### 1. Content Script (`src/content/`)
+- **Purpose**: Inject into n8n pages, detect n8n editor, mount chatbot panel
+- **Responsibilities**:
+  - Detect n8n editor canvas presence
+  - Inject trigger button into n8n UI
+  - Mount floating chatbot panel (React app)
+  - Handle n8n theme integration (CSS variables)
+  - Relay user interactions to background worker
+
+### 2. Background Service Worker (`src/background/`)
+- **Purpose**: Orchestrate AI agents, handle API calls, manage state
+- **Responsibilities**:
+  - Run LangChainJS + LangGraph orchestrator
+  - Execute AI agent workflows (Classifier → Enrichment → Planner → Executor)
+  - Make n8n API calls via custom fetch wrapper
+  - Manage conversation state and memory
+  - Handle LLM provider communication (OpenAI)
+
+### 3. Panel UI (`src/panel/`)
+- **Purpose**: User interface for chatbot interaction
+- **Responsibilities**:
+  - React-based chat interface
+  - Display workflow diffs and previews
+  - Show credential setup guidance (non-interruptive)
+  - Stream AI responses from background worker
+  - Handle user input and selections
+
+## Communication Flow
+```
+User Input → Content Script → Background Worker → AI Agents → n8n API
+                ↓
+Panel UI ← Background Worker ← AI Response ← LLM Provider
+```
+
+## Data Flow
+1. **User opens panel**: Content script detects n8n, fetches workflow list
+2. **User sends message**: Content script → Background worker
+3. **AI processing**: Background worker runs agent orchestration
+4. **API calls**: Background worker calls n8n API for workflow operations
+5. **Response streaming**: Background worker → Panel UI with real-time updates
+6. **User confirmation**: Panel UI → Background worker → Apply workflow changes
+
+## File Structure
+```
+src/
+├── background/
+│   ├── index.ts              # Service worker entry
+│   ├── orchestrator.ts       # LangGraph state machine
+│   ├── agents/               # AI agent implementations
+│   └── api/                  # n8n API client
+├── content/
+│   ├── inject.ts            # n8n detection and injection
+│   ├── panel-mount.ts       # React panel mounting
+│   └── theme-integration.ts  # n8n CSS variable reading
+├── panel/
+│   ├── App.tsx              # Main React app
+│   ├── components/          # Chat, diffs, credential guides
+│   └── hooks/               # State management
+└── options/
+    └── index.html           # Settings page
+```
+
+## Security Considerations
+- Content script runs in n8n page context (same-origin)
+- Background worker handles all external API calls
+- Panel UI isolated from n8n page DOM
+- No sensitive data stored in content script
+- API keys stored securely in extension storage
+
+## Performance Considerations
+- Background worker handles heavy AI processing
+- Panel UI optimized for real-time streaming
+- Content script minimal and lightweight
+- Lazy loading of AI agent modules
+- Efficient state management with Zustand
+
+## Integration Points
+- **n8n Detection**: Content script identifies n8n editor pages
+- **Theme Sync**: CSS variables read from n8n and applied to panel
+- **API Communication**: Background worker handles all n8n API calls
+- **User Experience**: Non-interruptive UI with optional guidance
