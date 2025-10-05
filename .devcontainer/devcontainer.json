@@ -10,6 +10,7 @@
                 "esbenp.prettier-vscode",
                 "ms-vscode.vscode-eslint",
                 "ms-vscode.vscode-json",
+                "ms-vscode.js-debug",
                 "ms-vscode.vscode-chrome-debug",
                 "ms-vscode.vscode-chrome-devtools",
                 "formulahendry.auto-rename-tag",
