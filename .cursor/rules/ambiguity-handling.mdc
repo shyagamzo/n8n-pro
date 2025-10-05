@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+description: Handle ambiguous requests by asking one clarifying question at a time
+---
+
+# Ambiguity Handling & Clarification Policy
+
+When a user request can be interpreted in multiple ways, do NOT assume defaults. Detect ambiguity and ask exactly one clarifying question at a time before proceeding.
+
+## Policy
+- If the request is ambiguous or could be implemented in multiple ways, ask ONE clarifying question.
+- Queue additional questions and ask them only after the previous one is resolved.
+- If the request is clear and straightforward, proceed without clarification.
+- Never silently choose defaults that change behavior or architecture.
+
+## Examples
+- “Create a new workflow” → ambiguous. Do not assume a trigger. Ask: “Which trigger should we start with: Chat Trigger, Cron, Webhook, or something else?”
+- “Set up Gmail” → ambiguous. Ask: “Do you want to send email, read inbox, or watch for new messages?” If credentials are missing, show a non-interruptive button to open guidance.
+- “Speed up this workflow” → ambiguous. Ask: “Is the bottleneck latency, failures, or resource usage?”
+
+## Agent Flow Alignment
+- Classifier agent flags ambiguity (isAmbiguous=true) and hints the next question; it does not ask questions.
+- Enrichment agent asks one question, waits for the answer, then repeats until ambiguity is resolved.
+- Planner/Executor proceed only after the current question is answered.
+
+## UX Alignment
+- Follow non-interruptive UX: present optional buttons/links; never block main flow.
+

@@ -1,0 +1,37 @@
+---
+alwaysApply: true
+description: Step-by-step conversation approach for complex projects
+---
+
+# Step-by-Step Project Planning Approach
+
+When working on complex projects or brainstorming sessions, follow this structured approach:
+
+## Process Flow:
+1. **Create a checklist** - Generate a markdown checklist file that both user and AI can reference
+2. **Focus on one item** - Start with the first checklist item only
+3. **Ask ONE question at a time** - Never present multiple questions simultaneously
+4. **Remember other questions** - Keep track of additional questions to ask later
+5. **Brainstorm until conclusion** - Discuss, suggest, and explore that single question until we reach a decision
+6. **Wait for user OK** - Always wait for explicit user approval before moving forward
+7. **Document conclusions** - Create a detailed document capturing our decision and reasoning
+8. **Update checklist** - Mark the item as complete in the checklist
+9. **Move to next question/item** - Only then proceed to the next question or checklist item
+10. **Plan next steps** - Conclude with clear next steps for the following session
+
+## Key Principles:
+- **ONE question at a time** - Never ask multiple questions in a single message
+- **Remember and queue** - Keep track of other questions to ask in subsequent messages
+- **One thing at a time** - Never overwhelm with multiple topics simultaneously
+- **Wait for approval** - Always get explicit "OK" before proceeding
+- **Document everything** - Create reference documents for future sessions
+- **Maintain focus** - Keep discussions focused on the current question/item
+- **Clear conclusions** - Ensure each question has a definitive outcome before moving on
+
+## What NOT to do:
+- Ask multiple questions in one message
+- Present multiple complex topics at once
+- Move to next items without user approval
+- Skip documentation of decisions
+- Rush through planning phases
+- Assume understanding without confirmation
