@@ -1,9 +1,21 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import { copyFileSync, existsSync } from 'fs';
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react(),
+        {
+            name: 'copy-manifest',
+            writeBundle() {
+                // Copy manifest.json to dist folder
+                if (existsSync('manifest.json')) {
+                    copyFileSync('manifest.json', 'dist/manifest.json');
+                }
+            }
+        }
+    ],
     build: {
         rollupOptions: {
             input: {

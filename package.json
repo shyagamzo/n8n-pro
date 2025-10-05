@@ -8,18 +8,24 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "dev:setup": "./scripts/dev-setup.sh",
+    "build:extension": "./scripts/build-extension.sh",
+    "test:n8n": "./scripts/test-n8n.sh",
+    "clean": "rm -rf dist/",
+    "dev:watch": "vite --watch"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.0",
+    "@langchain/openai": "^0.3.0",
+    "langchain": "^0.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "zustand": "^4.5.5",
-    "langchain": "^0.3.0",
-    "@langchain/openai": "^0.3.0",
-    "@langchain/core": "^0.3.0",
-    "webextension-polyfill": "^0.10.0"
+    "webextension-polyfill": "^0.10.0",
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.37.0",
     "@types/chrome": "^0.0.270",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

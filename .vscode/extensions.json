@@ -1,0 +1,19 @@
+{
+    "recommendations": [
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-eslint",
+        "ms-vscode.vscode-json",
+        "ms-vscode.vscode-chrome-debug",
+        "ms-vscode.vscode-chrome-devtools",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "ms-vscode.vscode-git-graph",
+        "eamodio.gitlens",
+        "ms-vscode.vscode-jest",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-css-peek",
+        "ms-vscode.vscode-html-css-support"
+    ]
+}

@@ -35,14 +35,18 @@ class BackgroundService
             switch (message.type)
             {
                 case 'CHAT_MESSAGE':
+                {
                     const response = await this.orchestrator.processMessage(message.data);
                     sendResponse({ success: true, data: response });
                     break;
+                }
                 
                 case 'GET_WORKFLOWS':
+                {
                     const workflows = await this.orchestrator.getWorkflows();
                     sendResponse({ success: true, data: workflows });
                     break;
+                }
                 
                 default:
                     sendResponse({ success: false, error: 'Unknown message type' });

@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "n8n AI Assistant",
+  "version": "0.1.0",
+  "description": "AI-powered workflow assistance for n8n",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:5678/*",
+    "https://*.n8n.cloud/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:5678/*",
+        "https://*.n8n.cloud/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "panel.html",
+    "default_title": "n8n AI Assistant"
+  },
+  "options_page": "options.html",
+  "web_accessible_resources": [
+    {
+      "resources": ["panel.html"],
+      "matches": [
+        "http://localhost:5678/*",
+        "https://*.n8n.cloud/*"
+      ]
+    }
+  ]
+}
