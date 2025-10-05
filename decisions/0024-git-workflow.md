@@ -54,6 +54,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 - **⚡**: Performance improvements
 - **🔧**: Configuration changes
 - **🧪**: Tests
+- **🐳**: Docker, DevContainer, container related
 
 ### Commit Examples
 ```bash

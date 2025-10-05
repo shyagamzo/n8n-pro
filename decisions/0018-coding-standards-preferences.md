@@ -333,6 +333,7 @@ async function createWorkflow(
 | ✅ | Added/modified tests |
 | 🤖 | AI instructions, Cursor rules, agent configurations |
 | 💭 | Decisions, brainstorms, planning documentation |
+| 🐳 | Docker, DevContainer, or container related |
 
 ### Branch Naming
 - **Format**: `<emoji>/<module>/<feature-name>`
