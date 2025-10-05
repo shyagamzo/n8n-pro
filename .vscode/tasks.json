@@ -2,49 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "yarn: install",
-            "type": "shell",
-            "command": "yarn",
-            "args": ["install"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "yarn: dev",
-            "type": "shell",
-            "command": "yarn",
-            "args": ["dev"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": [
-                {
-                    "owner": "typescript",
-                    "source": "ts",
-                    "applyTo": "closedDocuments",
-                    "fileLocation": "relative",
-                    "pattern": "$tsc",
-                    "background": {
-                        "activeOnStart": true,
-                        "beginsPattern": ".*",
-                        "endsPattern": ".*"
-                    }
-                }
-            ],
-            "isBackground": true
-        },
-        {
-            "label": "yarn: build",
+            "label": "Build",
             "type": "shell",
             "command": "yarn",
             "args": ["build"],
@@ -58,18 +16,44 @@
                 "focus": false,
                 "panel": "shared"
             },
-            "problemMatcher": [
-                {
-                    "owner": "typescript",
-                    "source": "ts",
-                    "applyTo": "closedDocuments",
-                    "fileLocation": "relative",
-                    "pattern": "$tsc"
-                }
-            ]
+            "problemMatcher": []
         },
         {
-            "label": "yarn: lint",
+            "label": "Watch",
+            "type": "shell",
+            "command": "yarn",
+            "args": ["watch"],
+            "group": "build",
+            "options": {
+                "env": {
+                    "NODE_OPTIONS": "--no-preload"
+                }
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "isBackground": true
+        },
+        {
+            "label": "Test",
+            "type": "shell",
+            "command": "yarn",
+            "args": ["test"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Lint",
             "type": "shell",
             "command": "yarn",
             "args": ["lint"],
@@ -94,126 +78,6 @@
                     }
                 }
             ]
-        },
-        {
-            "label": "yarn: type-check",
-            "type": "shell",
-            "command": "yarn",
-            "args": ["type-check"],
-            "group": "test",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": [
-                {
-                    "owner": "typescript",
-                    "source": "ts",
-                    "applyTo": "closedDocuments",
-                    "fileLocation": "relative",
-                    "pattern": "$tsc"
-                }
-            ]
-        },
-        {
-            "label": "Extension: Load Unpacked",
-            "type": "shell",
-            "command": "echo",
-            "args": ["Load the dist folder as an unpacked extension in Chrome/Edge"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Extension: Reload",
-            "type": "shell",
-            "command": "echo",
-            "args": ["Reload the extension in Chrome/Edge after building"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Extension: Watch & Rebuild",
-            "type": "shell",
-            "command": "yarn",
-            "args": ["watch:script"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": [
-                {
-                    "owner": "vite",
-                    "source": "vite",
-                    "applyTo": "closedDocuments",
-                    "fileLocation": "relative",
-                    "pattern": {
-                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    },
-                    "background": {
-                        "activeOnStart": true,
-                        "beginsPattern": ".*",
-                        "endsPattern": ".*"
-                    }
-                }
-            ],
-            "isBackground": true
-        },
-        {
-            "label": "Extension: Watch (Simple)",
-            "type": "shell",
-            "command": "yarn",
-            "args": ["watch"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": [
-                {
-                    "owner": "vite",
-                    "source": "vite",
-                    "applyTo": "closedDocuments",
-                    "fileLocation": "relative",
-                    "pattern": {
-                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    },
-                    "background": {
-                        "activeOnStart": true,
-                        "beginsPattern": ".*",
-                        "endsPattern": ".*"
-                    }
-                }
-            ],
-            "isBackground": true
         }
     ]
 }

@@ -28,10 +28,7 @@ This extension provides an intelligent chatbot interface that helps users create
 # Install dependencies
 yarn install
 
-# Development mode
-yarn dev
-
-# Build for production
+# Build the extension
 yarn build
 
 # Watch mode (auto-rebuild on changes)
@@ -39,6 +36,9 @@ yarn watch
 
 # Lint code
 yarn lint
+
+# Test n8n integration
+yarn test
 ```
 
 ### Development Workflow
@@ -48,15 +48,11 @@ For active development, use the watch mode:
 ```bash
 # Start watch mode (recommended for development)
 yarn watch
-
-# Or use the enhanced watch script with better output
-yarn watch:script
 ```
 
 The watch mode will:
 - Automatically rebuild the extension when you save files
 - Handle TypeScript compilation through Vite
-- Show colored output for easy debugging
 - Copy manifest.json to the dist folder automatically
 
 ### Project Structure

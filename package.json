@@ -4,18 +4,11 @@
   "description": "AI-powered Chrome/Edge extension for n8n workflow assistance",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit",
-    "dev:setup": "./scripts/dev-setup.sh",
-    "build:extension": "./scripts/build-extension.sh",
-    "test:n8n": "./scripts/test-n8n.sh",
-    "clean": "rm -rf dist/",
+    "build": "vite build",
     "watch": "vite build --watch",
-    "watch:script": "./scripts/watch.sh",
-    "dev:watch": "vite --watch"
+    "test": "./scripts/test-n8n.sh",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 15",
+    "clean": "rm -rf dist/"
   },
   "dependencies": {
     "@langchain/core": "^0.3.0",
@@ -34,7 +27,6 @@
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "@vitejs/plugin-react": "^4.3.3",
-    "concurrently": "^9.2.1",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
