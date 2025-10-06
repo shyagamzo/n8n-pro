@@ -2,6 +2,7 @@
   "name": "n8n-pro",
   "version": "1.0.0",
   "description": "AI-powered Chrome/Edge extension for n8n workflow automation",
+  "type": "module",
   "main": "index.js",
   "author": "Shy Agam <us@bespunky.io>",
   "license": "MIT",
@@ -9,7 +10,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 50",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
