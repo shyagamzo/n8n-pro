@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+description: Prevents writing files that can be generated using CLI tools
+---
+
+# Use CLI Tools and IDE Features Instead of Manual Files
+
+**Core Principle**: Always check if there's a CLI tool or IDE feature available before manually writing files. Never write files that can be generated using CLI tools or IDE features.
+
+## Universal Rule:
+Before creating any file, ask: "Is there a CLI tool or IDE feature that can generate this?" If yes, use it.
+
+## How to Discover Tools:
+
+### CLI Tools:
+- Check documentation for generators
+- Look for `--help` or `--init` flags
+- Search for "generator" or "scaffold" features
+- Check package.json scripts
+- Use framework generators (Angular CLI, React generators, Vue CLI, etc.)
+
+### IDE Features:
+- Command Palette: search "generate", "create", "scaffold"
+- Right-click context menus for "Generate" options
+- File templates and snippets
+- Framework-specific extensions
+- DevContainer features
+- Settings UI instead of manual JSON/XML
+
+## What NOT to Write Manually:
+
+❌ **Any file with a CLI generator or IDE feature**:
+- Configuration files (use IDE settings UI)
+- Build artifacts and compiled outputs
+- Package manager files (lock files, node_modules)
+- Framework files (components, services, models, controllers, routes)
+- Generated boilerplate (tests, migrations, schemas, interfaces)
+- DevContainer configs, IDE settings, launch configurations
+
+## Decision Process:
+1. Ask: "Is there a CLI tool or IDE feature for this?"
+2. If unsure: Search documentation or check IDE command palette
+3. If exists: Use it instead of manual creation
+4. If not: Then write manually
+
+## Exception:
+Only write manually when no tool/feature exists, customization needed beyond tool support, educational documentation, or project-specific business logic.
