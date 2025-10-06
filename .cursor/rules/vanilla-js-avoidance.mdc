@@ -1,0 +1,110 @@
+---
+globs: *.ts,*.tsx,*.js,*.jsx
+description: Guidelines for avoiding vanilla JavaScript in favor of React patterns
+---
+
+# Vanilla JavaScript Avoidance
+
+## Core Principle
+**NEVER use vanilla JavaScript DOM manipulation when React alternatives exist.**
+
+## What to Avoid
+❌ **Direct DOM manipulation**:
+```typescript
+// BAD - Vanilla JS
+const element = document.createElement('div');
+element.innerHTML = '<span>Hello</span>';
+element.style.cssText = 'color: red;';
+document.body.appendChild(element);
+```
+
+❌ **Event listeners**:
+```typescript
+// BAD - Vanilla JS
+button.addEventListener('click', handleClick);
+```
+
+❌ **innerHTML manipulation**:
+```typescript
+// BAD - Vanilla JS
+container.innerHTML = '<div>Content</div>';
+```
+
+❌ **Style manipulation**:
+```typescript
+// BAD - Vanilla JS
+element.style.display = 'none';
+element.style.backgroundColor = 'red';
+```
+
+## React Alternatives
+✅ **Use React components**:
+```typescript
+// GOOD - React
+function MyComponent(): React.JSX.Element {
+    return (
+        <div style={{ color: 'red' }}>
+            <span>Hello</span>
+        </div>
+    );
+}
+```
+
+✅ **Use React event handlers**:
+```typescript
+// GOOD - React
+<button onClick={handleClick}>Click me</button>
+```
+
+✅ **Use React state**:
+```typescript
+// GOOD - React
+const [isVisible, setIsVisible] = React.useState(false);
+return <div style={{ display: isVisible ? 'block' : 'none' }}>Content</div>;
+```
+
+✅ **Use React effects**:
+```typescript
+// GOOD - React
+React.useEffect(() => {
+    // Side effects here
+    return () => {
+        // Cleanup here
+    };
+}, [dependencies]);
+```
+
+## Content Script Patterns
+✅ **Create React root**:
+```typescript
+// GOOD - React
+const container = document.createElement('div');
+document.body.appendChild(container);
+const root = createRoot(container);
+root.render(<MyApp />);
+```
+
+✅ **Use React state for visibility**:
+```typescript
+// GOOD - React
+const [showPanel, setShowPanel] = React.useState(false);
+return showPanel ? <Panel /> : <TriggerButton />;
+```
+
+## When Vanilla JS is Acceptable
+- **Creating React root containers** (one-time setup)
+- **Chrome extension APIs** (chrome.runtime, chrome.storage)
+- **Browser APIs** (fetch, setTimeout, etc.)
+- **Third-party library integration** (when no React wrapper exists)
+
+## Migration Checklist
+When refactoring vanilla JS to React:
+1. **Identify DOM manipulation** - Find all `document.createElement`, `innerHTML`, `style` assignments
+2. **Create React components** - Convert to functional components with hooks
+3. **Use React state** - Replace manual state with `useState`
+4. **Use React events** - Replace `addEventListener` with React event handlers
+5. **Use React effects** - Replace manual lifecycle with `useEffect`
+6. **Test thoroughly** - Ensure all functionality works the same way
+
+## Examples from Codebase
+See [src/content/index.tsx](mdc:src/content/index.tsx) for a complete React implementation that replaced all vanilla JavaScript DOM manipulation.

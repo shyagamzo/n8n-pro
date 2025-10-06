@@ -1,0 +1,66 @@
+---
+alwaysApply: true
+description: Development workflow and build process guidelines
+---
+
+# Development Workflow
+
+## Build System
+- **Vite** for fast development and production builds
+- **TypeScript** for type safety and better development experience
+- **ESLint** for code quality and consistency
+- **Multiple entry points** for different extension components
+
+## Available Scripts
+- `yarn build` - Production build with TypeScript compilation
+- `yarn watch` - Development build with file watching
+- `yarn test` - Run tests (placeholder for future testing)
+- `yarn lint` - Check code quality with ESLint
+- `yarn clean` - Remove build artifacts
+
+## Development Process
+1. **Make changes** to source files
+2. **Run `yarn build`** to compile and bundle
+3. **Reload extension** in Chrome/Edge developer tools
+4. **Test functionality** on n8n pages
+5. **Check console** for any errors or warnings
+
+## File Structure
+```
+src/
+├── background/     # Service worker
+├── content/        # Content script (React app)
+├── popup/          # Extension popup
+├── options/        # Options page
+├── panel/          # Standalone panel (legacy)
+└── lib/            # Shared utilities and services
+    ├── api/        # API clients
+    ├── components/ # React components
+    ├── services/   # Business logic
+    ├── types/      # TypeScript definitions
+    └── utils/      # Utility functions
+```
+
+## Extension Loading
+1. **Open Chrome/Edge** and go to `chrome://extensions/`
+2. **Enable Developer mode**
+3. **Click "Load unpacked"**
+4. **Select the `dist/` folder**
+5. **Navigate to an n8n page** to test
+
+## Debugging
+- **Content Script**: Use browser DevTools on the n8n page
+- **Background Script**: Use extension DevTools (click "service worker")
+- **Popup**: Right-click extension icon and "Inspect popup"
+- **Options**: Right-click options page and "Inspect"
+
+## Common Issues
+- **Extension not loading**: Check manifest.json and build output
+- **Content script not injecting**: Check permissions and URL patterns
+- **API calls failing**: Check CORS and API key configuration
+- **React not rendering**: Check console for JavaScript errors
+
+## Project Tracking
+- **Development Milestones**: [development-milestones.md](mdc:development-milestones.md)
+- **Project Checklist**: [project-checklist.md](mdc:project-checklist.md)
+- **Workspace Scripts**: [workspace-scripts.md](mdc:workspace-scripts.md)

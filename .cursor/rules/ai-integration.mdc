@@ -1,0 +1,56 @@
+---
+description: AI integration patterns and LLM provider guidelines
+---
+
+# AI Integration Patterns
+
+## Multi-Agent Architecture
+The extension uses a multi-agent system with specialized roles:
+
+### Agent Types
+- **Classifier Agent**: Determines user intent and routes to appropriate agent
+- **Enrichment Agent**: Gathers additional context and asks clarifying questions
+- **Planner Agent**: Creates step-by-step plans for complex tasks
+- **Executor Agent**: Performs actions and executes workflows
+- **Orchestrator**: Coordinates between agents and manages the conversation flow
+
+## LLM Integration
+- **Use LangChainJS** for LLM provider abstraction
+- **Support multiple providers** (OpenAI, Anthropic, local models)
+- **Implement streaming responses** for better UX
+- **Handle rate limiting** and retry logic
+- **Cache responses** when appropriate
+
+## Message Flow
+```
+User Input → Classifier → Enrichment → Planner → Executor → Response
+                ↓
+            Orchestrator (coordinates all agents)
+```
+
+## n8n API Integration
+- **Use custom fetch wrapper** with retry logic and error handling
+- **Implement proper authentication** with API keys
+- **Handle rate limiting** and connection issues
+- **Validate API responses** before processing
+- **Cache frequently accessed data**
+
+## Error Handling
+- **Graceful degradation** when AI services are unavailable
+- **Fallback responses** for common scenarios
+- **User-friendly error messages** with actionable suggestions
+- **Logging and monitoring** for debugging
+
+## Security Considerations
+- **Never expose API keys** in client-side code
+- **Validate all user input** before sending to AI services
+- **Sanitize AI responses** before displaying to users
+- **Implement rate limiting** to prevent abuse
+- **Use secure communication** for all API calls
+
+## Performance Optimization
+- **Stream responses** for long-running operations
+- **Cache common responses** to reduce API calls
+- **Implement request deduplication** for identical queries
+- **Use background processing** for non-critical operations
+- **Optimize payload sizes** for faster transmission
