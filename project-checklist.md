@@ -20,7 +20,7 @@
 - [x] **Security & Privacy Considerations** - Data handling, API keys, permissions
   ↳ See decisions/0015-security-privacy-considerations.md
 - [x] **Development Phases & Milestones** - Breaking down the work into manageable chunks
-  ↳ See decisions/0016-development-phases-milestones.md
+  ↳ See development-milestones.md
 
 ## Coding Standards & Preferences
 - [x] **Package Manager & Build Tools** - npm vs yarn vs pnpm, Vite vs Webpack, etc.
@@ -58,8 +58,14 @@
   ↳ ✅ Created ESLint v9 configuration with TypeScript and React support
   ↳ ✅ Verified build scripts and development workflow
   ↳ ✅ All development tools working correctly
-- [ ] **Extension Scaffold** - Basic manifest, content script, popup
-  ↳ Created manifest.json, background service worker, content scripts, React panel
+- [x] **Extension Scaffold** - Basic manifest, content script, popup
+  ↳ ✅ Enhanced manifest.json with proper permissions (tabs, notifications)
+  ↳ ✅ Enhanced content script with robust n8n detection and retry logic
+  ↳ ✅ Enhanced background service worker with message handling and tab monitoring
+  ↳ ✅ Enhanced popup interface with toggle panel functionality
+  ↳ ✅ Added panel injection service with visibility toggle
+  ↳ ✅ Created extension icon (SVG placeholder)
+  ↳ ✅ All components working together with proper message routing
 - [ ] **n8n API Client** - Authentication, basic CRUD operations
 - [ ] **Chatbot Interface** - Basic UI for user interaction
 - [ ] **Workflow Analysis Tools** - Reading and parsing existing workflows
