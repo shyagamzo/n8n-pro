@@ -38,6 +38,21 @@ export function PopupInterface(): React.JSX.Element
         chrome.tabs.create({ url: 'http://localhost:5678' });
     };
 
+    const togglePanel = (): void =>
+    {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) =>
+        {
+            if (tabs[0]?.id)
+            {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    type: 'TOGGLE_PANEL',
+                    timestamp: Date.now(),
+                    id: `toggle_${Date.now()}`
+                });
+            }
+        });
+    };
+
     return (
         <div style={{ 
             padding: '20px',
@@ -81,6 +96,24 @@ export function PopupInterface(): React.JSX.Element
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {isConnected && (
+                    <button
+                        onClick={togglePanel}
+                        style={{
+                            padding: '12px',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '500'
+                        }}
+                    >
+                        Toggle AI Panel
+                    </button>
+                )}
+
                 <button
                     onClick={openN8n}
                     style={{

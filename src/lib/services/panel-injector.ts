@@ -8,9 +8,11 @@ export function injectAssistantPanel(): void
     console.log('[PanelInjector] Injecting assistant panel');
     
     // Check if panel is already injected
-    if (document.getElementById('n8n-pro-panel'))
+    const existingPanel = document.getElementById('n8n-pro-panel');
+    if (existingPanel)
     {
-        console.log('[PanelInjector] Panel already exists, skipping injection');
+        console.log('[PanelInjector] Panel already exists, toggling visibility');
+        togglePanelVisibility();
         return;
     }
     
@@ -35,6 +37,17 @@ export function injectAssistantPanel(): void
     else
     {
         console.warn('[PanelInjector] Could not find suitable injection target');
+    }
+}
+
+export function togglePanelVisibility(): void
+{
+    const panel = document.getElementById('n8n-pro-panel');
+    if (panel)
+    {
+        const isVisible = panel.style.display !== 'none';
+        panel.style.display = isVisible ? 'none' : 'block';
+        console.log('[PanelInjector] Panel visibility toggled:', !isVisible ? 'visible' : 'hidden');
     }
 }
 

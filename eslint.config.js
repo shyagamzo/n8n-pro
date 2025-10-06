@@ -43,7 +43,11 @@ export default [
                 window: 'readonly',
                 console: 'readonly',
                 HTMLElement: 'readonly',
-                React: 'readonly'
+                React: 'readonly',
+                setTimeout: 'readonly',
+                clearTimeout: 'readonly',
+                setInterval: 'readonly',
+                clearInterval: 'readonly'
             }
         },
         plugins: {
@@ -120,7 +124,11 @@ export default [
                 window: 'readonly',
                 console: 'readonly',
                 HTMLElement: 'readonly',
-                React: 'readonly'
+                React: 'readonly',
+                setTimeout: 'readonly',
+                clearTimeout: 'readonly',
+                setInterval: 'readonly',
+                clearInterval: 'readonly'
             }
         },
         plugins: {
