@@ -11,7 +11,7 @@ export default defineConfig({
             input: {
                 // Main extension entry points
                 background: resolve(__dirname, 'src/background/index.ts'),
-                content: resolve(__dirname, 'src/content/index.ts'),
+                content: resolve(__dirname, 'src/content/index.tsx'),
                 panel: resolve(__dirname, 'src/panel/index.tsx'),
                 options: resolve(__dirname, 'src/options/index.tsx'),
                 popup: resolve(__dirname, 'src/popup/index.tsx'),

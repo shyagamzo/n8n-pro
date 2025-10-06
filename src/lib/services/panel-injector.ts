@@ -47,8 +47,24 @@ export function togglePanelVisibility(): void
     if (panel)
     {
         const isVisible = panel.style.display !== 'none';
-        panel.style.display = isVisible ? 'none' : 'block';
-        console.log('[PanelInjector] Panel visibility toggled:', !isVisible ? 'visible' : 'hidden');
+        if (isVisible)
+        {
+            // Hide panel
+            panel.style.display = 'none';
+            console.log('[PanelInjector] Panel hidden');
+        }
+        else
+        {
+            // Show panel
+            panel.style.display = 'block';
+            console.log('[PanelInjector] Panel shown');
+        }
+    }
+    else
+    {
+        // Panel doesn't exist, create it
+        console.log('[PanelInjector] Panel does not exist, creating it');
+        injectAssistantPanel();
     }
 }
 
@@ -68,6 +84,7 @@ function createPanelContainer(): HTMLElement
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         z-index: 10000;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: none;
     `;
     
     // Create React root element
@@ -79,14 +96,7 @@ function createPanelContainer(): HTMLElement
         overflow: hidden;
     `;
     
-    // Add a test message to see if the panel is working
-    reactRoot.innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #333;">
-            <h3>n8n AI Assistant</h3>
-            <p>Panel is working! Loading React app...</p>
-            <div id="react-loading">Initializing...</div>
-        </div>
-    `;
+    // React will render the content
     
     container.appendChild(reactRoot);
     
