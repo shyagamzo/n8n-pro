@@ -36,6 +36,8 @@ export class Orchestrator
                 return this.handleGetWorkflows(message);
             case 'GET_CREDENTIALS':
                 return this.handleGetCredentials(message);
+            case 'PANEL_INJECTED':
+                return this.handlePanelInjected(message);
             default:
                 throw new Error(`Unknown message type: ${message.type}`);
         }
@@ -144,5 +146,15 @@ export class Orchestrator
                 credentials: []
             };
         }
+    }
+
+    private async handlePanelInjected(message: any): Promise<any>
+    {
+        console.log('[Orchestrator] Panel injected successfully:', message);
+        // TODO: Handle panel injection logic (e.g., initialize chat state, load user preferences)
+        return {
+            success: true,
+            message: 'Panel injection acknowledged'
+        };
     }
 }

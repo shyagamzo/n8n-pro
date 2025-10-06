@@ -27,6 +27,7 @@ export function injectAssistantPanel(): void
         targetElement.appendChild(panelContainer);
         console.log('[PanelInjector] Panel injected successfully');
         
+        
         // Notify background script that panel was injected
         chrome.runtime.sendMessage({
             type: 'PANEL_INJECTED',
@@ -69,6 +70,26 @@ function createPanelContainer(): HTMLElement
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     `;
     
+    // Create React root element
+    const reactRoot = document.createElement('div');
+    reactRoot.id = 'n8n-pro-panel-root';
+    reactRoot.style.cssText = `
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    `;
+    
+    // Add a test message to see if the panel is working
+    reactRoot.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #333;">
+            <h3>n8n AI Assistant</h3>
+            <p>Panel is working! Loading React app...</p>
+            <div id="react-loading">Initializing...</div>
+        </div>
+    `;
+    
+    container.appendChild(reactRoot);
+    
     return container;
 }
 
@@ -99,3 +120,4 @@ function generateId(): string
 {
     return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
+
