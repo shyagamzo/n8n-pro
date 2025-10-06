@@ -32,6 +32,7 @@
         "https://*.n8n.cloud/*"
       ],
       "js": ["content.js"],
+      "type": "module",
       "run_at": "document_end"
     }
   ],

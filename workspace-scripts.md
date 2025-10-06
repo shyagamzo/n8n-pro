@@ -116,10 +116,31 @@ Debug configurations for:
 
 | Task | Command | Purpose |
 |------|---------|---------|
-| Build | `yarn build` | Production build |
-| Watch | `yarn watch` | Development build |
+| Build | `yarn build` | Production build (minified) |
+| Build Dev | `yarn build:dev` | Development build (readable) |
+| Watch | `yarn watch` | Development build with file watching |
 | Test | `yarn test` | Run tests |
 | Lint | `yarn lint` | Check code quality |
 | Clean | `yarn clean` | Remove build files |
+
+## Development vs Production Builds
+
+### Development Build (`yarn build:dev` / `yarn watch`)
+- **No minification** - Code remains readable and debuggable
+- **Preserved function names** - Better stack traces and debugging
+- **Larger file sizes** - Easier to read and debug
+- **Source maps** - Full debugging support
+- **Perfect for development** - Use during coding and testing
+
+### Production Build (`yarn build`)
+- **Minified with Terser** - Optimized for size and performance
+- **Obfuscated code** - Smaller file sizes, harder to read
+- **Source maps** - Still available for debugging if needed
+- **Optimized for deployment** - Use for final releases
+
+### When to Use Which
+- **Development**: Use `yarn watch` for active development
+- **Testing**: Use `yarn build:dev` for testing readable code
+- **Release**: Use `yarn build` for production deployment
 
 All tasks are aligned across package.json scripts, VSCode tasks, and build tools for consistent development experience.

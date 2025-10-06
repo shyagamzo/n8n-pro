@@ -19,6 +19,20 @@
             "problemMatcher": []
         },
         {
+            "label": "Build Dev",
+            "type": "shell",
+            "command": "yarn",
+            "args": ["build:dev"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Watch",
             "type": "shell",
             "command": "yarn",

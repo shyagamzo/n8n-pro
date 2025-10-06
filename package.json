@@ -7,8 +7,9 @@
   "author": "Shy Agam <us@bespunky.io>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc && vite build",
-    "watch": "vite build --watch",
+    "build": "vite build --mode production",
+    "build:dev": "vite build --mode development",
+    "watch": "vite build --watch --mode development",
     "test": "echo \"No tests specified yet\" && exit 0",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 100",
     "clean": "rm -rf dist || echo 'Clean completed (some files may be in use)'"
