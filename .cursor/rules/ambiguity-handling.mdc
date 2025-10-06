@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: Handle ambiguous requests by asking one clarifying question at a time
+description: Handle ambiguous user requests by asking one clarifying question at a time
 ---
 
 # Ambiguity Handling & Clarification Policy
@@ -14,20 +14,17 @@ When a user request can be interpreted in multiple ways, do NOT assume defaults.
 - Never silently choose defaults that change behavior or architecture.
 
 ## Examples
-- “Create a new workflow” → ambiguous. Do not assume a trigger. Ask: “Which trigger should we start with: Chat Trigger, Cron, Webhook, or something else?”
-- “Set up Gmail” → ambiguous. Ask: “Do you want to send email, read inbox, or watch for new messages?” If credentials are missing, show a non-interruptive button to open guidance.
-- “Speed up this workflow” → ambiguous. Ask: “Is the bottleneck latency, failures, or resource usage?”
+- "Create a new process" → ambiguous. Do not assume a starting point. Ask: "Which type of process should we start with: automated, manual, or scheduled?"
+- "Set up email integration" → ambiguous. Ask: "Do you want to send email, read inbox, or watch for new messages?"
+- "Optimize performance" → ambiguous. Ask: "Is the bottleneck latency, failures, or resource usage?"
 
-## Agent Flow Alignment
-- Classifier agent flags ambiguity (isAmbiguous=true) and hints the next question; it does not ask questions.
-- Enrichment agent asks one question, waits for the answer, then repeats until ambiguity is resolved.
-- Planner/Executor proceed only after the current question is answered.
+## Communication Alignment
+- Present clarification options without overwhelming the user
+- Offer specific choices when possible rather than open-ended questions
+- Allow the user to choose their preferred level of detail
+- Keep the conversation focused and avoid tangents
 
-## UX Alignment
-- Follow non-interruptive UX: present optional buttons/links; never block main flow.
-
-## Integration with Other Rules:
-- Always reference [project-context-awareness.mdc](mdc:project-context-awareness.mdc) for project-specific context
-- Use [communication-clarity.mdc](mdc:communication-clarity.mdc) for clear question formulation
-- Follow [non-interruptive-ux.mdc](mdc:non-interruptive-ux.mdc) for UX implementation
-
+## What NOT to do:
+- Assume defaults without asking
+- Ask multiple questions simultaneously
+- Block user workflow for clarification

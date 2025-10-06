@@ -1,4 +1,4 @@
-# Decision Record: User Interface Design - Chatbot Panel
+# Decision Record: n8n Extension User Interface Design
 
 ## Panel Layout & Structure
 

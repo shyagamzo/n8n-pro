@@ -1,4 +1,4 @@
-# Decision Record: Use Case — Creativity Suggestions for Daily Problems
+# Decision Record: n8n Extension Use Case — Creativity Suggestions
 
 ## Intent
 Help experienced users discover automation opportunities by proposing concrete, runnable workflow ideas tailored to their context, tools, and habits.

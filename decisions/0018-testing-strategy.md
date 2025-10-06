@@ -1,33 +1,21 @@
-# Decision Record: Testing Strategy
+# Decision Record: n8n Extension Testing Strategy
 
-## Testing Philosophy
+## n8n Extension Specific Testing
 
 ### Test Pyramid Approach
 - **Unit Tests (80%)**: Test individual functions, components, and utilities in isolation
 - **Integration Tests (20%)**: Test interactions between modules and external APIs
 - **No E2E Tests**: Skip end-to-end testing for MVP
 
-### Testing Principles
-- **Test Public APIs Only**: Focus on behavior, not implementation details
-- **Meaningful Test Names**: Describe what is being tested and expected outcome
-- **Small, Focused Tests**: One concept per test, clear assertions
-- **Fast Feedback**: Tests should run quickly and provide immediate feedback
-- **Reliable Tests**: Tests should be deterministic and not flaky
-
-## Testing Frameworks
-
-### Unit Testing
+### n8n Extension Testing Frameworks
 - **Jest**: Primary testing framework for JavaScript/TypeScript
 - **@testing-library/react**: React component testing utilities
 - **@testing-library/jest-dom**: Custom Jest matchers for DOM testing
 - **@testing-library/user-event**: User interaction simulation
-
-### Integration Testing
-- **Jest**: For testing service integrations and API clients
 - **MSW (Mock Service Worker)**: Mock HTTP requests for n8n API testing
 - **Chrome Extension Testing**: Use Chrome extension testing utilities
 
-### Manual Testing
+### n8n Extension Manual Testing
 - **Manual Verification**: Manual testing of extension functionality
 - **User Acceptance Testing**: Manual testing with real users
 - **Chrome Extension Testing**: Manual testing in Chrome environment
@@ -35,133 +23,26 @@
 ## Test Structure
 
 ### Unit Tests
-```typescript
-// Example: Testing a utility function
-describe('WorkflowValidator', () =>
-{
-    describe('validateWorkflowDescription', () =>
-    {
-        it('should return true for valid workflow descriptions', () =>
-        {
-            // Arrange
-            const description = 'Send email when form submitted';
-            
-            // Act
-            const result = WorkflowValidator.validateWorkflowDescription(description);
-            
-            // Assert
-            expect(result).toBe(true);
-        });
-        
-        it('should return false for empty descriptions', () =>
-        {
-            // Arrange
-            const description = '';
-            
-            // Act
-            const result = WorkflowValidator.validateWorkflowDescription(description);
-            
-            // Assert
-            expect(result).toBe(false);
-        });
-    });
-});
-```
+- Test individual functions and utilities in isolation
+- Use AAA pattern (Arrange, Act, Assert)
+- Focus on behavior and expected outcomes
 
 ### Component Tests
-```typescript
-// Example: Testing a React component
-describe('ChatPanel', () =>
-{
-    it('should display user messages', () =>
-    {
-        // Arrange
-        const messages = [
-            { id: '1', text: 'Hello', sender: 'user' },
-            { id: '2', text: 'Hi there!', sender: 'bot' }
-        ];
-        
-        // Act
-        render(<ChatPanel messages={messages} />);
-        
-        // Assert
-        expect(screen.getByText('Hello')).toBeInTheDocument();
-        expect(screen.getByText('Hi there!')).toBeInTheDocument();
-    });
-    
-    it('should call onSendMessage when user sends a message', async () =>
-    {
-        // Arrange
-        const onSendMessage = jest.fn();
-        const user = userEvent.setup();
-        
-        render(<ChatPanel onSendMessage={onSendMessage} />);
-        
-        // Act
-        await user.type(screen.getByRole('textbox'), 'Test message');
-        await user.click(screen.getByRole('button', { name: /send/i }));
-        
-        // Assert
-        expect(onSendMessage).toHaveBeenCalledWith('Test message');
-    });
-});
-```
+- Test React components with user interactions
+- Use testing-library for component testing
+- Focus on user behavior and component output
 
 ### Integration Tests
-```typescript
-// Example: Testing API client
-describe('N8nApiClient', () =>
-{
-    beforeEach(() =>
-    {
-        server.use(
-            rest.get('http://localhost:5678/api/v1/workflows', (req, res, ctx) =>
-            {
-                return res(ctx.json([
-                    { id: '1', name: 'Test Workflow' }
-                ]));
-            })
-        );
-    });
-    
-    it('should fetch workflows from n8n API', async () =>
-    {
-        // Arrange
-        const apiClient = new N8nApiClient('http://localhost:5678');
-        
-        // Act
-        const workflows = await apiClient.getWorkflows();
-        
-        // Assert
-        expect(workflows).toHaveLength(1);
-        expect(workflows[0].name).toBe('Test Workflow');
-    });
-});
-```
+- Test API client interactions with n8n
+- Use MSW (Mock Service Worker) for HTTP mocking
+- Test agent orchestration and workflow creation
 
 ## Test Organization
 
 ### File Structure
-```
-src/
-├── __tests__/
-│   ├── unit/
-│   │   ├── utils/
-│   │   ├── services/
-│   │   └── models/
-│   ├── integration/
-│   │   ├── api/
-│   │   └── agents/
-│   └── components/
-│       ├── panel/
-│       └── options/
-├── __mocks__/
-│   ├── chrome-extension.ts
-│   └── n8n-api.ts
-└── __fixtures__/
-    ├── workflows.json
-    └── messages.json
-```
+- Organize tests by type (unit, integration, components)
+- Co-locate test files with source files
+- Use separate directories for mocks and fixtures
 
 ### Test Naming Convention
 - **Unit Tests**: `*.test.ts` or `*.spec.ts`
@@ -169,55 +50,9 @@ src/
 - **Test Files**: Co-located with source files or in `__tests__` directory
 
 ## Mocking Strategy
-
-### Chrome Extension APIs
-```typescript
-// __mocks__/chrome-extension.ts
-export const chrome = {
-    storage: {
-        local: {
-            get: jest.fn(),
-            set: jest.fn(),
-            remove: jest.fn()
-        }
-    },
-    runtime: {
-        sendMessage: jest.fn(),
-        onMessage: {
-            addListener: jest.fn()
-        }
-    }
-};
-```
-
-### n8n API
-```typescript
-// __mocks__/n8n-api.ts
-export const mockN8nApi = {
-    getWorkflows: jest.fn(),
-    createWorkflow: jest.fn(),
-    updateWorkflow: jest.fn(),
-    deleteWorkflow: jest.fn()
-};
-```
-
-### LLM Responses
-```typescript
-// __mocks__/openai.ts
-export const mockOpenAI = {
-    chat: {
-        completions: {
-            create: jest.fn().mockResolvedValue({
-                choices: [{
-                    message: {
-                        content: 'Mock AI response'
-                    }
-                }]
-            })
-        }
-    }
-};
-```
+- Mock Chrome extension APIs (storage, runtime, messaging)
+- Mock n8n API responses for consistent testing
+- Mock LLM responses for agent testing
 
 ## Test Data Management
 

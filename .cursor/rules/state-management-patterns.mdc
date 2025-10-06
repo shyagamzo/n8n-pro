@@ -1,0 +1,84 @@
+---
+alwaysApply: false
+description: Universal state management patterns and best practices - apply when building applications with complex state
+---
+
+# State Management Patterns
+
+## State Management Strategy
+
+### Store Organization Principles
+- **Domain-Based Stores**: Each store handles one business domain
+- **Minimal Cross-Store Dependencies**: Avoid circular dependencies
+- **Clear Boundaries**: Well-defined interfaces between stores
+- **Single Source of Truth**: Each piece of state has one authoritative source
+
+### State Separation Principles
+- **Separation of Concerns**: Keep different types of state separate
+- **UI State vs Business State**: Distinguish between interface state and business logic state
+- **Local vs Global State**: Use local state for component-specific data, global state for shared data
+- **Transient vs Persistent State**: Identify what needs to persist across sessions
+
+## State Architecture Patterns
+
+### Store Structure
+Organize stores by business domain:
+- **User State**: Authentication, preferences, profile data
+- **Application State**: UI state, navigation, modals, notifications
+- **Business State**: Core application data and business logic
+- **Configuration State**: Settings, feature flags, environment config
+
+### State Design Principles
+- **Immutable Updates**: Always create new state objects instead of mutating existing ones
+- **Normalized Data**: Store related data in normalized structures to avoid duplication
+- **Computed Values**: Derive computed values from base state rather than storing them
+- **State Validation**: Validate state changes to maintain data integrity
+
+## State Management Approaches
+
+### Lightweight Solutions
+- **Minimal Boilerplate**: Choose solutions with minimal setup and configuration
+- **Built-in Solutions**: Use framework-provided state management when appropriate
+- **Predictable Updates**: Use solutions that provide predictable state update patterns
+- **Type Safety**: Prefer solutions with strong type safety and inference
+
+### Enterprise Solutions
+- **Complex State Interactions**: Use solutions designed for large applications with complex state relationships
+- **Reactive Programming**: Consider reactive programming patterns for complex state flows
+- **Advanced Dependencies**: Use solutions that handle complex state dependencies and derived values
+- **Scalability**: Choose solutions that scale well with application growth
+
+## Performance Considerations
+
+### Optimization Strategies
+- **Selective Subscriptions**: Only subscribe to the state you need
+- **Memoization**: Use memoization to prevent unnecessary re-renders
+- **State Splitting**: Split large state objects into smaller, focused pieces
+- **Lazy Loading**: Load state data only when needed
+
+### Anti-Patterns to Avoid
+- **Over-normalization**: Don't split state into too many small pieces
+- **Circular Dependencies**: Avoid stores that depend on each other
+- **State Duplication**: Don't store the same data in multiple places
+- **Premature Optimization**: Don't optimize state management before identifying actual performance issues
+
+## State Persistence
+
+### Persistence Strategies
+- **Session Storage**: For temporary state that should survive page refreshes
+- **Local Storage**: For user preferences and settings
+- **Database Storage**: For critical business data
+- **URL State**: For shareable application state
+
+### Data Synchronization
+- **Optimistic Updates**: Update UI immediately, sync with server in background
+- **Conflict Resolution**: Handle conflicts when multiple sources update the same data
+- **Offline Support**: Maintain state consistency when network is unavailable
+- **Real-time Sync**: Keep state synchronized across multiple clients
+
+## What NOT to do:
+- Store derived data that can be computed from other state
+- Create circular dependencies between stores
+- Mutate state directly instead of using proper update methods
+- Store sensitive data in client-side state without encryption
+- Over-engineer state management for simple applications

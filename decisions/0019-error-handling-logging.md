@@ -1,245 +1,35 @@
-# Decision Record: Error Handling & Logging
+# Decision Record: n8n Extension Error Handling
 
-## Error Classification
-
-### Error Types
+## n8n Extension Specific Error Types
 - **User Errors**: Invalid input, missing credentials, workflow validation failures
 - **API Errors**: n8n API failures, OpenAI API rate limits, network timeouts
 - **System Errors**: Extension crashes, memory issues, browser compatibility
 - **Agent Errors**: LLM processing failures, agent orchestration issues
 - **Security Errors**: Authentication failures, permission denials, data validation
 
-### Error Severity Levels
-- **Critical**: Extension crashes, data loss, security breaches
-- **High**: API failures, workflow creation failures, user blocking issues
-- **Medium**: Non-critical feature failures, performance issues
-- **Low**: Warnings, deprecated API usage, minor validation issues
-
-## Error Handling Strategy
-
-### Graceful Degradation
-- **Fallback Mechanisms**: Provide alternative paths when primary functionality fails
-- **User Communication**: Clear, actionable error messages for users
-- **Recovery Options**: Allow users to retry or use alternative approaches
-- **State Preservation**: Maintain user context during error recovery
+## n8n Extension Error Handling Strategy
 
 ### Error Boundaries (React)
-```typescript
-// Error boundary for React components
-class ChatPanelErrorBoundary extends React.Component
-{
-    constructor(props)
-    {
-        super(props);
-        this.state = { hasError: false, error: null };
-    }
-
-    static getDerivedStateFromError(error)
-    {
-        return { hasError: true, error };
-    }
-
-    componentDidCatch(error, errorInfo)
-    {
-        Logger.error('ChatPanel Error', error, errorInfo);
-    }
-
-    render()
-    {
-        if (this.state.hasError)
-        {
-            return (
-                <ErrorFallback
-                    error={this.state.error}
-                    onRetry={() => this.setState({ hasError: false, error: null })}
-                />
-            );
-        }
-
-        return this.props.children;
-    }
-}
-```
+- Implement error boundaries for React components
+- Provide fallback UI when components crash
+- Log errors for debugging and recovery
 
 ### API Error Handling
-```typescript
-// Custom error classes for different error types
-export class N8nApiError extends Error
-{
-    constructor(
-        message: string,
-        public statusCode: number,
-        public endpoint: string,
-        public originalError?: Error
-    )
-    {
-        super(message);
-        this.name = 'N8nApiError';
-    }
-}
-
-export class OpenAiApiError extends Error
-{
-    constructor(
-        message: string,
-        public errorType: string,
-        public originalError?: Error
-    )
-    {
-        super(message);
-        this.name = 'OpenAiApiError';
-    }
-}
-
-// Error handling in API client
-export class N8nApiClient
-{
-    async getWorkflows(): Promise<Workflow[]>
-    {
-        try
-        {
-            const response = await this.fetch('/api/v1/workflows');
-            return response.data;
-        }
-        catch (error)
-        {
-            if (error instanceof N8nApiError)
-            {
-                throw error;
-            }
-            
-            throw new N8nApiError(
-                'Failed to fetch workflows',
-                500,
-                '/api/v1/workflows',
-                error
-            );
-        }
-    }
-}
-```
+- Create custom error classes for different error types (N8nApiError, OpenAiApiError)
+- Include context information (status codes, endpoints, original errors)
+- Implement consistent error handling in API clients
 
 ## Logging Infrastructure
 
 ### Logger Implementation
-```typescript
-// Centralized logging service
-export class Logger
-{
-    private static instance: Logger;
-    private logLevel: LogLevel = LogLevel.INFO;
-
-    public static getInstance(): Logger
-    {
-        if (!Logger.instance)
-        {
-            Logger.instance = new Logger();
-        }
-        return Logger.instance;
-    }
-
-    public error(message: string, error?: Error, context?: any): void
-    {
-        this.log(LogLevel.ERROR, message, error, context);
-    }
-
-    public warn(message: string, context?: any): void
-    {
-        this.log(LogLevel.WARN, message, undefined, context);
-    }
-
-    public info(message: string, context?: any): void
-    {
-        this.log(LogLevel.INFO, message, undefined, context);
-    }
-
-    public debug(message: string, context?: any): void
-    {
-        this.log(LogLevel.DEBUG, message, undefined, context);
-    }
-
-    private log(level: LogLevel, message: string, error?: Error, context?: any): void
-    {
-        if (level < this.logLevel) return;
-
-        const logEntry: LogEntry = {
-            timestamp: new Date().toISOString(),
-            level,
-            message,
-            error: error ? {
-                name: error.name,
-                message: error.message,
-                stack: error.stack
-            } : undefined,
-            context: this.sanitizeContext(context)
-        };
-
-        // Console logging for development
-        if (process.env.NODE_ENV === 'development')
-        {
-            console.log(`[${level}] ${message}`, logEntry);
-        }
-
-        // Store locally for debugging (no external transmission)
-        this.storeLogEntry(logEntry);
-    }
-
-    private sanitizeContext(context: any): any
-    {
-        // Remove sensitive data from logs
-        if (!context) return context;
-        
-        const sanitized = { ...context };
-        delete sanitized.apiKey;
-        delete sanitized.password;
-        delete sanitized.token;
-        
-        return sanitized;
-    }
-
-    private storeLogEntry(entry: LogEntry): void
-    {
-        // Store in chrome.storage.local for debugging
-        chrome.storage.local.get(['logs'], (result) =>
-        {
-            const logs = result.logs || [];
-            logs.push(entry);
-            
-            // Keep only last 100 log entries
-            if (logs.length > 100)
-            {
-                logs.splice(0, logs.length - 100);
-            }
-            
-            chrome.storage.local.set({ logs });
-        });
-    }
-}
-```
+- Use singleton pattern for centralized logging
+- Support different log levels (ERROR, WARN, INFO, DEBUG)
+- Sanitize sensitive data from logs
+- Store logs locally in chrome.storage.local for debugging
 
 ### Log Levels
-```typescript
-enum LogLevel
-{
-    DEBUG = 0,
-    INFO = 1,
-    WARN = 2,
-    ERROR = 3
-}
-
-interface LogEntry
-{
-    timestamp: string;
-    level: LogLevel;
-    message: string;
-    error?: {
-        name: string;
-        message: string;
-        stack?: string;
-    };
-    context?: any;
-}
-```
+- Define log levels: DEBUG, INFO, WARN, ERROR
+- Include timestamp, level, message, error details, and context
 
 ## User-Facing Error Handling
 
@@ -250,58 +40,9 @@ interface LogEntry
 - **Non-Blocking**: Don't prevent users from continuing their work
 
 ### Error UI Components
-```typescript
-// Error display component
-export const ErrorMessage: React.FC<ErrorMessageProps> = ({ error, onRetry, onDismiss }) =>
-{
-    const getErrorMessage = (error: Error): string =>
-    {
-        if (error instanceof N8nApiError)
-        {
-            switch (error.statusCode)
-            {
-                case 401:
-                    return 'Please check your n8n API key in the extension settings.';
-                case 404:
-                    return 'The requested workflow was not found.';
-                case 500:
-                    return 'n8n server error. Please try again later.';
-                default:
-                    return 'Failed to connect to n8n. Please check your connection.';
-            }
-        }
-        
-        if (error instanceof OpenAiApiError)
-        {
-            return 'AI service temporarily unavailable. Please try again.';
-        }
-        
-        return 'An unexpected error occurred. Please try again.';
-    };
-
-    return (
-        <div className="error-message">
-            <div className="error-icon">⚠️</div>
-            <div className="error-content">
-                <h3>Something went wrong</h3>
-                <p>{getErrorMessage(error)}</p>
-                <div className="error-actions">
-                    {onRetry && (
-                        <button onClick={onRetry} className="retry-button">
-                            Try Again
-                        </button>
-                    )}
-                    {onDismiss && (
-                        <button onClick={onDismiss} className="dismiss-button">
-                            Dismiss
-                        </button>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
-```
+- Create user-friendly error display components
+- Provide specific error messages for different error types
+- Include retry and dismiss actions for user control
 
 ## Debugging Tools
 

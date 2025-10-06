@@ -1,103 +1,45 @@
-# Decision Record: Coding Standards & Preferences
+# Decision Record: n8n Extension Coding Standards
 
-## Package Manager & Build Tools
-- **yarn**: Use yarn for package management (confirmed in dev environment)
+## n8n Extension Specific Standards
+
+### Package Manager & Build Tools
+- **yarn**: Use yarn for package management
 - **Vite**: Build tool with TypeScript and React support
 - **Node.js 22**: Latest LTS version
 
-## Language & Framework Choices
+### Language & Framework Choices
 - **TypeScript**: Strict mode enabled, ^5.5.4
 - **React**: ^18.3.1 for UI components
 - **Zustand**: ^4.5.5 for state management
 - **LangChainJS**: ^0.3.0 for AI orchestration
 
-## Code Style & Formatting
-
-### Core Principles
-- **Separation of Concerns**: Top priority - each module/class/function should have a single, well-defined responsibility
-  - **Logic vs View**: Separate business logic from presentation components
-  - **Data vs Behavior**: Separate data models from business operations
-  - **API vs Implementation**: Separate external interfaces from internal implementation
-  - **Configuration vs Code**: Separate configuration from executable code
-  - **Domain Boundaries**: Separate different business domains (agents, UI, API, storage)
-  - **Layers**: Maintain clear architectural layers (presentation, business, data)
-- **Small, Reusable Units**: Break down code into smaller, organized, reusable units
-- **Refactor Before Extend**: When adding to large files, examine if refactoring is needed
-- **Fix Root Causes**: When fixing bugs, treat the source of the problem, even at the cost of refactoring
-- **Patching as Last Resort**: Use patching only as ultra-super-no-other-way last resort
-
-### Indentation & Spacing
+### n8n Extension Specific Formatting
 - **4 spaces** for indentation (except .json files)
 - **2 spaces** for .json file indentation
 - **No Prettier**: Custom styling rules to be defined later
 
-### Import Organization
+### n8n Extension Import Organization
 Imports should follow this order:
 1. **Low-level packages** (e.g., `lodash`, `rxjs`)
 2. **Framework packages** (e.g., `react`, `@types/chrome`)
 3. **Third-party libraries** (e.g., `@langchain/openai`, `zustand`)
 4. **Internal imports** (separated by one empty line)
 
-```typescript
-import { Subject             } from 'rxjs';
-import { useState, useEffect } from 'react';
-import { create              } from 'zustand';
-
-import { N8nApiClient } from '../lib/api/n8n-api-client';
-import { ChatPanel    } from '../components/chat-panel';
-```
-
 ### Import Alignment
 - Align imports vertically to the furthest closing bracket
 - Internal imports ordered from least close to closest
 
 ### Object Properties & Assignment Alignment
-```typescript
-const someValue    = 1;
-const anotherValue = 2;
-const config       = {
-    someKey   : 'value',
-    anotherKey: 'anotherValue'
-};
-```
+- Align variable assignments and object properties vertically
+- Use consistent spacing for readability
 
 ### Braces & Control Structures
-- **Opening braces on new line**:
-
-```typescript
-function doMagic(): void
-{
-    if (somethingCoolHappened)
-    {
-        sparkTheAir();
-        return;
-    }
-    
-    goToSleep();
-}
-```
+- **Opening braces on new line** for functions and control structures
+- Consistent indentation with 4 spaces
 
 ### Switch Statements
-- **Avoid switch statements** when possible, use mapping objects:
-
-```typescript
-enum AgentType { Classifier, Enrichment, Planner, Executor }
-
-class AgentRouter
-{
-    private handlers = {
-        [AgentType.Classifier]: this.handleClassifier.bind(this),
-        [AgentType.Enrichment]: this.handleEnrichment.bind(this),
-        [AgentType.Planner]: this.handlePlanner.bind(this),
-        [AgentType.Executor]: this.handleExecutor.bind(this)
-    };
-
-    public routeAgent(type: AgentType): void
-    {
-        this.handlers[type]();
-    }
-}
-```
+- **Avoid switch statements** when possible, use mapping objects
+- Use type-alias based (union type) routing for agent types (Classifier, Enrichment, Planner, Executor)
 
 ### Line Grouping
 Separate lines into logical groups:
@@ -106,33 +48,6 @@ Separate lines into logical groups:
 - **Return statements**
 - **Same-topic operations**
 
-```typescript
-function createWorkflow(description: string): Workflow
-{
-    const isComplex = description.includes('complex');
-    const nodeCount = estimateNodeCount(description);
-    // ⤵
-    validateDescription(description);
-    checkCredentials();
-    // ⤵
-    if (isComplex)
-    {
-        const plan = createComplexPlan(description);
-        // ⤵
-        executePlan(plan);
-        logSuccess('Complex workflow created');
-        // ⤵
-        return plan.workflow;
-    }
-    // ⤵
-    const simpleWorkflow = createSimpleWorkflow(description);
-    // ⤵
-    saveWorkflow(simpleWorkflow);
-    notifyUser('Workflow created');
-    // ⤵
-    return simpleWorkflow;
-}
-```
 
 ## TypeScript Standards
 
@@ -193,26 +108,9 @@ src/
 - **Small, focused tests**: One concept per test
 
 ### Test Structure
-```typescript
-describe('WorkflowCreator', () =>
-{
-    describe('createWorkflow', () =>
-    {
-        it('should create simple workflow from description', () =>
-        {
-            // Arrange
-            const description = 'Send email when form submitted';
-            
-            // Act
-            const workflow = workflowCreator.createWorkflow(description);
-            
-            // Assert
-            expect(workflow.nodes).toHaveLength(2);
-            expect(workflow.nodes[0].type).toBe('Webhook');
-        });
-    });
-});
-```
+- Use AAA pattern (Arrange, Act, Assert)
+- Test public APIs only, not implementation details
+- Focus on behavior and expected outcomes
 
 ## Error Handling & Logging
 
@@ -222,20 +120,9 @@ describe('WorkflowCreator', () =>
 - **Logging**: Log errors for debugging (no sensitive data)
 
 ### Logging Strategy
-```typescript
-class Logger
-{
-    public static error(message: string, error?: Error): void
-    {
-        console.error(`[ERROR] ${message}`, error);
-    }
-    
-    public static info(message: string): void
-    {
-        console.info(`[INFO] ${message}`);
-    }
-}
-```
+- Use structured logging with consistent format
+- Include error levels (ERROR, INFO, DEBUG)
+- Only log debug information in development mode
 
 ## State Management
 
@@ -244,24 +131,9 @@ class Logger
 - **Immutable updates**: Use immer for complex state updates
 - **Type safety**: Strongly typed store interfaces
 
-```typescript
-interface ChatStore
-{
-    messages: Message[];
-    isLoading: boolean;
-    addMessage: (message: Message) => void;
-    setLoading: (loading: boolean) => void;
-}
-
-export const useChatStore = create<ChatStore>((set) => ({
-    messages: [],
-    isLoading: false,
-    addMessage: (message) => set((state) => ({ 
-        messages: [...state.messages, message] 
-    })),
-    setLoading: (loading) => set({ isLoading: loading })
-}));
-```
+- Define clear interfaces for store state and actions
+- Use immutable updates for state changes
+- Keep stores focused on single domains
 
 ## API & Data Layer
 

@@ -1,9 +1,7 @@
----
-alwaysApply: true
-description: Development workflow and build process guidelines
----
+# Decision Record: n8n Extension Development Workflow
 
-# Development Workflow
+## Goal
+Establish development workflow and build process guidelines specifically for the n8n extension, including build system, development process, and debugging strategies.
 
 ## Build System
 - **Vite** for fast development and production builds
@@ -41,20 +39,20 @@ src/
     └── utils/      # Utility functions
 ```
 
-## Extension Loading
+## Extension Loading Process
 1. **Open Chrome/Edge** and go to `chrome://extensions/`
 2. **Enable Developer mode**
 3. **Click "Load unpacked"**
 4. **Select the `dist/` folder**
 5. **Navigate to an n8n page** to test
 
-## Debugging
+## Debugging Strategies
 - **Content Script**: Use browser DevTools on the n8n page
 - **Background Script**: Use extension DevTools (click "service worker")
 - **Popup**: Right-click extension icon and "Inspect popup"
 - **Options**: Right-click options page and "Inspect"
 
-## Common Issues
+## Common Issues and Solutions
 - **Extension not loading**: Check manifest.json and build output
 - **Content script not injecting**: Check permissions and URL patterns
 - **API calls failing**: Check CORS and API key configuration
@@ -64,3 +62,16 @@ src/
 - **Development Milestones**: [development-milestones.md](mdc:development-milestones.md)
 - **Project Checklist**: [project-checklist.md](mdc:project-checklist.md)
 - **Workspace Scripts**: [workspace-scripts.md](mdc:workspace-scripts.md)
+
+## n8n-Specific Development Considerations
+- **Test on actual n8n instances** to ensure proper integration
+- **Handle n8n's dynamic content loading** during development
+- **Respect n8n's security policies** and CORS requirements
+- **Test across different n8n versions** for compatibility
+
+## Why This Workflow
+- **Vite build system** provides fast development and optimized production builds
+- **TypeScript integration** ensures type safety and better developer experience
+- **Multiple entry points** enable different extension interfaces
+- **Comprehensive debugging** strategies cover all extension components
+- **n8n-specific testing** ensures proper integration with the target platform

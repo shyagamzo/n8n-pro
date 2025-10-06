@@ -1,0 +1,93 @@
+---
+alwaysApply: false
+description: User-friendly error messaging and feedback patterns - apply when designing user interfaces
+---
+
+# Error Messaging Guidelines
+
+## Core Principle: Help Users Succeed
+
+Error messages should guide users toward resolution, not just inform them of problems. Every error is an opportunity to help users understand and fix issues.
+
+## Message Characteristics
+
+### Clarity and Specificity
+- **Be specific**: "Please enter a valid email address" not "Invalid input"
+- **Use plain language**: Avoid technical jargon and error codes
+- **Explain the problem**: Tell users exactly what went wrong
+- **Provide context**: Include relevant details about the error
+
+### Actionability
+- **Suggest solutions**: Tell users how to fix the problem
+- **Provide next steps**: Guide users toward resolution
+- **Offer alternatives**: Suggest workarounds when possible
+- **Link to help**: Provide links to relevant documentation or support
+
+### Tone and Empathy
+- **Be helpful, not accusatory**: "We couldn't find that file" not "File not found"
+- **Acknowledge frustration**: Recognize when errors are inconvenient
+- **Use positive language**: Focus on solutions rather than problems
+- **Maintain consistency**: Use consistent tone across all error messages
+
+## Error Types and Responses
+
+### Validation Errors
+- **Immediate feedback**: Show validation errors as users type or submit
+- **Field-specific messages**: Place error messages near the relevant field
+- **Clear requirements**: Explain what format or content is expected
+- **Examples**: Provide examples of correct input when helpful
+- **Good approach**: Check specific validation rules and provide detailed error messages (e.g., "Please provide a valid email address")
+- **Bad approach**: Use generic error messages like "Invalid input" that don't help users understand what's wrong
+- **Error specificity**: Tell users exactly what's wrong and how to fix it
+
+### System Errors
+- **User-friendly explanations**: Translate technical errors into understandable language
+- **Recovery options**: Offer retry buttons or alternative actions
+- **Status information**: Let users know if the system is working on the problem
+- **Contact information**: Provide ways to get help for persistent issues
+
+### Network and Connectivity Issues
+- **Clear indicators**: Show when connectivity problems are affecting the app
+- **Retry mechanisms**: Provide easy ways to retry failed operations
+- **Offline capabilities**: Explain what features work offline
+- **Sync status**: Show when data will be synchronized
+- **HTTP status handling**: Map different status codes to user-friendly messages (404 for not found, 500+ for server errors)
+- **Network vs application errors**: Distinguish between network connectivity issues and application-level problems
+- **Contextual handling**: Provide different responses based on error type (retry for server errors, show helpful message for not found)
+
+## Error Prevention
+
+### Proactive Guidance
+- **Input hints**: Provide examples and format hints before errors occur
+- **Confirmation dialogs**: Ask for confirmation before destructive actions
+- **Auto-save**: Save work automatically to prevent data loss
+- **Validation preview**: Show validation results before submission
+
+### Graceful Degradation
+- **Fallback options**: Provide alternative ways to complete tasks
+- **Partial functionality**: Allow users to continue with available features
+- **Clear limitations**: Explain what features are temporarily unavailable
+- **Recovery paths**: Provide ways to restore full functionality
+
+## Error Message Placement
+
+### Contextual Placement
+- **Near the source**: Place error messages close to the relevant interface element
+- **Consistent location**: Use consistent placement patterns throughout the app
+- **Visible but not intrusive**: Make errors noticeable without blocking workflow
+- **Dismissible**: Allow users to dismiss non-critical error messages
+
+### Visual Design
+- **Appropriate styling**: Use colors and icons that clearly indicate errors
+- **Sufficient contrast**: Ensure error messages are readable
+- **Appropriate size**: Make error messages prominent but not overwhelming
+- **Consistent styling**: Use consistent visual treatment for all error states
+
+## What NOT to do:
+- Use technical error codes or jargon
+- Blame users for errors
+- Provide vague or unhelpful messages
+- Hide error messages in hard-to-find locations
+- Use error messages as the primary way to guide users
+- Use generic error messages like "Invalid input"
+- Expose internal system details to users

@@ -1,4 +1,4 @@
-# Decision Record: Use Case — Creating an Initial Workflow
+# Decision Record: n8n Extension Use Case — Creating Initial Workflow
 
 ## Intent
 Enable experienced users to go from a single request to a runnable initial workflow with minimal friction.

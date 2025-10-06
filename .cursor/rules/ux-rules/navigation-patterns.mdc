@@ -1,0 +1,115 @@
+---
+alwaysApply: false
+description: Navigation and information architecture guidelines - apply when designing user interfaces
+---
+
+# Navigation Patterns
+
+## Core Principle: Intuitive Wayfinding
+
+Users should always know where they are, where they can go, and how to get back. Navigation should feel natural and predictable.
+
+## Navigation Structure
+
+### Hierarchical Organization
+- **Logical grouping**: Organize content into logical, meaningful categories
+- **Consistent depth**: Maintain consistent navigation depth throughout the application
+- **Clear hierarchy**: Use visual cues to show content relationships
+- **Breadcrumb trails**: Provide clear paths showing current location
+
+### Navigation Types
+- **Primary navigation**: Main sections of the application
+- **Secondary navigation**: Sub-sections within primary areas
+- **Contextual navigation**: Actions and options relevant to current content
+- **Utility navigation**: Account settings, help, search, etc.
+
+## Navigation Design
+
+### Visual Design
+- **Consistent placement**: Keep navigation in the same location across pages
+- **Clear labeling**: Use descriptive, user-friendly labels for navigation items
+- **Visual hierarchy**: Use size, color, and spacing to show importance
+- **Active states**: Clearly indicate the current page or section
+
+### Interaction Patterns
+- **Hover states**: Provide visual feedback when hovering over navigation items
+- **Click targets**: Ensure navigation items are large enough to click easily
+- **Keyboard navigation**: Support full keyboard navigation of menu systems
+- **Touch-friendly**: Design for touch interaction on mobile devices
+
+## Mobile Navigation
+
+### Responsive Design
+- **Adaptive layouts**: Adjust navigation for different screen sizes
+- **Collapsible menus**: Use hamburger menus or drawer navigation on small screens
+- **Touch optimization**: Ensure navigation works well with touch input
+- **Thumb-friendly**: Place important navigation within easy thumb reach
+
+### Mobile-Specific Patterns
+- **Bottom navigation**: Use bottom navigation for primary actions on mobile
+- **Tab navigation**: Use tabs for switching between related content sections
+- **Swipe gestures**: Support swipe navigation where appropriate
+- **Pull-to-refresh**: Implement pull-to-refresh for content updates
+
+## Search and Discovery
+
+### Search Functionality
+- **Prominent placement**: Make search easily discoverable
+- **Auto-complete**: Provide suggestions as users type
+- **Search results**: Display results in a clear, scannable format
+- **Search filters**: Allow users to refine search results
+
+### Content Discovery
+- **Related content**: Suggest related items and content
+- **Recent items**: Show recently accessed content
+- **Popular content**: Highlight frequently accessed items
+- **Recommendations**: Provide personalized content suggestions
+
+## Navigation Feedback
+
+### Location Awareness
+- **Current page indication**: Clearly show which page the user is on
+- **Breadcrumbs**: Provide breadcrumb navigation for deep hierarchies
+- **Page titles**: Use descriptive page titles that match navigation labels
+- **URL structure**: Use meaningful URLs that reflect navigation structure
+
+### Navigation History
+- **Back button support**: Ensure browser back button works as expected
+- **History preservation**: Maintain navigation state when appropriate
+- **Deep linking**: Support direct links to specific pages or states
+- **Bookmark support**: Allow users to bookmark important pages
+
+## Accessibility
+
+### Screen Reader Support
+- **Semantic markup**: Use proper HTML elements for navigation
+- **ARIA labels**: Provide descriptive labels for navigation elements
+- **Skip links**: Provide skip links to bypass navigation
+- **Landmark roles**: Use ARIA landmark roles for navigation areas
+
+### Keyboard Navigation
+- **Tab order**: Ensure logical tab order through navigation
+- **Focus indicators**: Provide clear visual focus indicators
+- **Keyboard shortcuts**: Support common keyboard shortcuts
+- **Escape key**: Allow users to close menus with the Escape key
+
+## Performance Considerations
+
+### Loading and Caching
+- **Fast navigation**: Ensure navigation responds quickly
+- **Preloading**: Preload likely next pages when possible
+- **Caching**: Cache navigation structure and content
+- **Progressive enhancement**: Ensure navigation works without JavaScript
+
+### Optimization
+- **Minimal requests**: Reduce the number of requests needed for navigation
+- **Lazy loading**: Load navigation content as needed
+- **Compression**: Compress navigation assets
+- **CDN usage**: Use CDNs for navigation assets when appropriate
+
+## What NOT to do:
+- Hide important navigation behind multiple clicks
+- Use unclear or technical navigation labels
+- Ignore mobile navigation requirements
+- Create navigation that doesn't work without JavaScript
+- Use inconsistent navigation patterns throughout the application

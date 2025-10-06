@@ -1,9 +1,7 @@
----
-alwaysApply: true
-description: Core project architecture and structure guidelines
----
+# Decision Record: n8n Extension Project Architecture
 
-# n8n Pro Extension - Project Architecture
+## Goal
+Define the core project architecture and structure for the n8n Pro Extension, a Chrome/Edge browser extension that provides AI-powered assistance for n8n workflow automation.
 
 ## Project Overview
 This is a Chrome/Edge browser extension that provides AI-powered assistance for n8n workflow automation. The extension uses React + TypeScript with a multi-agent AI system.
@@ -19,7 +17,7 @@ This is a Chrome/Edge browser extension that provides AI-powered assistance for 
 
 ### Key Services
 - **Orchestrator**: [src/lib/services/orchestrator.ts](mdc:src/lib/services/orchestrator.ts) - Central message routing and AI coordination
-- **n8n API Service**: [src/lib/services/n8n-api-service.ts](mdc:src/lib/services/n8n-api-service.ts) - n8n API client management
+- **n8n Client**: [src/lib/services/n8n-api-service.ts](mdc:src/lib/services/n8n-api-service.ts) - n8n API client management
 - **Panel Injector**: [src/lib/services/panel-injector.ts](mdc:src/lib/services/panel-injector.ts) - Legacy panel injection (now handled by React)
 
 ### Configuration Files
@@ -35,8 +33,32 @@ User Input → Content Script → Background Worker → AI Agents → n8n API
 Panel UI ← Background Worker ← AI Response ← LLM Provider
 ```
 
+## File Structure
+```
+src/
+├── background/     # Service worker
+├── content/        # Content script (React app)
+├── popup/          # Extension popup
+├── options/        # Options page
+├── panel/          # Standalone panel (legacy)
+└── lib/            # Shared utilities and services
+    ├── api/        # API clients
+    ├── components/ # React components
+    ├── services/   # Business logic
+    ├── types/      # TypeScript definitions
+    └── utils/      # Utility functions
+```
+
 ## Development Phases
 See [development-milestones.md](mdc:development-milestones.md) for current progress and upcoming milestones.
 
 ## Project Checklist
 See [project-checklist.md](mdc:project-checklist.md) for detailed task tracking and completion status.
+
+## Why This Architecture
+- **Multi-entry point design** enables different extension interfaces (popup, options, content script)
+- **Service worker architecture** provides background processing and AI orchestration
+- **React-based content script** enables rich UI integration with n8n pages
+- **Modular service structure** promotes code reusability and maintainability
+- **TypeScript integration** ensures type safety across all components
+- **Vite build system** provides fast development and optimized production builds

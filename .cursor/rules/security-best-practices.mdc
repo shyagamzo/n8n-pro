@@ -1,0 +1,179 @@
+---
+alwaysApply: false
+description: Universal security best practices for application development - apply when building applications with security requirements
+---
+
+# Security Best Practices
+
+## Input Validation and Sanitization
+
+### Server-Side Validation
+Always validate input on the server, even if client-side validation exists:
+- **Comprehensive validation**: Check all input fields for required values, format compliance, and business rules
+- **Email validation**: Verify email format using proper regex patterns or validation libraries
+- **Password requirements**: Enforce minimum length, complexity requirements, and character restrictions
+- **Input sanitization**: Clean and sanitize all input data before processing
+- **Error handling**: Provide clear validation error messages for each field
+- **Data transformation**: Hash passwords and normalize data before storage
+
+### Client-Side Validation
+Use client-side validation for user experience, but never trust it for security:
+- **Immediate feedback**: Provide real-time validation feedback as users type
+- **User-friendly messages**: Display clear, actionable error messages
+- **Form state management**: Track validation state and prevent submission of invalid forms
+- **Progressive validation**: Validate fields as users complete them
+- **Never rely on client validation**: Always implement server-side validation as the primary security measure
+
+## Authentication and Authorization
+
+### Password Security
+Implement strong password security practices:
+- **Use strong hashing algorithms**: Use bcrypt, scrypt, or Argon2 with appropriate cost factors
+- **Salt passwords**: Always use unique salts for each password to prevent rainbow table attacks
+- **Adequate cost factors**: Use high enough cost factors (12+ rounds for bcrypt) to slow down brute force attacks
+- **Never store plain text**: Never store passwords in plain text or with weak hashing
+- **Secure comparison**: Use constant-time comparison functions to prevent timing attacks
+- **Password policies**: Enforce minimum length, complexity, and prevent common passwords
+
+### JWT Token Security
+Implement secure JWT token handling:
+- **Strong secrets**: Use cryptographically strong, randomly generated secrets
+- **Short expiration times**: Set reasonable expiration times (1-2 hours for access tokens)
+- **Minimal payload**: Include only necessary information in token payloads
+- **Proper verification**: Always verify token signature, expiration, issuer, and audience
+- **Secure storage**: Store tokens securely on the client side (httpOnly cookies preferred)
+- **Token rotation**: Implement token refresh mechanisms for long-lived sessions
+- **Revocation support**: Maintain ability to revoke tokens when needed
+
+### Session Management
+Configure secure session handling:
+- **Strong session secrets**: Use cryptographically strong, randomly generated session secrets
+- **Secure cookies**: Set httpOnly, secure, and sameSite attributes appropriately
+- **Session expiration**: Implement reasonable session timeouts and idle timeouts
+- **Session regeneration**: Regenerate session IDs after login to prevent session fixation
+- **Secure storage**: Store session data securely on the server side
+- **Environment-specific settings**: Use secure settings in production (HTTPS required)
+- **Session cleanup**: Properly clean up expired and invalid sessions
+
+## API Security
+
+### Rate Limiting
+Implement comprehensive rate limiting strategies:
+- **General API limits**: Set reasonable limits for general API endpoints (e.g., 100 requests per 15 minutes)
+- **Authentication limits**: Use stricter limits for authentication endpoints (e.g., 5 attempts per 15 minutes)
+- **Progressive penalties**: Implement escalating penalties for repeated violations
+- **IP-based limiting**: Track and limit requests by IP address
+- **User-based limiting**: Implement per-user rate limits for authenticated endpoints
+- **Endpoint-specific limits**: Apply different limits based on endpoint sensitivity
+- **Graceful responses**: Provide clear error messages when limits are exceeded
+
+### CORS Configuration
+Configure restrictive Cross-Origin Resource Sharing policies:
+- **Specific origins**: Only allow specific, trusted domains in production
+- **Method restrictions**: Limit allowed HTTP methods to only those needed
+- **Header restrictions**: Specify only necessary headers in allowed headers list
+- **Credential handling**: Carefully manage credential sharing across origins
+- **Environment-specific settings**: Use restrictive settings in production, more permissive in development
+- **Regular review**: Regularly review and update CORS policies as needed
+
+### Input Sanitization
+Implement comprehensive input sanitization:
+- **HTML sanitization**: Remove or escape HTML tags and dangerous content to prevent XSS
+- **Email normalization**: Normalize email addresses to prevent bypassing validation
+- **Character encoding**: Properly handle character encoding to prevent injection attacks
+- **Whitelist approach**: Use whitelist-based sanitization rather than blacklist approaches
+- **Context-aware sanitization**: Apply different sanitization based on where data will be used
+- **Regular updates**: Keep sanitization libraries updated to handle new attack vectors
+
+## Data Protection
+
+### Environment Variables
+Manage sensitive configuration data securely:
+- **Never commit secrets**: Never store secrets, API keys, or passwords in version control
+- **Environment-specific configs**: Use different configuration files for different environments
+- **Secure storage**: Store production secrets in secure secret management systems
+- **Access control**: Limit access to production secrets to authorized personnel only
+- **Regular rotation**: Regularly rotate secrets and API keys
+- **Audit access**: Log and monitor access to sensitive configuration data
+- **Default values**: Use secure defaults and fail safely when secrets are missing
+
+### API Key Management
+Implement secure API key handling:
+- **Secure Storage**: Use secure storage mechanisms (encrypted storage, secure cookies)
+- **No Client-Side Exposure**: Never expose API keys in client-side code or console
+- **Key Validation**: Validate API key format before storage
+- **Key Rotation**: Support for updating API keys without data loss
+- **Access Control**: Restrict API key access to authorized components only
+- **Credential Separation**: Store credentials separately and reference by ID only
+
+### Data Handling Principles
+- **Local Data Only**: Keep sensitive data on user's machine when possible
+- **No External Storage**: Avoid sending sensitive data to external servers
+- **No Analytics**: Avoid usage tracking or telemetry for sensitive applications
+- **Read-Only Access**: Only read metadata, never store or transmit sensitive content
+- **Credential References**: Only access credential IDs/names, never credential values
+
+### Database Security
+Implement secure database practices:
+- **Parameterized queries**: Always use parameterized queries or prepared statements to prevent SQL injection
+- **Input validation**: Validate all input before using it in database queries
+- **Least privilege**: Use database accounts with minimal necessary permissions
+- **Connection security**: Use encrypted connections to the database
+- **Query optimization**: Optimize queries to prevent information disclosure through timing attacks
+- **Regular updates**: Keep database software and drivers updated
+- **Backup security**: Secure database backups with encryption and access controls
+
+### Data Encryption
+Implement proper data encryption practices:
+- **Encrypt sensitive data**: Encrypt personally identifiable information and sensitive data at rest
+- **Strong algorithms**: Use industry-standard encryption algorithms (AES-256, ChaCha20)
+- **Random initialization vectors**: Use cryptographically random IVs for each encryption operation
+- **Key management**: Implement secure key generation, storage, and rotation
+- **Encryption in transit**: Use TLS/SSL for all data transmission
+- **Database encryption**: Enable database-level encryption for sensitive data
+- **Key separation**: Use different keys for different data types or environments
+
+## HTTPS and Transport Security
+
+### SSL/TLS Configuration
+Implement secure transport layer security:
+- **Force HTTPS**: Redirect all HTTP traffic to HTTPS in production
+- **Strong cipher suites**: Use only strong, modern cipher suites
+- **Certificate management**: Use valid, properly configured SSL certificates
+- **HSTS headers**: Implement HTTP Strict Transport Security headers
+- **Certificate transparency**: Monitor certificate issuance and changes
+- **Regular updates**: Keep TLS libraries and configurations updated
+- **Perfect forward secrecy**: Enable perfect forward secrecy for session keys
+
+### Security Headers
+Implement comprehensive security headers:
+- **Content Security Policy**: Define strict CSP to prevent XSS attacks
+- **X-Frame-Options**: Prevent clickjacking attacks by controlling frame embedding
+- **X-Content-Type-Options**: Prevent MIME type sniffing attacks
+- **X-XSS-Protection**: Enable browser XSS filtering
+- **Strict-Transport-Security**: Enforce HTTPS connections
+- **Referrer-Policy**: Control referrer information leakage
+- **Permissions-Policy**: Control browser feature access
+- **Regular review**: Regularly review and update security header policies
+
+## Logging and Monitoring
+
+### Security Event Logging
+Implement comprehensive security event logging:
+- **Authentication events**: Log all login attempts, successes, and failures
+- **Authorization events**: Track access to sensitive resources and permission changes
+- **Input validation failures**: Log attempts to submit invalid or malicious input
+- **Rate limiting triggers**: Log when rate limits are exceeded
+- **Suspicious activities**: Monitor for unusual patterns or potential attacks
+- **Contextual information**: Include IP addresses, user agents, timestamps, and user IDs
+- **Secure storage**: Store security logs securely and protect them from tampering
+- **Regular monitoring**: Implement automated monitoring and alerting for security events
+
+## What NOT to do:
+- Store passwords in plain text
+- Expose sensitive data in error messages
+- Trust client-side validation alone
+- Use weak encryption or hashing
+- Log sensitive information
+- Ignore security headers
+- Skip input validation and sanitization

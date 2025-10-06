@@ -1,4 +1,4 @@
-# Decision Record: n8n Design System Integration
+# Decision Record: n8n Extension Design System Integration
 
 ## Approach
 Use n8n's CSS variables directly from their design system for seamless visual integration.

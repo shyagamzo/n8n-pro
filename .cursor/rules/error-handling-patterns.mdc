@@ -1,0 +1,88 @@
+---
+globs: *.ts,*.tsx,*.js,*.jsx,*.py,*.java,*.go,*.rs,*.cs,*.cpp,*.c,*.php,*.rb,*.swift,*.kt
+description: Universal error handling patterns and best practices for all programming languages
+---
+
+# Error Handling Patterns
+
+## Core Principles
+- **Fail fast and fail clearly** - Catch errors early with meaningful messages
+- **Graceful degradation** - Provide fallbacks when possible
+- **Comprehensive logging** - Log errors with sufficient context for debugging
+
+## Error Types and Handling
+
+### Error Classification
+- **User Errors**: Invalid input, missing credentials, validation failures
+- **API Errors**: External API failures, rate limits, network timeouts
+- **System Errors**: Application crashes, memory issues, compatibility problems
+- **Security Errors**: Authentication failures, permission denials, data validation
+
+### Error Severity Levels
+- **Critical**: Application crashes, data loss, security breaches
+- **High**: API failures, feature failures, user blocking issues
+- **Medium**: Non-critical feature failures, performance issues
+- **Low**: Warnings, deprecated API usage, minor validation issues
+
+### Input Validation Errors
+Validate user input and handle validation failures:
+- **Validation strategy**: Check for required fields, format validation, and business rule compliance
+- **Error classification**: Distinguish between different types of validation failures
+- **Error context**: Include field names and validation rules in error information
+- **Error handling**: Provide appropriate error responses for different validation scenarios
+
+### Network/API Errors
+Handle different types of network and API errors appropriately:
+- **HTTP status codes**: Map different status codes to appropriate error types (404 for not found, 500+ for server errors)
+- **Network vs application errors**: Distinguish between network connectivity issues and application-level problems
+- **Error classification**: Create specific error types for different scenarios (NotFoundError, ServerError, NetworkError)
+- **Error handling**: Implement appropriate error handling logic for different error types
+- **Graceful degradation**: Offer fallback options when services are unavailable
+
+### Resource Errors
+Handle resource availability and cleanup properly:
+- **Pre-check resources**: Verify resources exist before attempting to use them (files, database connections, external services)
+- **Resource cleanup**: Always clean up resources in finally blocks or using try-with-resources patterns
+- **Resource lifecycle**: Properly open, use, and close resources to prevent leaks
+- **Error context**: Include resource identifiers in error information for easier debugging
+- **Error handling**: Implement proper error handling for resource-related failures
+
+### Graceful Degradation
+- **Fallback Mechanisms**: Provide alternative paths when primary functionality fails
+- **User Communication**: Clear, actionable error messages for users
+- **Recovery Options**: Allow users to retry or use alternative approaches
+- **State Preservation**: Maintain user context during error recovery
+
+## Error Logging and Monitoring
+
+### Developer-Facing Errors
+- **Include context** - Stack traces, request IDs, timestamps
+- **Include debugging info** - Variable values, system state
+- **Use structured logging** - JSON format for easy parsing
+- **Error tracking** - Implement error tracking and monitoring systems
+- **Performance impact** - Monitor error rates and their impact on system performance
+
+## Error Recovery Strategies
+
+### Retry Logic
+When an operation fails, automatically retry it with increasing delays between attempts:
+- **Exponential backoff**: Start with a short delay (e.g., 1 second), then double it for each retry (2s, 4s, 8s)
+- **Maximum retry limit**: Set a reasonable number of attempts (typically 3-5) to avoid infinite loops
+- **Retryable vs non-retryable errors**: Only retry transient errors (network timeouts, temporary service unavailability), not permanent errors (authentication failures, invalid input)
+- **Graceful failure**: After exhausting retries, throw the original error with context about the retry attempts
+
+### Circuit Breaker Pattern
+Prevent cascading failures by temporarily stopping calls to failing services:
+- **Three states**: CLOSED (normal operation), OPEN (failing, reject all calls), HALF_OPEN (testing if service recovered)
+- **Failure threshold**: After a certain number of consecutive failures, "trip" the circuit to OPEN state
+- **Timeout period**: Wait a specified time before transitioning from OPEN to HALF_OPEN to test recovery
+- **Recovery testing**: In HALF_OPEN state, allow one test call to see if the service has recovered
+- **Automatic recovery**: If the test call succeeds, return to CLOSED state; if it fails, return to OPEN state
+- **Fast failure**: When circuit is OPEN, immediately reject calls without attempting the operation
+
+## What NOT to do:
+- Ignore errors silently
+- Expose internal system details to users
+- Forget to clean up resources in error cases
+- Catch errors without handling them appropriately
+- Log sensitive information in error messages

@@ -5,21 +5,33 @@ description: Maintain awareness of project context and decision history
 
 # Project Context Awareness
 
-Always reference established context, decisions, and patterns for this n8n AI Assistant Extension.
+Always reference established context, decisions, and patterns for the current project.
 
-## Key Context:
-- **Chrome/Edge extension** for locally hosted n8n sites
-- **LLM chatbot** that creates/optimizes workflows via n8n API
-- **Multi-agent architecture**: Classifier, Enrichment, Planner, Executor, Orchestrator
-- **Tech stack**: Zustand, React + TypeScript, Vite
-- **Git workflow**: ✨ features, 🐛 hotfixes, 🚀 releases
+## Key Context Areas:
+- **Project type and domain** - What kind of application/system
+- **Technology stack** - Frameworks, languages, tools being used
+- **Architecture patterns** - How the system is structured
+- **Established conventions** - Naming, workflow, and process patterns
 
-## Established Patterns:
-- Non-interruptive UX, one question at a time, step-by-step approach
-- Separation of concerns, fix root causes
-- All decisions documented in `decisions/` with incremental numbering
+## Context Sources:
+- **Decision records** - Previous architectural and technical decisions
+- **Documentation** - Project README, architecture docs, API docs
+- **Code patterns** - Existing implementations and conventions
+- **Configuration files** - Build tools, linters, formatters
+
+## Established Patterns to Follow:
+- **One question at a time** - Handle ambiguity systematically
+- **Step-by-step approach** - Break complex tasks into manageable pieces
+- **Documentation standards** - Maintain decision records and context
 
 ## What NOT to do:
 - Make decisions without checking existing context
 - Assume defaults that contradict established patterns
 - Start from scratch when patterns exist
+- Ignore previous decisions without good reason
+
+## Context Maintenance:
+- **Reference previous decisions** when making new ones
+- **Update documentation** when patterns change
+- **Cross-reference related decisions** for consistency
+- **Maintain decision history** for future reference

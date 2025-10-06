@@ -1,0 +1,58 @@
+---
+alwaysApply: false
+description: Non-interruptive user experience guidelines - apply when designing user interfaces
+---
+# Non-Interruptive UX Guidelines
+
+## Core Principle: Never Force Context Switching
+
+Applications should **never interrupt** the user's current workflow or thought process. Users should always feel in control of their experience.
+
+## Agent and UX Principles
+
+### Multi-Agent Architecture
+- **Specialized Agents**: Use different agents for different responsibilities (Classifier, Enrichment, Planner, Executor)
+- **Orchestration**: Coordinate agents through a central orchestrator
+- **Ambiguity Handling**: Do not assume defaults, ask one clarifying question at a time
+- **Preference for Simplicity**: Use simple tools when sufficient, reserve complexity for complex tasks
+
+### Credential and Configuration Guidance
+- **Non-Interruptive Setup**: Detect missing credentials, show optional setup button
+- **Parallel Guidance**: Guidance runs in parallel, never blocks main workflow
+- **Optional Actions**: Provide optional actions (buttons/links) rather than forcing processes
+
+## Key Guidelines:
+
+### 1. **Optional Actions Only**
+- Show clickable buttons/links for additional features
+- Never force users into setup or configuration processes
+- Always allow users to continue their primary task
+
+### 2. **Parallel Processes**
+- When additional guidance is needed, run it in parallel
+- Don't block the main workflow or process
+- Users can engage with guidance when they're ready
+
+### 3. **Context Preservation**
+- Maintain the user's current focus and intent
+- Don't force them to think about something else mid-task
+- Preserve their mental model and workflow state
+
+### 4. **Progressive Disclosure**
+- Show relevant options when appropriate
+- Hide complexity until needed
+- Let users choose their level of engagement
+
+## Examples:
+- ✅ Show "Setup configuration" button when needed
+- ❌ Popup blocking main process for setup
+- ✅ Parallel guidance that doesn't interrupt main flow
+- ❌ Forcing users to complete setup before continuing
+
+## Application:
+This principle applies to all features: setup processes, optimization suggestions, recommendations, and any other guidance the application provides.
+
+## What NOT to do:
+- Force context switching mid-task
+- Block primary workflows for secondary concerns
+- Overwhelm users with multiple simultaneous requests

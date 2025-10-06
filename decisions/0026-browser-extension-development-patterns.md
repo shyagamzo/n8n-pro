@@ -1,9 +1,7 @@
----
-globs: *.ts,*.tsx,*.json
-description: Browser extension development patterns and Chrome API usage
----
+# Decision Record: Browser Extension Development Patterns for n8n Extension
 
-# Browser Extension Development
+## Goal
+Establish Chrome/Edge browser extension development patterns specifically tailored for the n8n extension, including message passing, content script injection, and Chrome API usage.
 
 ## Chrome Extension APIs
 - **chrome.runtime**: For message passing between scripts
@@ -11,7 +9,7 @@ description: Browser extension development patterns and Chrome API usage
 - **chrome.tabs**: For tab management and URL detection
 - **chrome.action**: For extension icon and popup management
 
-## Message Passing
+## Message Passing Pattern
 ```typescript
 // Send message
 chrome.runtime.sendMessage({
@@ -28,11 +26,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 ```
 
-## Content Script Patterns
-- **Inject React apps** into web pages using `createRoot`
+## Content Script Patterns for n8n
+- **Inject React apps** into n8n web pages using `createRoot`
 - **Use pointer-events: none** on container, **pointer-events: auto** on interactive elements
 - **Check for existing elements** before injection to prevent duplicates
-- **Handle page navigation** and dynamic content loading
+- **Handle page navigation** and dynamic content loading in n8n
 
 ## Background Service Worker
 - **Handle all external API calls** (n8n API, LLM providers)
@@ -51,14 +49,27 @@ chrome.storage.sync.get(['key'], (result) => {
 });
 ```
 
-## Manifest V3
+## Manifest V3 Requirements
 - Use **service workers** instead of background pages
 - Use **web_accessible_resources** for content script assets
 - Use **host_permissions** for API access
 - Use **action** instead of **browser_action**
 
-## Security
+## Security Considerations
 - **Never expose API keys** in content scripts
 - **Validate all messages** before processing
 - **Use HTTPS** for all external API calls
 - **Sanitize user input** before processing
+
+## n8n-Specific Considerations
+- **Detect n8n pages** using URL patterns and DOM elements
+- **Handle n8n's dynamic content loading** and navigation
+- **Integrate with n8n's existing UI** without conflicts
+- **Respect n8n's security policies** and CORS requirements
+
+## Why This Approach
+- **Manifest V3 compliance** ensures future compatibility
+- **Service worker architecture** provides better performance and reliability
+- **Message passing pattern** enables secure communication between extension components
+- **Content script injection** allows seamless integration with n8n pages
+- **Storage patterns** provide persistent configuration and caching capabilities

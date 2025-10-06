@@ -1,10 +1,9 @@
----
-description: n8n API integration patterns and workflow automation guidelines
----
+# Decision Record: n8n API Integration and Workflow Assistance
 
-# n8n Integration Patterns
+## Goal
+Establish comprehensive n8n API integration patterns and AI-powered workflow assistance capabilities for the extension.
 
-## n8n API Client
+## n8n API Client Strategy
 The extension uses a custom API client for n8n integration:
 
 ### Key Features
@@ -19,23 +18,23 @@ The extension uses a custom API client for n8n integration:
 - **Executions**: Monitor workflow execution status
 - **Health**: Connection testing and status checking
 
-## Workflow Operations
+## Workflow Operations Pattern
 ```typescript
 // Get all workflows
-const workflows = await n8nApiService.getWorkflows();
+const workflows = await n8n.getWorkflows();
 
 // Create new workflow
-const newWorkflow = await n8nApiService.createWorkflow({
+const newWorkflow = await n8n.createWorkflow({
     name: 'My Workflow',
     nodes: [...],
     connections: [...]
 });
 
 // Execute workflow
-const execution = await n8nApiService.executeWorkflow(workflowId, inputData);
+const execution = await n8n.executeWorkflow(workflowId, inputData);
 ```
 
-## Page Detection
+## Page Detection Strategy
 The extension automatically detects n8n pages using multiple strategies:
 
 ### Detection Methods
@@ -50,7 +49,7 @@ The extension automatically detects n8n pages using multiple strategies:
 - **Re-check on navigation** events
 - **Graceful fallback** for non-n8n pages
 
-## AI Workflow Assistance
+## AI Workflow Assistance Capabilities
 The AI system can help with:
 
 ### Workflow Creation
@@ -78,7 +77,7 @@ The AI system can help with:
 - **Implement proper error handling** for API failures
 - **Respect rate limits** and implement backoff strategies
 
-## Error Handling
+## Error Handling Strategy
 - **Connection failures**: Retry with exponential backoff
 - **Authentication errors**: Prompt user to check API key
 - **Rate limiting**: Implement queuing and retry logic
@@ -91,3 +90,10 @@ The AI system can help with:
 - **Use streaming** for large data sets
 - **Implement pagination** for large result sets
 - **Optimize payload sizes** for faster transmission
+
+## Why This Approach
+- **Comprehensive API coverage** enables full workflow management capabilities
+- **Multi-strategy page detection** ensures reliable n8n page identification
+- **AI-powered assistance** provides intelligent workflow creation and optimization
+- **Robust error handling** ensures reliable operation in various scenarios
+- **Performance optimization** provides responsive user experience

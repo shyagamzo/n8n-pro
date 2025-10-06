@@ -1,0 +1,138 @@
+---
+globs: *.test.*,*.spec.*,*test*,*spec*
+description: Universal testing strategies and best practices - apply when working with test files or testing scenarios
+---
+
+# Testing Strategies
+
+## Testing Pyramid
+- **Unit Tests** (70-80%) - Test individual functions and components in isolation
+- **Integration Tests** (20-30%) - Test how components work together
+- **End-to-End Tests** (0-10%) - Test complete user workflows (optional for MVP)
+
+## Testing Philosophy
+- **Test Public APIs Only**: Focus on behavior, not implementation details
+- **Meaningful Test Names**: Describe what is being tested and expected outcome
+- **Small, Focused Tests**: One concept per test, clear assertions
+- **Fast Feedback**: Tests should run quickly and provide immediate feedback
+- **Reliable Tests**: Tests should be deterministic and not flaky
+
+## Unit Testing Principles
+
+### Test Structure (AAA Pattern)
+Organize tests using the Arrange-Act-Assert pattern:
+- **Arrange**: Set up test data, mock dependencies, and prepare the test environment
+- **Act**: Execute the function or method being tested with the arranged inputs
+- **Assert**: Verify that the results match expected outcomes and that dependencies were called correctly
+- **Clear naming**: Use descriptive test names that explain what is being tested
+- **Single responsibility**: Each test should verify one specific behavior or outcome
+- **Isolation**: Tests should be independent and not rely on other tests
+
+### What to Test
+- **Happy paths** - Normal operation with valid inputs
+- **Edge cases** - Boundary conditions, empty inputs, null values
+- **Error conditions** - Invalid inputs, network failures, exceptions
+- **Business logic** - Complex calculations, validation rules
+
+### What NOT to Test
+- **Third-party libraries** - Test your usage, not their implementation
+- **Framework code** - Don't test framework internals
+- **Simple getters/setters** - Unless they contain business logic
+- **Configuration files** - Test behavior, not configuration
+
+## Integration Testing
+
+### API Testing
+Test API endpoints and their interactions:
+- **HTTP method testing**: Test all supported HTTP methods (GET, POST, PUT, DELETE)
+- **Status code verification**: Verify correct HTTP status codes are returned
+- **Request/response validation**: Test request body validation and response format
+- **Authentication testing**: Test protected endpoints with valid and invalid credentials
+- **Error handling**: Test API error responses and error codes
+- **Data persistence**: Verify that API operations correctly persist data
+- **Integration verification**: Test that APIs work together correctly
+
+### Database Testing
+Test database operations and data persistence:
+- **CRUD operations**: Test create, read, update, and delete operations
+- **Data integrity**: Verify that data is stored and retrieved correctly
+- **Transaction testing**: Test database transactions and rollback scenarios
+- **Constraint validation**: Test database constraints and validation rules
+- **Query performance**: Monitor query execution times and optimize slow queries
+- **Data cleanup**: Ensure test data is properly cleaned up between tests
+- **Connection handling**: Test database connection management and error handling
+
+## End-to-End Testing
+
+### User Journey Testing
+Test complete user workflows from start to finish:
+- **Critical user paths**: Test the most important user journeys through the application
+- **Multi-step processes**: Test complex workflows that span multiple pages or components
+- **Cross-browser testing**: Verify functionality works across different browsers
+- **Responsive testing**: Test user journeys on different screen sizes and devices
+- **Error recovery**: Test how users can recover from errors during their journey
+- **Performance validation**: Ensure user journeys complete within acceptable time limits
+- **Accessibility verification**: Test that user journeys work with assistive technologies
+
+## Test Data Management
+
+### Test Fixtures
+Create reusable test data and scenarios:
+- **Valid data sets**: Create realistic, valid test data for positive test cases
+- **Invalid data sets**: Create invalid data for testing error conditions and validation
+- **Edge case data**: Include boundary values and edge cases in test fixtures
+- **Data factories**: Use factories or builders to generate test data dynamically
+- **Consistent data**: Ensure test data is consistent across different test scenarios
+- **Data isolation**: Keep test data separate from production data
+- **Data cleanup**: Ensure test data doesn't interfere with other tests
+
+### Test Database Setup
+Manage test database lifecycle and state:
+- **Database initialization**: Set up test database with proper schema and initial data
+- **Data seeding**: Populate test database with necessary baseline data
+- **Test isolation**: Ensure each test starts with a clean, known state
+- **Data cleanup**: Clean up test data after each test to prevent interference
+- **Migration testing**: Test database migrations and schema changes
+- **Performance optimization**: Use in-memory databases or optimized test configurations
+- **Environment separation**: Keep test databases completely separate from development and production
+
+## Mocking Strategies
+
+### External Dependencies
+Mock external services and dependencies for reliable testing:
+- **API service mocking**: Mock external API calls to ensure consistent test results
+- **Database mocking**: Mock database operations to test business logic without database dependencies
+- **File system mocking**: Mock file operations for testing file handling logic
+- **Network mocking**: Mock network requests to test offline scenarios and error conditions
+- **Time mocking**: Mock time-dependent functions to test time-sensitive logic
+- **Random value mocking**: Mock random number generation for deterministic test results
+- **Mock verification**: Verify that mocked functions are called with expected parameters
+
+### Time and Randomness
+Control non-deterministic elements in tests:
+- **Time mocking**: Mock system time to test time-dependent functionality consistently
+- **Timer mocking**: Mock setTimeout, setInterval, and other timer functions
+- **Random value control**: Mock random number generation for predictable test outcomes
+- **Date/time testing**: Test date calculations, scheduling, and time-based business logic
+- **Async operation timing**: Control timing of asynchronous operations in tests
+- **Deterministic results**: Ensure tests produce consistent results regardless of execution time
+- **Edge case timing**: Test behavior at specific times (midnight, year boundaries, etc.)
+
+## Performance Testing
+
+### Load Testing
+Test application performance under various load conditions:
+- **Concurrent request testing**: Test how the application handles multiple simultaneous requests
+- **Response time validation**: Verify that responses are returned within acceptable time limits
+- **Throughput testing**: Measure the number of requests the application can handle per second
+- **Resource utilization**: Monitor CPU, memory, and database usage under load
+- **Scalability testing**: Test how performance changes as load increases
+- **Stress testing**: Test application behavior under extreme load conditions
+- **Performance regression**: Ensure new changes don't degrade performance
+
+## What NOT to do:
+- Test implementation details instead of behavior
+- Write tests that are too brittle (break with minor changes)
+- Skip testing error conditions
+- Write tests that depend on external services
+- Ignore test performance and maintainability

@@ -1,0 +1,74 @@
+---
+alwaysApply: true
+description: Standards for incorporating existing decisions into ongoing tasks and creating/maintaining decision records - essential for project continuity and context
+---
+
+# Decision Documentation Standards
+
+## What Are Decision Documents?
+Structured records that capture the reasoning, context, and implications of important choices made during project development. They serve as a historical record and reference for future work.
+These will either be in a `decisions` or a `goldens` folder.
+
+## When to Use Decision Documents:
+**BEFORE executing any significant task**, read existing decision documents to understand and incorporate:
+- Previous architectural choices and their reasoning
+- Established technology and framework selections
+- Defined processes and workflows
+- Resolved conflicts and chosen approaches
+- Established patterns and conventions
+
+**DURING task execution**, continuously reference decision documents to ensure:
+- Consistency with established patterns
+- Adherence to previous architectural decisions
+- Alignment with defined processes and workflows
+
+## When to Create Decision Documents:
+Create a new decision document when:
+- Making architectural choices
+- Selecting technologies or frameworks
+- Defining processes or workflows
+- Resolving conflicts between approaches
+- Establishing patterns or conventions
+
+## Core Principle:
+Document every significant decision with sufficient detail for future reference. Never proceed with implementation without documenting the decision-making process.
+
+## Requirements:
+- **File naming**: `0001-decision-name.md`, `0002-next-decision.md` in `decisions/` directory
+- **Structure**: Context, Decision, Implementation Details, Alternatives, Consequences, References
+- **Content**: Be specific, include examples, document reasoning, reference context
+- **Updates**: Update when implementation changes, cross-reference related decisions
+
+## Document These Patterns:
+- **Technical**: Framework choices, architecture, API design, configuration
+- **Process**: Development workflow, testing, documentation, Git workflow
+- **UX/Design**: User interactions, visual design, accessibility, error handling
+
+## Decision Record Template:
+```markdown
+# Decision: [Brief Title]
+
+## Context
+[Background and problem statement]
+
+## Decision
+[What was decided]
+
+## Implementation Details
+[How it will be implemented]
+
+## Alternatives Considered
+[Other options that were evaluated]
+
+## Consequences
+[Positive and negative outcomes]
+
+## References
+[Links to related decisions, documentation, or code]
+```
+
+## What NOT to do:
+- Create vague or incomplete records
+- Skip implementation details
+- Forget to reference related decisions
+- Leave records outdated

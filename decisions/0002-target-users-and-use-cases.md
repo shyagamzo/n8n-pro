@@ -1,4 +1,4 @@
-# Decision Record: Target Users & Use Cases (partial)
+# Decision Record: n8n Extension Target Users & Use Cases
 
 ## Decision
 Primary target users: Experienced n8n users seeking speed and reduced friction in building/modifying workflows.

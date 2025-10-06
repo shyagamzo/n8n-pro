@@ -1,4 +1,4 @@
-# Decision Record: Browser Extension Structure
+# Decision Record: n8n Extension Structure
 
 ## Overall Architecture
 Chrome/Edge extension with three main components working together to provide AI-powered n8n workflow assistance.

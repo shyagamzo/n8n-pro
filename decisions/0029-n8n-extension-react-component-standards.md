@@ -1,18 +1,16 @@
----
-globs: *.tsx,*.ts
-description: React and TypeScript coding patterns and standards
----
+# Decision Record: n8n Extension React Component Standards
 
-# React & TypeScript Patterns
+## Goal
+Establish React component standards and patterns specifically for the n8n extension, focusing on component structure, state management, and styling approaches.
 
-## React Standards
+## React Standards for n8n Extension
 - **ALWAYS use React components** - Never use vanilla JavaScript DOM manipulation
 - **Use functional components** with hooks (`useState`, `useEffect`, etc.)
 - **Use TypeScript interfaces** for all props and state
 - **Use inline styles** for component styling (no CSS files for components)
 - **Use React event handlers** (`onClick`, `onChange`, `onKeyPress`, etc.)
 
-## Component Structure
+## Component Structure Pattern
 ```typescript
 interface ComponentProps {
     // Define all props with types
@@ -36,18 +34,18 @@ function Component({ prop1, prop2 }: ComponentProps): React.JSX.Element {
 }
 ```
 
-## State Management
+## State Management Strategy
 - Use `React.useState` for local component state
 - Use `React.useEffect` for side effects and lifecycle
 - Pass state up via props, not down via context (keep it simple)
 - Use proper TypeScript types for all state
 
-## Event Handling
+## Event Handling Patterns
 - Use React event handlers: `onClick`, `onChange`, `onKeyPress`
 - Use proper TypeScript event types: `React.KeyboardEvent`, `React.MouseEvent`
 - Prevent default behavior when needed: `e.preventDefault()`
 
-## Styling
+## Styling Approach
 - Use inline styles with React state for dynamic styling
 - Use CSS properties in camelCase: `backgroundColor`, `fontSize`
 - Use template literals for conditional styles
@@ -57,3 +55,16 @@ function Component({ prop1, prop2 }: ComponentProps): React.JSX.Element {
 - Use `.tsx` for React components
 - Use `.ts` for TypeScript utilities and services
 - Update [vite.config.ts](mdc:vite.config.ts) when adding new entry points
+
+## n8n Extension Specific Considerations
+- **Component integration** with n8n's existing UI elements
+- **Event handling** that doesn't interfere with n8n's workflow editor
+- **Styling** that matches n8n's design system
+- **State management** that works within the extension's architecture
+
+## Why This Approach
+- **Consistency** with React ecosystem and patterns
+- **Type safety** with TypeScript integration
+- **Maintainability** through component-based architecture
+- **Performance** through React's optimization strategies
+- **Integration** with n8n's existing interface and functionality

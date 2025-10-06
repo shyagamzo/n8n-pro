@@ -1,4 +1,4 @@
-# Decision Record: AI Agent vs Simple Tools Logic
+# Decision Record: n8n Extension AI Agent vs Simple Tools Logic
 
 ## Core Principle
 **Workflow simplicity is prudent**: Prefer visually clean workflows with clear visual flows. Avoid complex or networked branches and node connections which will be difficult to process or follow with the naked eye.

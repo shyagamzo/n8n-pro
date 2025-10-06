@@ -1,0 +1,66 @@
+---
+alwaysApply: true
+description: Prevents writing files that can be generated using CLI tools or IDE features
+---
+
+# Use CLI Tools and IDE Features Instead of Manual Files
+
+**Core Principle**: Always check if there's a CLI tool or IDE feature available before manually writing files. Never write files that can be generated using CLI tools or IDE features.
+
+## Why Use Tools Instead of Manual Creation:
+Using CLI tools and generators avoids unnecessary problems because:
+- **Tested configurations**: Generated code follows established patterns and best practices
+- **Proven structure**: Project scaffolding is battle-tested by the community
+- **Automatic updates**: Tools stay current with framework changes and security patches
+- **Reduced errors**: Eliminates manual mistakes in boilerplate and configuration
+- **Consistency**: Ensures standard project structure across team members
+- **Time savings**: Avoids reinventing the wheel for common setup tasks
+
+## Universal Rule:
+Before creating any file or project, ask: "Is there a CLI tool or IDE feature that can generate this?" If yes, use it.
+
+## Project Generation:
+When starting a new project from scratch, always check for:
+- **Project generators**: `create-react-app`, `vue create`, `ng new`, `rails new`, etc.
+- **Template repositories**: GitHub templates, starter kits, boilerplates
+- **IDE project wizards**: New project templates in your IDE
+- **Framework CLI tools**: Most frameworks provide project scaffolding
+
+## How to Discover Tools:
+
+### CLI Tools:
+- Check documentation for generators and project creators
+- Look for `--help` or `--init` flags
+- Search for "generator", "scaffold", or "create" features
+- Check package.json scripts for project setup commands
+- Use framework generators (Angular CLI, React generators, Vue CLI, etc.)
+- Look for project templates: `create-*`, `*-starter`, `*-template`
+
+### IDE Features:
+- Command Palette: search "generate", "create", "scaffold"
+- Right-click context menus for "Generate" options
+- File templates and snippets
+- Framework-specific extensions
+- DevContainer features
+- Settings UI instead of manual JSON/XML
+
+## What NOT to Write Manually:
+
+❌ **Any file or project with a CLI generator or IDE feature**:
+- **Entire projects**: Use project generators instead of creating from scratch
+- Configuration files (use IDE settings UI)
+- Build artifacts and compiled outputs
+- Package manager files (lock files, node_modules)
+- Framework files (components, services, models, controllers, routes)
+- Generated boilerplate (tests, migrations, schemas, interfaces)
+- DevContainer configs, IDE settings, launch configurations
+- Project structure and initial setup files
+
+## Decision Process:
+1. Ask: "Is there a CLI tool or IDE feature for this?"
+2. If unsure: Search documentation or check IDE command palette
+3. If exists: Use it instead of manual creation
+4. If not: Then write manually
+
+## Exception:
+Only write manually when no tool/feature exists, customization needed beyond tool support, educational documentation, or project-specific business logic.

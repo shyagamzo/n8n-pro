@@ -1,4 +1,4 @@
-# Decision Record: n8n API Integration Strategy
+# Decision Record: n8n Extension API Integration Strategy
 
 ## API Version
 Use n8n's latest REST API (v2) for MVP integration.

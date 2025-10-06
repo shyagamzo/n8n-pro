@@ -1,4 +1,4 @@
-# Decision Record: Extension Scaffold (Chrome/Edge, MV3)
+# Decision Record: n8n Extension Scaffold
 
 ## Manifest V3 (baseline)
 - name, version, description; `action` opens panel (optional); `options_page` for settings

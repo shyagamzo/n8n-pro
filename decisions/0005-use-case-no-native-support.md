@@ -1,4 +1,4 @@
-# Decision Record: Use Case — Solving Gaps with No Built-in n8n Support
+# Decision Record: n8n Extension Use Case — No Built-in Support
 
 ## Intent
 Handle requests for services or behaviors without native n8n nodes by proposing viable implementation strategies, then executing the chosen approach.

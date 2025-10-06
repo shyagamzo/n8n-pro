@@ -1,0 +1,104 @@
+---
+alwaysApply: false
+description: Universal API integration patterns and best practices - apply when building applications with external API integrations
+---
+
+# API Integration Patterns
+
+## HTTP Client Strategy
+
+### HTTP Client Principles
+- **Consistent Interface**: Use a consistent interface for all API calls
+- **Type Safety**: Strongly typed request/response interfaces when possible
+- **Error Handling**: Consistent error handling across all API calls
+- **Retry Logic**: Exponential backoff for transient failures
+- **Timeout Management**: Configurable timeouts for different operations
+
+### API Client Design
+- **Base URL Configuration**: Centralized base URL management
+- **Header Management**: Automatic header injection and management
+- **Request/Response Interceptors**: Middleware for common operations
+- **Authentication**: Automatic token management and refresh
+- **Rate Limiting**: Built-in rate limiting and throttling
+
+## Error Handling
+
+### API Error Classification
+- **Network Errors**: Connection timeouts, network unavailability
+- **HTTP Errors**: 4xx client errors, 5xx server errors
+- **Authentication Errors**: Invalid tokens, expired credentials
+- **Validation Errors**: Invalid request data, missing required fields
+- **Rate Limit Errors**: API quota exceeded, too many requests
+
+### Error Response Handling
+- **Structured Error Objects**: Consistent error format across all APIs
+- **Error Context**: Include request details, timestamps, and error codes
+- **User-Friendly Messages**: Convert technical errors to actionable user messages
+- **Retry Logic**: Automatic retry for transient errors
+- **Fallback Strategies**: Graceful degradation when APIs are unavailable
+
+## Data Management
+
+### Request/Response Patterns
+- **Request Validation**: Validate request data before sending
+- **Response Validation**: Validate response data structure and content
+- **Data Transformation**: Transform API data to application models
+- **Caching Strategy**: Implement appropriate caching for different data types
+- **Pagination**: Handle paginated responses efficiently
+
+### Data Synchronization
+- **Optimistic Updates**: Update UI immediately, sync with server in background
+- **Conflict Resolution**: Handle data conflicts when multiple sources update
+- **Offline Support**: Cache data for offline functionality
+- **Real-time Updates**: Implement real-time data synchronization
+
+## Authentication & Security
+
+### Token Management
+- **Secure Storage**: Store tokens securely (httpOnly cookies, secure storage)
+- **Token Refresh**: Automatic token refresh before expiration
+- **Token Rotation**: Implement token rotation for enhanced security
+- **Multi-token Support**: Handle different types of tokens (access, refresh, API keys)
+
+### Security Best Practices
+- **HTTPS Only**: Always use HTTPS for API communications
+- **Input Sanitization**: Sanitize all data before sending to APIs
+- **Rate Limiting**: Implement client-side rate limiting
+- **Request Signing**: Sign requests when required for security
+
+## Performance Optimization
+
+### Caching Strategies
+- **Response Caching**: Cache API responses based on cache headers
+- **Request Deduplication**: Prevent duplicate requests for the same data
+- **Background Refresh**: Refresh cached data in the background
+- **Cache Invalidation**: Smart cache invalidation strategies
+
+### Request Optimization
+- **Request Batching**: Batch multiple requests when possible
+- **Request Compression**: Use compression for large requests
+- **Connection Pooling**: Reuse HTTP connections when possible
+- **Request Prioritization**: Prioritize critical requests over non-critical ones
+
+## Testing API Integrations
+
+### Mocking Strategies
+- **API Mocking**: Mock external APIs for testing
+- **Response Simulation**: Simulate different response scenarios
+- **Error Simulation**: Test error handling with simulated failures
+- **Performance Testing**: Test API performance under load
+
+### Integration Testing
+- **Contract Testing**: Verify API contracts and schemas
+- **End-to-End Testing**: Test complete API workflows
+- **Error Scenario Testing**: Test error handling and recovery
+- **Performance Testing**: Test API performance and reliability
+
+## What NOT to do:
+- Make direct fetch calls without error handling
+- Store sensitive data in client-side storage without encryption
+- Ignore API rate limits and quotas
+- Skip request/response validation
+- Use synchronous API calls that block the UI
+- Hardcode API endpoints and configuration
+- Ignore API versioning and backward compatibility

@@ -1,21 +1,21 @@
-# Decision Record: Security & Privacy Considerations
+# Decision Record: n8n Extension Security & Privacy
 
-## API Key Management
+## n8n Extension API Key Management
 
-### Secure Storage
+### Chrome Extension Storage
 - **Chrome Extension Storage**: Use `chrome.storage.local` for API keys (encrypted by browser)
 - **No localStorage**: Avoid localStorage for sensitive data (accessible to page scripts)
 - **No sessionStorage**: Avoid sessionStorage (cleared on tab close)
 - **Encryption**: Browser handles encryption of chrome.storage.local automatically
 
-### Key Handling
+### n8n Extension Key Handling
 - **OpenAI API Keys**: Store securely, never log or expose in console
 - **n8n API Keys**: Store securely, only send in authenticated requests
 - **Key Validation**: Validate API key format before storage
 - **Key Rotation**: Support for updating API keys without data loss
 - **Credential Separation**: n8n credentials stored separately by n8n, referenced by ID only
 
-### Access Control
+### n8n Extension Access Control
 - **Options Page Only**: API keys can only be set/modified in extension options
 - **Background Worker**: Only background worker can access stored keys
 - **Content Script**: Never has direct access to API keys

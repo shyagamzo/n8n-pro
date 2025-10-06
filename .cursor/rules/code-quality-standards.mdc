@@ -1,0 +1,69 @@
+---
+globs: *.ts,*.tsx,*.js,*.jsx,*.py,*.java,*.go,*.rs,*.cs,*.cpp,*.c,*.php,*.rb,*.swift,*.kt
+description: Universal code quality standards and best practices for all programming languages
+---
+
+# Code Quality Standards
+
+## General Principles
+- **Readability over cleverness** - Code should be easy to understand
+- **Consistency** - Follow established patterns and conventions
+- **Explicit over implicit** - Make intentions clear
+- **Fail fast** - Catch errors early and provide meaningful messages
+
+## Code Style
+- **Use descriptive names** - Variables, functions, and classes should be self-documenting
+- **Keep functions small** - Single responsibility principle
+- **Avoid deep nesting** - Use early returns and guard clauses
+- **Use consistent formatting** - Follow project style guides
+
+## Separation of Concerns
+- **Logic vs View**: Separate business logic from presentation components
+- **Data vs Behavior**: Separate data models from business operations
+- **API vs Implementation**: Separate external interfaces from internal implementation
+- **Configuration vs Code**: Separate configuration from executable code
+- **Domain Boundaries**: Separate different business domains
+- **Layers**: Maintain clear architectural layers (presentation, business, data)
+
+## Code Organization Principles
+- **Small, Reusable Units**: Break down code into smaller, organized, reusable units
+- **Refactor Before Extend**: When adding to large files, examine if refactoring is needed
+- **Fix Root Causes**: When fixing bugs, treat the source of the problem, even at the cost of refactoring
+- **Patching as Last Resort**: Use patching only as ultra-super-no-other-way last resort
+
+## Import Organization
+Imports should follow this order:
+1. **Low-level packages** (e.g., `lodash`, `rxjs`)
+2. **Framework packages** (e.g., `react`, `@types/chrome`)
+3. **Third-party libraries** (e.g., `@langchain/openai`, `zustand`)
+4. **Internal imports** (separated by one empty line)
+
+## Error Handling
+- **Use try-catch** for operations that can fail
+- **Provide meaningful error messages** with context
+- **Log errors** with sufficient information for debugging
+- **Handle edge cases** gracefully
+
+## Performance
+- **Optimize for readability first** - Premature optimization is the root of all evil
+- **Profile before optimizing** - Measure actual performance bottlenecks
+- **Use appropriate data structures** - Choose the right tool for the job
+- **Clean up resources** - Properly dispose of connections, files, etc.
+
+## Documentation
+- **Document complex logic** - Explain why, not what
+- **Use meaningful comments** - Comments should add value
+- **Keep documentation up to date** - Remove outdated comments
+- **Use TODO comments** for future improvements
+
+## Testing
+- **Write tests for critical paths** - Focus on business logic
+- **Test edge cases** - Boundary conditions and error scenarios
+- **Keep tests simple** - One concept per test
+- **Make tests readable** - Clear setup, action, assertion
+
+## What NOT to do:
+- Write overly clever or complex code
+- Ignore error handling
+- Skip documentation for complex logic
+- Optimize without measuring

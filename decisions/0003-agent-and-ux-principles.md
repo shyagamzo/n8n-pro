@@ -1,6 +1,6 @@
-# Decision Record: Agent and UX Principles
+# Decision Record: n8n Extension Agent and UX Principles
 
-This document centralizes how the extension (its LLM agents and UI) should behave. Our collaboration rules reference this document but remain focused on our process.
+This document centralizes how the n8n extension (its LLM agents and UI) should behave.
 
 ## Agent Principles
 - Multi-agent architecture: Classifier, Enrichment (one-question-at-a-time), Planner, Executor; Orchestrator coordinates.

@@ -1,0 +1,69 @@
+---
+alwaysApply: false
+description: Universal accessibility guidelines for inclusive design - apply when building user interfaces
+---
+# Accessibility Guidelines
+
+## Core Principle: Design for Everyone
+
+Create applications that are usable by people with diverse abilities, including those with visual, auditory, motor, and cognitive disabilities.
+
+## Visual Accessibility
+
+### Color and Contrast
+- **Sufficient contrast**: Ensure text has at least 4.5:1 contrast ratio against background
+- **Color independence**: Never rely solely on color to convey information
+- **Color blindness**: Test with color blindness simulators and provide alternative indicators
+
+### Typography and Layout
+- **Readable fonts**: Use clear, legible fonts with appropriate sizing
+- **Scalable text**: Support text scaling up to 200% without horizontal scrolling
+- **Consistent spacing**: Maintain consistent spacing and alignment
+- **Focus indicators**: Provide clear visual focus indicators for keyboard navigation
+
+## Motor Accessibility
+
+### Input Methods
+- **Multiple input options**: Support keyboard, mouse, touch, and assistive technologies
+- **Large touch targets**: Minimum 44x44 pixels for touch targets
+- **Keyboard navigation**: Ensure all functionality is accessible via keyboard
+- **No time limits**: Avoid time-based interactions or provide extensions
+
+### Interaction Design
+- **Error prevention**: Provide clear feedback and confirmation for destructive actions
+- **Undo functionality**: Allow users to reverse actions when possible
+- **Consistent interactions**: Use familiar interaction patterns
+
+## Cognitive Accessibility
+
+### Content and Navigation
+- **Clear language**: Use simple, concise language appropriate for the audience
+- **Logical structure**: Organize content in a logical, hierarchical manner
+- **Consistent navigation**: Maintain consistent navigation patterns throughout
+- **Progress indicators**: Show progress for multi-step processes
+
+### Error Handling
+- **Clear error messages**: Provide specific, actionable error messages
+- **Error recovery**: Offer clear paths to resolve errors
+- **Validation feedback**: Provide immediate feedback for form validation
+
+## Technical Implementation
+
+### Semantic HTML
+- **Proper markup**: Use semantic HTML elements (headings, lists, forms)
+- **ARIA labels**: Add ARIA labels for complex interactions
+- **Landmark roles**: Use ARIA landmark roles for page structure
+- **Form labels**: Associate labels with form controls
+
+### Testing and Validation
+- **Screen reader testing**: Test with actual screen readers
+- **Keyboard-only navigation**: Verify all functionality works with keyboard only
+- **Automated testing**: Use accessibility testing tools and linting
+- **User testing**: Include users with disabilities in testing
+
+## What NOT to do:
+- Rely solely on color to convey information
+- Use small touch targets or text
+- Create time-based interactions without alternatives
+- Ignore keyboard navigation requirements
+- Use unclear or technical language without explanation

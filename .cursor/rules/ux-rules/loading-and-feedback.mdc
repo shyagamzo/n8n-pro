@@ -1,0 +1,99 @@
+---
+alwaysApply: false
+description: Loading states and user feedback patterns - apply when designing user interfaces
+---
+
+# Loading and Feedback Guidelines
+
+## Core Principle: Keep Users Informed
+
+Users should always know what's happening in the application. Provide clear feedback for all user actions and system processes.
+
+## Loading States
+
+### Visual Indicators
+- **Loading spinners**: Use for short operations (under 2 seconds)
+- **Progress bars**: Use for operations with known duration
+- **Skeleton screens**: Use for content loading to show page structure
+- **Pulsing placeholders**: Use for individual elements being loaded
+
+### Timing and Duration
+- **Immediate feedback**: Show loading indicators within 100ms of user action
+- **Threshold awareness**: Don't show loading for operations under 200ms
+- **Timeout handling**: Provide feedback if operations take longer than expected
+- **Cancellation options**: Allow users to cancel long-running operations
+
+### Contextual Information
+- **Operation description**: Tell users what's happening ("Saving document...")
+- **Progress indication**: Show percentage or step completion when possible
+- **Time estimates**: Provide estimated time remaining for long operations
+- **Status updates**: Update users on progress milestones
+
+## User Action Feedback
+
+### Immediate Confirmation
+- **Visual feedback**: Provide immediate visual response to user actions
+- **State changes**: Clearly show when buttons are pressed or toggles are switched
+- **Hover states**: Indicate interactive elements before clicking
+- **Focus indicators**: Show which element has keyboard focus
+
+### Success and Completion
+- **Success messages**: Confirm when actions complete successfully
+- **Visual confirmation**: Use checkmarks, color changes, or animations
+- **Auto-dismiss**: Automatically hide success messages after a few seconds
+- **Persistent indicators**: Keep important status changes visible
+
+### Error and Failure Feedback
+- **Clear error indication**: Immediately show when actions fail
+- **Error context**: Explain what went wrong and why
+- **Recovery options**: Provide ways to retry or fix the problem
+- **Error persistence**: Keep error messages visible until resolved
+
+## Performance Feedback
+
+### Perceived Performance
+- **Optimistic updates**: Show expected results immediately when possible
+- **Progressive loading**: Load and display content as it becomes available
+- **Lazy loading**: Load content only when needed
+- **Caching indicators**: Show when content is loaded from cache
+
+### Network Status
+- **Connection indicators**: Show when the app is online/offline
+- **Sync status**: Indicate when data is being synchronized
+- **Bandwidth awareness**: Adjust loading strategies based on connection speed
+- **Offline capabilities**: Clearly show what works without internet
+
+## Feedback Patterns
+
+### Micro-interactions
+- **Button animations**: Provide subtle feedback for button presses
+- **Form validation**: Show validation feedback as users type
+- **Drag and drop**: Provide visual feedback during drag operations
+- **Scroll indicators**: Show scroll position and available content
+
+### System Status
+- **Background processes**: Indicate when background tasks are running
+- **Update notifications**: Inform users about available updates
+- **Maintenance windows**: Notify users about scheduled maintenance
+- **Feature availability**: Show when new features become available
+
+## Accessibility Considerations
+
+### Screen Reader Support
+- **ARIA live regions**: Announce status changes to screen readers
+- **Loading announcements**: Inform assistive technology about loading states
+- **Progress updates**: Provide progress information in accessible formats
+- **Status descriptions**: Use descriptive text for all status indicators
+
+### Keyboard and Motor Accessibility
+- **Keyboard feedback**: Provide clear feedback for keyboard interactions
+- **Focus management**: Maintain logical focus flow during loading
+- **Large targets**: Ensure loading indicators don't interfere with interaction
+- **Timing flexibility**: Allow users to control timing of auto-dismissing messages
+
+## What NOT to do:
+- Leave users wondering if their action worked
+- Show loading indicators for operations under 200ms
+- Use generic or unclear loading messages
+- Block the interface during loading without indication
+- Ignore accessibility requirements for feedback elements

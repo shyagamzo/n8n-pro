@@ -1,4 +1,4 @@
-# Decision Record: Technical Architecture (MVP)
+# Decision Record: n8n Extension Technical Architecture
 
 ## Orchestration & Agents
 - Orchestration library: LangChainJS + LangGraph (confirmed)

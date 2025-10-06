@@ -1,0 +1,133 @@
+---
+alwaysApply: false
+description: Universal Git workflow standards and best practices - apply when setting up project Git workflows
+---
+
+# Git Workflow Standards
+
+## Git Workflow Strategy
+
+### Branching Model: Git Flow
+- **Main Branch**: `main` - Production-ready code
+- **Development Branch**: `develop` - Integration branch for features
+- **Feature Branches**: `✨/*` - New features and enhancements
+- **Hotfix Branches**: `🐛/*` - Critical bug fixes for production
+- **Release Branches**: `🚀/*` - Release preparation and stabilization
+
+### Branch Naming Conventions
+Use descriptive branch names with prefixes:
+- **Features**: `✨/feature-name` (e.g., `✨/user-authentication`)
+- **Bug Fixes**: `🐛/bug-description` (e.g., `🐛/login-validation-error`)
+- **Releases**: `🚀/version-number` (e.g., `🚀/v1.2.0`)
+- **Hotfixes**: `🔥/critical-fix` (e.g., `🔥/security-patch`)
+
+## Commit Message Standards
+
+### Conventional Commits
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Commit Emojis
+Use emojis to categorize commits:
+- **🤖**: AI instructions, automation, Cursor rules
+- **💭**: Decisions, brainstorms, planning documentation
+- **✨**: New features
+- **🐛**: Bug fixes
+- **📚**: Documentation updates
+- **🎨**: Code style and formatting
+- **♻️**: Code refactoring
+- **⚡**: Performance improvements
+- **🔧**: Configuration and tooling
+- **🚀**: Releases and deployments
+
+## Pull Request Standards
+
+### PR Requirements
+- **Clear Title**: Descriptive title that explains the change
+- **Detailed Description**: Explain what, why, and how
+- **Linked Issues**: Reference related issues or tickets
+- **Testing**: Include testing information and results
+- **Screenshots**: Include screenshots for UI changes
+- **Breaking Changes**: Clearly mark any breaking changes
+
+### PR Review Process
+- **Code Review**: At least one reviewer required
+- **Automated Checks**: All CI/CD checks must pass
+- **Testing**: Manual testing for critical changes
+- **Documentation**: Update documentation if needed
+- **Approval**: Require approval before merging
+
+## Branch Protection Rules
+
+### Main Branch Protection
+- **Require PR**: No direct pushes to main branch
+- **Require Reviews**: At least one approved review
+- **Require Status Checks**: All CI/CD checks must pass
+- **Require Up-to-Date**: Branch must be up-to-date before merging
+- **Restrict Pushes**: Only allow pushes from protected branches
+
+### Development Branch Protection
+- **Require PR**: No direct pushes to develop branch
+- **Require Reviews**: At least one approved review for critical changes
+- **Require Status Checks**: Core CI/CD checks must pass
+- **Allow Force Push**: Allow force push for rebasing (with restrictions)
+
+## Release Management
+
+### Release Process
+- **Create Release Branch**: Create release branch from develop
+- **Version Bumping**: Update version numbers and changelog
+- **Testing**: Comprehensive testing on release branch
+- **Merge to Main**: Merge release branch to main
+- **Tag Release**: Create git tag for the release
+- **Merge Back**: Merge main back to develop
+
+### Version Numbering
+Follow semantic versioning (SemVer):
+- **Major**: Breaking changes (1.0.0 → 2.0.0)
+- **Minor**: New features, backward compatible (1.0.0 → 1.1.0)
+- **Patch**: Bug fixes, backward compatible (1.0.0 → 1.0.1)
+
+## Git Hooks
+
+### Pre-commit Hooks
+- **Code Formatting**: Ensure code is properly formatted
+- **Linting**: Run linters to catch code quality issues
+- **Testing**: Run unit tests for changed files
+- **Commit Message**: Validate commit message format
+
+### Pre-push Hooks
+- **Full Test Suite**: Run complete test suite
+- **Build Verification**: Ensure code builds successfully
+- **Security Checks**: Run security vulnerability scans
+- **Dependency Checks**: Verify dependency integrity
+
+## Collaboration Guidelines
+
+### Team Workflow
+- **Regular Sync**: Regular team sync on branch status
+- **Conflict Resolution**: Clear process for resolving merge conflicts
+- **Feature Flags**: Use feature flags for incomplete features
+- **Communication**: Clear communication about breaking changes
+
+### Code Ownership
+- **Code Review**: All code must be reviewed before merging
+- **Knowledge Sharing**: Share knowledge through code reviews
+- **Documentation**: Document complex changes and decisions
+- **Mentoring**: Use code reviews for mentoring and learning
+
+## What NOT to do:
+- Commit directly to main or develop branches
+- Use vague or unclear commit messages
+- Skip code reviews for "small" changes
+- Force push to shared branches without coordination
+- Ignore failing CI/CD checks
+- Create long-lived feature branches without regular updates
+- Merge without proper testing and validation

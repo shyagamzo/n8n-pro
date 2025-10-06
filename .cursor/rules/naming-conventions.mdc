@@ -1,0 +1,53 @@
+---
+globs: *.ts,*.tsx,*.js,*.jsx,*.html,*.css,*.scss,*.sass,*.less,*.vue,*.svelte,*.php,*.rb,*.py,*.md,*.mdx,*.json,*.yaml,*.yml,*.toml,*.xml,*.svg
+description: Naming conventions and redundancy avoidance guidelines for web development and repository files
+---
+
+# Naming Conventions and Redundancy Avoidance
+
+## Core Principle
+**Name things after what they represent, not their implementation pattern or type.**
+
+## Avoid Redundant Suffixes
+
+### ❌ Redundant Patterns
+```typescript
+// BAD - Redundant suffixes
+await n8nApiService.getWorkflows();  // "ApiService" is redundant
+await userService.createUser();      // "Service" is redundant
+await dataManager.processData();     // "Manager" is redundant
+```
+
+### ✅ Natural Patterns
+```typescript
+// GOOD - Context makes purpose clear
+await n8n.getWorkflows();           // Context: n8n API
+await users.create();               // Context: user operations
+await data.process();               // Context: data processing
+```
+
+## When to Use Suffixes
+- **Multiple implementations**: `UserRepository` vs `UserCache` vs `UserValidator`
+- **Different abstractions**: `UserModel` vs `UserView` vs `UserController`
+- **Specific types**: `HttpClient` vs `WebSocketClient` vs `GraphQLClient`
+
+## Naming Guidelines
+- **Use verbs for actions**: `create`, `update`, `delete`, `process`
+- **Use nouns for entities**: `user`, `workflow`, `data`, `config`
+- **Avoid redundant prefixes**: `getUser()` not `getUserData()`
+- **Name after domain concept**: `User`, `Workflow`, `Payment`
+
+## Common Redundancy Patterns
+```typescript
+// BAD → GOOD
+UserService.createUser() → Users.create()
+n8nApiService.getWorkflows() → n8n.getWorkflows()
+getUserData() → getUser()
+orderService.create() → order.create()
+```
+
+## What NOT to do
+- Add suffixes that don't add meaning
+- Use generic terms when context provides clarity
+- Repeat information already present in context
+- Create verbose names that could be simplified

@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: Guidelines for clear communication and avoiding miscommunications
+description: Guidelines for clear communication and avoiding miscommunications between AI and user
 ---
 
 # Communication Clarity Guidelines
@@ -14,7 +14,7 @@ Prevent miscommunications through explicit confirmation and clear language.
 - **Response Patterns**: Clarify ambiguous responses, acknowledge corrections
 
 ## Common Patterns to Avoid:
-- **Ambiguous Responses**: "5" → "Do you mean gpt-5 model?"
+- **Ambiguous Responses**: "5" → "Do you mean version 5, model 5, or something else?"
 - **Assumption Errors**: Don't assume preferences without confirmation
 - **Context Switching**: Don't jump topics without completion
 - **Technical Misunderstandings**: Always clarify technical terms

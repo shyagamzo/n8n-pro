@@ -5,25 +5,25 @@ Visually integrate the chatbot panel with n8n by reusing n8n's runtime CSS varia
 
 ## Strategy
 1) Token discovery at runtime
-   - Read computed styles from  and the n8n editor root (if present) to collect CSS variables matching .
-   - Build a filtered map of likely design tokens (color, spacing, radius, typography) by simple heuristics and a small allowlist pattern set (e.g., , , , ).
-   - Cache the discovered token map in memory and  to avoid repeated scans; refresh on theme changes.
+   - Read computed styles from document.documentElement and the n8n editor root (if present) to collect CSS variables
+   - Build a filtered map of likely design tokens (color, spacing, radius, typography) by simple heuristics and a small allowlist pattern set
+   - Cache the discovered token map in memory to avoid repeated scans; refresh on theme changes
 
 2) Semantic aliasing in our panel
-   - Define our own minimal semantic token layer (e.g., , , , , , , ).
-   - On init, resolve each semantic token from best-matching n8n variables; fall back to computed defaults if missing.
-   - Expose these on the panel root so all components can reference them.
+   - Define our own minimal semantic token layer (primary, secondary, background, text, border, etc.)
+   - On init, resolve each semantic token from best-matching n8n variables; fall back to computed defaults if missing
+   - Expose these on the panel root so all components can reference them
 
 3) Shadow DOM bridge (optional)
-   - If panel uses Shadow DOM, inject an adopted stylesheet that re-exports discovered n8n variables onto the shadow host, then defines our semantic aliases.
-   - If mounted in page DOM, skip the bridge; variables will inherit naturally.
+   - If panel uses Shadow DOM, inject an adopted stylesheet that re-exports discovered n8n variables onto the shadow host, then defines our semantic aliases
+   - If mounted in page DOM, skip the bridge; variables will inherit naturally
 
 4) Theme change detection
-   - Observe  class/attribute mutations (common theming toggles) and  changes with a .
-   - On change, re-run discovery+aliasing and update the panel stylesheet.
+   - Observe class/attribute mutations (common theming toggles) and style changes with a MutationObserver
+   - On change, re-run discovery+aliasing and update the panel stylesheet
 
 5) Minimal components
-   - Implement a small set of primitives (Button, Input, Tag, Tooltip) using semantic tokens only; no reliance on n8n CSS class names.
+   - Implement a small set of primitives (Button, Input, Tag, Tooltip) using semantic tokens only; no reliance on n8n CSS class names
 
 ## Why this works
 - Avoids brittle dependencies on n8n internal classes.
@@ -31,6 +31,6 @@ Visually integrate the chatbot panel with n8n by reusing n8n's runtime CSS varia
 - Keeps our code portable and easy to extend.
 
 ## Open Items
-- Confirm whether we render inside Shadow DOM or page DOM.
-- Establish the initial semantic token mapping table (start small; grow as needed).
-- Identify n8n’s theme root element selectors to optimize discovery (fallback to ).
+- Confirm whether we render inside Shadow DOM or page DOM
+- Establish the initial semantic token mapping table (start small; grow as needed)
+- Identify n8n's theme root element selectors to optimize discovery (fallback to document.documentElement)

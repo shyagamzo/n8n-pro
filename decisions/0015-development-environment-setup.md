@@ -1,6 +1,6 @@
-# Decision Record: Development Environment Setup
+# Decision Record: n8n Extension Development Environment
 
-## Package Manager & Build Tools
+## n8n Extension Package Manager & Build Tools
 
 ### Package Manager
 - **yarn**: Use yarn as the package manager for faster, more reliable dependency management

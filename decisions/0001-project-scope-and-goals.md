@@ -1,4 +1,4 @@
-# Decision Record: Project Scope & Goals
+# Decision Record: n8n Extension Project Scope & Goals
 
 ## Summary
 Build a Chrome/Edge extension that injects a trigger button into locally hosted n8n. Clicking it opens a floating chatbot panel. The chatbot is an LLM-powered multi-agent system that can create and improve n8n workflows and facilitate credential setup with non-interruptive UX.

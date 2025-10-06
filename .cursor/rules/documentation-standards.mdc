@@ -1,0 +1,125 @@
+---
+alwaysApply: false
+description: Universal documentation standards and best practices - apply when creating project documentation
+---
+
+# Documentation Standards
+
+## Documentation Philosophy
+
+### Core Principles
+- **TLDR First**: Quick overview at the top of every document
+- **Progressive Disclosure**: Start simple, add complexity as needed
+- **Code Examples**: Show, don't just tell
+- **Keep Updated**: Documentation must evolve with code
+- **User-Centric**: Write for the person who will use it
+
+### Documentation Types
+- **API Documentation**: Function signatures, parameters, return types
+- **Architecture Documentation**: System design, component relationships
+- **User Documentation**: Setup guides, usage instructions
+- **Developer Documentation**: Contributing guidelines, development setup
+
+## Code Documentation
+
+### JSDoc Standards
+Document functions with comprehensive JSDoc comments:
+- **Function Purpose**: Clear description of what the function does
+- **Parameters**: Document all parameters with types and descriptions
+- **Return Values**: Document return types and possible values
+- **Exceptions**: Document possible errors and exceptions
+- **Examples**: Provide usage examples for complex functions
+- **Related Functions**: Reference related functions and dependencies
+
+### Code Comments
+- **Why, Not What**: Explain the reasoning behind code, not what it does
+- **Complex Logic**: Comment complex algorithms and business logic
+- **TODOs**: Use TODO comments for future improvements
+- **Deprecation**: Mark deprecated code with clear deprecation notices
+- **Performance Notes**: Document performance considerations and optimizations
+
+## Architecture Documentation
+
+### System Design
+- **High-Level Overview**: System architecture and component relationships
+- **Data Flow**: How data moves through the system
+- **Integration Points**: External systems and APIs
+- **Security Considerations**: Security architecture and considerations
+- **Performance Characteristics**: Performance expectations and bottlenecks
+
+### Component Documentation
+- **Component Purpose**: What each component does and why it exists
+- **Interfaces**: Public APIs and interfaces
+- **Dependencies**: What the component depends on
+- **Usage Examples**: How to use the component
+- **Configuration**: Configuration options and defaults
+
+## User Documentation
+
+### Setup Guides
+- **Prerequisites**: System requirements and dependencies
+- **Installation Steps**: Step-by-step installation instructions
+- **Configuration**: How to configure the application
+- **Verification**: How to verify the installation works
+- **Troubleshooting**: Common issues and solutions
+
+### Usage Instructions
+- **Getting Started**: Quick start guide for new users
+- **Feature Guides**: Detailed guides for specific features
+- **Best Practices**: Recommended usage patterns
+- **Examples**: Real-world usage examples
+- **FAQ**: Frequently asked questions and answers
+
+## Developer Documentation
+
+### Contributing Guidelines
+- **Development Setup**: How to set up the development environment
+- **Code Standards**: Coding conventions and standards
+- **Testing Requirements**: Testing expectations and guidelines
+- **Pull Request Process**: How to submit changes
+- **Release Process**: How releases are managed
+
+### Development Workflow
+- **Branching Strategy**: Git workflow and branching conventions
+- **Build Process**: How to build and test the application
+- **Deployment**: Deployment procedures and environments
+- **Monitoring**: How to monitor and debug the application
+
+## Documentation Maintenance
+
+### Keeping Documentation Current
+- **Code-Documentation Sync**: Update documentation when code changes
+- **Regular Reviews**: Periodically review and update documentation
+- **Version Control**: Track documentation changes in version control
+- **Feedback Loop**: Collect and incorporate user feedback
+- **Automation**: Automate documentation generation where possible
+
+### Documentation Quality
+- **Accuracy**: Ensure documentation is accurate and up-to-date
+- **Completeness**: Cover all necessary topics and use cases
+- **Clarity**: Write clearly and concisely
+- **Consistency**: Maintain consistent style and format
+- **Accessibility**: Make documentation accessible to all users
+
+## Documentation Tools
+
+### Documentation Generation
+- **API Documentation**: Use tools like JSDoc, Swagger, or OpenAPI
+- **Architecture Diagrams**: Use tools like Mermaid, PlantUML, or draw.io
+- **Code Examples**: Use syntax highlighting and interactive examples
+- **Version Control**: Track documentation changes with code changes
+
+### Documentation Platforms
+- **Static Sites**: Use tools like GitBook, Docusaurus, or MkDocs
+- **Wiki Systems**: Use tools like Confluence, Notion, or GitHub Wiki
+- **Documentation as Code**: Store documentation in version control
+- **Automated Publishing**: Automate documentation publishing and updates
+
+## What NOT to do:
+- Write documentation that becomes outdated quickly
+- Skip documenting complex or critical functionality
+- Use technical jargon without explanation
+- Create documentation that's hard to find or navigate
+- Ignore user feedback on documentation quality
+- Document obvious code without adding value
+- Create documentation that duplicates code comments

@@ -1,22 +1,33 @@
 ---
-description: AI integration patterns and LLM provider guidelines
+alwaysApply: false
+description: AI integration patterns and LLM provider guidelines - apply when building AI-powered applications
 ---
 
 # AI Integration Patterns
 
 ## Multi-Agent Architecture
-The extension uses a multi-agent system with specialized roles:
+When building AI-powered applications, consider using specialized agents for different responsibilities. Each project should define its own agent types based on specific requirements.
 
-### Agent Types
+### Example Agent Types
+Here's an example of how agents might be organized (adapt to your project's needs):
 - **Classifier Agent**: Determines user intent and routes to appropriate agent
 - **Enrichment Agent**: Gathers additional context and asks clarifying questions
 - **Planner Agent**: Creates step-by-step plans for complex tasks
 - **Executor Agent**: Performs actions and executes workflows
 - **Orchestrator**: Coordinates between agents and manages the conversation flow
 
+### Alternative Agent Patterns
+Different projects might use:
+- **Content Agent**: Handles content generation and editing
+- **Analysis Agent**: Performs data analysis and insights
+- **Validation Agent**: Ensures quality and compliance
+- **Integration Agent**: Manages external API connections
+- **User Agent**: Handles user interactions and preferences
+- **Orchestration Agent**: Coordinates multiple agents and manages complex workflows
+
 ## LLM Integration
-- **Use LangChainJS** for LLM provider abstraction
-- **Support multiple providers** (OpenAI, Anthropic, local models)
+- **Use abstraction layers** for LLM provider switching
+- **Support multiple providers** when possible
 - **Implement streaming responses** for better UX
 - **Handle rate limiting** and retry logic
 - **Cache responses** when appropriate
@@ -28,8 +39,8 @@ User Input → Classifier → Enrichment → Planner → Executor → Response
             Orchestrator (coordinates all agents)
 ```
 
-## n8n API Integration
-- **Use custom fetch wrapper** with retry logic and error handling
+## API Integration
+- **Use custom fetch wrappers** with retry logic and error handling
 - **Implement proper authentication** with API keys
 - **Handle rate limiting** and connection issues
 - **Validate API responses** before processing

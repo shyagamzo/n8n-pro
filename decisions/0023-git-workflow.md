@@ -1,13 +1,6 @@
-# Decision Record: Git Workflow
+# Decision Record: n8n Extension Git Workflow
 
-## Git Workflow Strategy
-
-### Branching Model: Git Flow
-- **Main Branch**: `main` - Production-ready code
-- **Development Branch**: `develop` - Integration branch for features
-- **Feature Branches**: `✨/*` - New features and enhancements
-- **Hotfix Branches**: `🐛/*` - Critical bug fixes for production
-- **Release Branches**: `🚀/*` - Release preparation and stabilization
+## n8n Extension Git Workflow Strategy
 
 ### Branch Naming Conventions
 ```
@@ -18,30 +11,7 @@
 🚀/v1.0.0
 ```
 
-## Commit Message Standards
-
-### Conventional Commits
-Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
-
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-### Commit Types
-- **feat**: New feature
-- **fix**: Bug fix
-- **docs**: Documentation changes
-- **style**: Code style changes (formatting, etc.)
-- **refactor**: Code refactoring
-- **test**: Adding or updating tests
-- **chore**: Maintenance tasks
-- **perf**: Performance improvements
-- **ci**: CI/CD changes
-- **build**: Build system changes
+## n8n Extension Commit Standards
 
 ### Commit Emojis
 - **🤖**: AI instructions, Cursor rules, automation
@@ -57,27 +27,9 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 - **🐳**: Docker, DevContainer, container related
 
 ### Commit Examples
-```bash
-# Feature commits
-feat(chat): add message streaming support
-✨ feat(chat): add message streaming support
-
-# Bug fix commits
-fix(api): handle n8n connection timeout
-🐛 fix(api): handle n8n connection timeout
-
-# Documentation commits
-docs(api): add n8n client usage examples
-📚 docs(api): add n8n client usage examples
-
-# Decision commits
-docs(decisions): define state management strategy
-💭 docs(decisions): define state management strategy
-
-# AI/Rules commits
-feat(rules): add ambiguity handling guidelines
-🤖 feat(rules): add ambiguity handling guidelines
-```
+- Use conventional commit format with emojis
+- Include scope and clear description
+- Reference issues and breaking changes
 
 ## Pull Request Process
 
@@ -90,47 +42,10 @@ feat(rules): add ambiguity handling guidelines
 - **Breaking Changes**: Document any breaking changes
 
 ### PR Template
-```markdown
-## Description
-Brief description of the changes in this PR.
-
-## Type of Change
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Refactoring (no functional changes)
-
-## Related Issues
-Fixes #123
-Closes #456
-
-## Changes Made
-- List specific changes made
-- Include any new files or major modifications
-- Note any dependencies added or removed
-
-## Testing
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing completed
-- [ ] Extension loads correctly in Chrome/Edge
-- [ ] n8n integration works as expected
-
-## Screenshots (if applicable)
-Before:
-[Add screenshot]
-
-After:
-[Add screenshot]
-
-## Checklist
-- [ ] Code follows project coding standards
-- [ ] Self-review completed
-- [ ] Documentation updated (if needed)
-- [ ] No console errors or warnings
-- [ ] Performance impact considered
-```
+- Include description, type of change, and related issues
+- Document testing and breaking changes
+- Provide screenshots for UI changes
+- Include comprehensive checklist
 
 ### PR Review Process
 1. **Self Review**: Author reviews their own PR first
@@ -158,62 +73,20 @@ Follow [Semantic Versioning](https://semver.org/):
 8. **Build Package**: Create extension package for distribution
 
 ### Changelog Format
-```markdown
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-## [1.0.0] - 2024-01-15
-
-### Added
-- Initial release of n8n AI Assistant Extension
-- Chat panel with AI-powered workflow creation
-- n8n API integration for workflow management
-- Support for Chrome and Edge browsers
-
-### Changed
-- Updated to use OpenAI GPT-5 model
-- Improved error handling for API failures
-
-### Fixed
-- Fixed chat message persistence issue
-- Resolved n8n connection timeout problems
-
-## [0.9.0] - 2024-01-01
-
-### Added
-- Beta release with core functionality
-- Basic workflow creation capabilities
-```
+- Use semantic versioning with clear sections
+- Document added, changed, and fixed items
+- Include release dates and version numbers
 
 ## Git Hooks
 
 ### Pre-commit Hook
-```bash
-#!/bin/sh
-# .git/hooks/pre-commit
-
-# Run linting
-yarn lint
-
-# Run type checking
-yarn type-check
-
-# Run tests
-yarn test
-
-# Check commit message format
-yarn commitlint --edit $1
-```
+- Run linting, type checking, and tests
+- Validate commit message format
+- Ensure code quality before commits
 
 ### Commit Message Hook
-```bash
-#!/bin/sh
-# .git/hooks/commit-msg
-
-# Validate commit message format
-yarn commitlint --edit $1
-```
+- Validate commit message format
+- Enforce conventional commit standards
 
 ## Branch Protection Rules
 
