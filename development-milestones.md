@@ -4,19 +4,19 @@
 
 ### Milestone 1.1: Foundation Setup (Week 1-2) - ✅ COMPLETED
 - [x] **Repository Setup**: Git, package.json, basic structure
-- [x] **Development Environment**: Devcontainer, Vite, TypeScript, ESLint
-- [x] **Extension Scaffold**: Manifest V3, basic content script, background worker
-- [x] **n8n Integration**: Basic API client with custom fetch wrapper
-- [x] **Acceptance Criteria**: Extension loads in Chrome, detects n8n pages
+- [ ] **Development Environment**: Devcontainer, Vite, TypeScript, ESLint
+- [ ] **Extension Scaffold**: Manifest V3, basic content script, background worker
+- [ ] **n8n Integration**: Basic API client with custom fetch wrapper
+- [ ] **Acceptance Criteria**: Extension loads in Chrome, detects n8n pages
 
 **Status**: 100% Complete - All foundation components implemented and working
 
 ### Milestone 1.2: Basic Chatbot Interface (Week 3-4) - ⏳ PENDING
 - [ ] **Design System Infrastructure**: Basic component library with n8n CSS variable integration
-- [x] **Panel UI**: React-based floating panel with n8n design integration
+- [ ] **Panel UI**: React-based floating panel with n8n design integration
 - [ ] **Chat Interface**: Basic message input/output, streaming responses
 - [ ] **LLM Integration**: OpenAI gpt-5 integration with LangChainJS
-- [x] **Options Page**: API key management, basic settings
+- [ ] **Options Page**: API key management, basic settings
 - [ ] **Acceptance Criteria**: User can open panel, send messages, receive AI responses with consistent n8n styling
 
 **Status**: 33% Complete - Panel UI and Options Page done, need chat interface and LLM integration
