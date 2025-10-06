@@ -47,7 +47,12 @@ export default [
                 setTimeout: 'readonly',
                 clearTimeout: 'readonly',
                 setInterval: 'readonly',
-                clearInterval: 'readonly'
+                clearInterval: 'readonly',
+                fetch: 'readonly',
+                RequestInit: 'readonly',
+                Response: 'readonly',
+                AbortController: 'readonly',
+                alert: 'readonly'
             }
         },
         plugins: {
@@ -128,7 +133,12 @@ export default [
                 setTimeout: 'readonly',
                 clearTimeout: 'readonly',
                 setInterval: 'readonly',
-                clearInterval: 'readonly'
+                clearInterval: 'readonly',
+                fetch: 'readonly',
+                RequestInit: 'readonly',
+                Response: 'readonly',
+                AbortController: 'readonly',
+                alert: 'readonly'
             }
         },
         plugins: {

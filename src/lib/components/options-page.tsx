@@ -13,6 +13,8 @@ export function OptionsPage(): React.JSX.Element
         autoInject: true,
         theme: 'light'
     });
+    const [isTestingConnection, setIsTestingConnection] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState<{ success: boolean; message: string } | null>(null);
 
     useEffect(() =>
     {
@@ -28,13 +30,57 @@ export function OptionsPage(): React.JSX.Element
         chrome.storage.sync.set(settings, () =>
         {
             console.log('Settings saved');
+            
+            // Update the API service configuration
+            chrome.runtime.sendMessage({
+                type: 'UPDATE_API_CONFIG',
+                baseUrl: settings.n8nUrl,
+                apiKey: settings.apiKey,
+                timestamp: Date.now(),
+                id: `config_${Date.now()}`
+            });
+            
             // Show success message
+            alert('Settings saved successfully!');
         });
     };
 
     const handleInputChange = (key: string, value: string | boolean): void =>
     {
         setSettings(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleTestConnection = (): void =>
+    {
+        if (!settings.n8nUrl || !settings.apiKey)
+        {
+            setConnectionStatus({ success: false, message: 'Please enter both URL and API key' });
+            return;
+        }
+
+        setIsTestingConnection(true);
+        setConnectionStatus(null);
+
+        chrome.runtime.sendMessage({
+            type: 'TEST_CONNECTION',
+            timestamp: Date.now(),
+            id: `test_${Date.now()}`
+        }, (response) =>
+        {
+            setIsTestingConnection(false);
+            
+            if (response && response.success)
+            {
+                setConnectionStatus({ success: true, message: 'Connection successful!' });
+            }
+            else
+            {
+                setConnectionStatus({ 
+                    success: false, 
+                    message: response?.error || 'Connection failed' 
+                });
+            }
+        });
     };
 
     return (
@@ -97,6 +143,39 @@ export function OptionsPage(): React.JSX.Element
                             fontSize: '14px'
                         }}
                     />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                    <button
+                        onClick={handleTestConnection}
+                        disabled={isTestingConnection || !settings.n8nUrl || !settings.apiKey}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: isTestingConnection ? '#6c757d' : '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: isTestingConnection ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '500'
+                        }}
+                    >
+                        {isTestingConnection ? 'Testing...' : 'Test Connection'}
+                    </button>
+                    
+                    {connectionStatus && (
+                        <div style={{ 
+                            marginTop: '10px',
+                            padding: '8px 12px',
+                            backgroundColor: connectionStatus.success ? '#d4edda' : '#f8d7da',
+                            border: `1px solid ${connectionStatus.success ? '#c3e6cb' : '#f5c6cb'}`,
+                            borderRadius: '4px',
+                            color: connectionStatus.success ? '#155724' : '#721c24',
+                            fontSize: '14px'
+                        }}>
+                            {connectionStatus.message}
+                        </div>
+                    )}
                 </div>
             </div>
 

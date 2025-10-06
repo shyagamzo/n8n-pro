@@ -66,7 +66,14 @@
   ↳ ✅ Added panel injection service with visibility toggle
   ↳ ✅ Created extension icon (SVG placeholder)
   ↳ ✅ All components working together with proper message routing
-- [ ] **n8n API Client** - Authentication, basic CRUD operations
+- [x] **n8n API Client** - Authentication, basic CRUD operations
+  ↳ ✅ Created N8nApiClient with custom fetch wrapper and retry logic
+  ↳ ✅ Implemented API key authentication and configuration management
+  ↳ ✅ Added workflow CRUD operations (create, read, update, delete)
+  ↳ ✅ Added credential checking and execution monitoring
+  ↳ ✅ Integrated with orchestrator for message handling
+  ↳ ✅ Enhanced options page with test connection functionality
+  ↳ ✅ All TypeScript types defined and build working correctly
 - [ ] **Chatbot Interface** - Basic UI for user interaction
 - [ ] **Workflow Analysis Tools** - Reading and parsing existing workflows
 - [ ] **AI Integration** - LLM provider setup and basic tool calling
