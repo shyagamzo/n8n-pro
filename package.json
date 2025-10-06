@@ -7,11 +7,11 @@
   "author": "Shy Agam <us@bespunky.io>",
   "license": "MIT",
   "scripts": {
-    "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
+    "watch": "vite build --watch",
+    "test": "echo \"No tests specified yet\" && exit 0",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 100",
-    "type-check": "tsc --noEmit"
+    "clean": "rm -rf dist || echo 'Clean completed (some files may be in use)'"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.22",
