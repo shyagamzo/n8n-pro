@@ -59,6 +59,7 @@
     "remoteUser": "node",
     "workspaceFolder": "/workspaces/n8n-pro",
     "mounts": [
-        "source=${localWorkspaceFolder}/.vscode,target=/workspaces/n8n-pro/.vscode,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder}/node_modules,target=/workspaces/n8n-pro/node_modules,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/dist,target=/workspaces/n8n-pro/dist,type=bind,consistency=cached"
     ]
 }
