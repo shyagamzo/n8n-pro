@@ -173,8 +173,8 @@ Monitor and report on workflow executions.
 ```markdown
 ✅ **Workflow Created Successfully!**
 
-**Name:** Daily Morning Greeting  
-**ID:** wf_abc123  
+**Name:** Daily Morning Greeting
+**ID:** wf_abc123
 **Status:** Inactive (needs credentials)
 
 **Next Steps:**

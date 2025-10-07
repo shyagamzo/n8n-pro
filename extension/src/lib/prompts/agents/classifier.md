@@ -50,46 +50,43 @@ Request is too vague or ambiguous.
 - "Help me with n8n"
 
 ## Output Format
-Respond with a JSON object:
-```json
-{
-  "intent": "WORKFLOW_CREATE | WORKFLOW_UPDATE | WORKFLOW_ANALYZE | QUESTION | CREDENTIAL_SETUP | NEEDS_CLARIFICATION",
-  "confidence": 0.0-1.0,
-  "reasoning": "Brief explanation of classification",
-  "extractedEntities": {
-    "trigger": "schedule | webhook | manual | ...",
-    "services": ["slack", "email", ...],
-    "actions": ["send", "create", "update", ...]
-  }
-}
+Respond using **Loom format** (indentation-based, not JSON):
 ```
+intent: WORKFLOW_CREATE
+confidence: 0.95
+reasoning: Brief explanation
+extractedEntities:
+  trigger: schedule
+  services: slack, email
+  actions: send
+```
+
+**Loom Rules:**
+- Use 2-space indentation for nesting
+- No quotes around values
+- Arrays: comma-separated for simple lists
+- Types auto-detected: numbers, true/false, null
 
 ## Examples
 
 **Input:** "Send me a Slack message every morning"
 **Output:**
-```json
-{
-  "intent": "WORKFLOW_CREATE",
-  "confidence": 0.95,
-  "reasoning": "User wants to create a new scheduled workflow with Slack notification",
-  "extractedEntities": {
-    "trigger": "schedule",
-    "services": ["slack"],
-    "actions": ["send"]
-  }
-}
+```
+intent: WORKFLOW_CREATE
+confidence: 0.95
+reasoning: User wants to create a new scheduled workflow with Slack notification
+extractedEntities:
+  trigger: schedule
+  services: slack
+  actions: send
 ```
 
 **Input:** "Make it faster"
 **Output:**
-```json
-{
-  "intent": "NEEDS_CLARIFICATION",
-  "confidence": 0.9,
-  "reasoning": "Request is too vague - unclear what 'it' refers to and what aspect needs improvement",
-  "extractedEntities": {}
-}
+```
+intent: NEEDS_CLARIFICATION
+confidence: 0.9
+reasoning: Request is too vague - unclear what 'it' refers to and what aspect needs improvement
 ```
 
 ## Constraints

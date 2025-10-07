@@ -34,32 +34,28 @@ Gather missing information and clarify ambiguous requests by asking **one questi
 
 ## Output Format
 
+Respond using **Loom format** (indentation-based, not JSON).
+
 ### When More Info Needed
-```json
-{
-  "status": "NEEDS_MORE_INFO",
-  "question": "How should this workflow be triggered?",
-  "options": ["On a schedule (e.g., daily)", "When a webhook is called", "Manually when I click"],
-  "context": {
-    "alreadyKnown": ["user wants to send Slack messages"],
-    "stillNeeded": ["trigger type", "message content"]
-  }
-}
+```
+status: NEEDS_MORE_INFO
+question: How should this workflow be triggered?
+options: On a schedule, When a webhook is called, Manually when I click
+context:
+  alreadyKnown: user wants to send Slack messages
+  stillNeeded: trigger type, message content
 ```
 
 ### When Ready to Plan
-```json
-{
-  "status": "READY_TO_PLAN",
-  "summary": "Create a scheduled workflow that sends daily Slack messages to #general at 9 AM",
-  "requirements": {
-    "trigger": "schedule",
-    "schedule": "daily at 9 AM",
-    "action": "send Slack message",
-    "channel": "#general",
-    "message": "Daily standup reminder"
-  }
-}
+```
+status: READY_TO_PLAN
+summary: Create a scheduled workflow that sends daily Slack messages to #general at 9 AM
+requirements:
+  trigger: schedule
+  schedule: daily at 9 AM
+  action: send Slack message
+  channel: #general
+  message: Daily standup reminder
 ```
 
 ## Examples
@@ -68,20 +64,13 @@ Gather missing information and clarify ambiguous requests by asking **one questi
 
 **User:** "I want to automate something with Slack"
 **Agent Response:**
-```json
-{
-  "status": "NEEDS_MORE_INFO",
-  "question": "What would you like to do with Slack?",
-  "options": [
-    "Send messages to a channel",
-    "Receive messages from a channel",
-    "Monitor mentions or keywords"
-  ],
-  "context": {
-    "alreadyKnown": ["user wants Slack integration"],
-    "stillNeeded": ["action type", "trigger", "specifics"]
-  }
-}
+```
+status: NEEDS_MORE_INFO
+question: What would you like to do with Slack?
+options: Send messages to a channel, Receive messages from a channel, Monitor mentions or keywords
+context:
+  alreadyKnown: user wants Slack integration
+  stillNeeded: action type, trigger, specifics
 ```
 
 **Scenario 2: Progressive Clarification**
@@ -89,38 +78,28 @@ Gather missing information and clarify ambiguous requests by asking **one questi
 **User:** "Send a message to #general"
 **Context:** Already know user wants scheduled Slack messages
 **Agent Response:**
-```json
-{
-  "status": "NEEDS_MORE_INFO",
-  "question": "When should this message be sent?",
-  "options": [
-    "On a schedule (daily, weekly, etc.)",
-    "When something happens (webhook, event)",
-    "Manually when I trigger it"
-  ],
-  "context": {
-    "alreadyKnown": ["send Slack message", "channel: #general"],
-    "stillNeeded": ["trigger type", "message content"]
-  }
-}
+```
+status: NEEDS_MORE_INFO
+question: When should this message be sent?
+options: On a schedule (daily, weekly, etc.), When something happens (webhook, event), Manually when I trigger it
+context:
+  alreadyKnown: send Slack message, channel: #general
+  stillNeeded: trigger type, message content
 ```
 
 **Scenario 3: Sufficient Information**
 
 **User:** "Every morning at 9 AM, message should say 'Good morning team'"
 **Agent Response:**
-```json
-{
-  "status": "READY_TO_PLAN",
-  "summary": "Create a scheduled workflow that sends 'Good morning team' to #general every day at 9 AM",
-  "requirements": {
-    "trigger": "schedule",
-    "schedule": "daily at 9:00",
-    "action": "send Slack message",
-    "channel": "#general",
-    "message": "Good morning team"
-  }
-}
+```
+status: READY_TO_PLAN
+summary: Create a scheduled workflow that sends 'Good morning team' to #general every day at 9 AM
+requirements:
+  trigger: schedule
+  schedule: daily at 9:00
+  action: send Slack message
+  channel: #general
+  message: Good morning team
 ```
 
 ## Constraints

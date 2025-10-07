@@ -42,55 +42,38 @@ Choose from n8n's node library (see `shared/n8n-nodes-reference.md`):
 
 ## Output Format
 
-Return a JSON workflow plan:
+Return workflow plan using **Loom format** (indentation-based, not JSON):
 
-```json
-{
-  "title": "Brief workflow title",
-  "summary": "Human-readable description of what the workflow does",
-  "credentialsNeeded": [
-    {
-      "type": "slackApi",
-      "name": "Slack Account",
-      "requiredFor": "Send message to Slack"
-    }
-  ],
-  "workflow": {
-    "name": "Workflow Name",
-    "nodes": [
-      {
-        "id": "unique-node-id",
-        "type": "n8n-nodes-base.schedule",
-        "name": "Schedule Trigger",
-        "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "field": "hours",
-                "hoursInterval": 24
-              }
-            ]
-          }
-        },
-        "position": [250, 300]
-      }
-    ],
-    "connections": {
-      "Schedule Trigger": {
-        "main": [
-          [
-            {
-              "node": "Send Slack Message",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      }
-    }
-  }
-}
 ```
+title: Brief workflow title
+summary: Human-readable description of what the workflow does
+credentialsNeeded:
+  - type: slackApi
+    name: Slack Account
+    requiredFor: Send message to Slack
+workflow:
+  name: Workflow Name
+  nodes:
+    - id: unique-node-id
+      type: n8n-nodes-base.schedule
+      name: Schedule Trigger
+      parameters:
+        rule:
+          interval: daily
+      position: 250, 300
+  connections:
+    Schedule Trigger:
+      main:
+        - node: Send Slack Message
+          type: main
+          index: 0
+```
+
+**Loom Rules:**
+- Use 2-space indentation for nesting
+- No quotes needed
+- Arrays with `-` prefix for items
+- Types auto-detected
 
 ## Examples
 
@@ -102,64 +85,40 @@ Return a JSON workflow plan:
 - Message: "Good morning team!"
 
 **Plan:**
-```json
-{
-  "title": "Daily Morning Slack Message",
-  "summary": "Sends 'Good morning team!' to #general every day at 9 AM",
-  "credentialsNeeded": [
-    {
-      "type": "slackApi",
-      "name": "Slack Account",
-      "requiredFor": "Sending messages to Slack channels"
-    }
-  ],
-  "workflow": {
-    "name": "Daily Morning Greeting",
-    "nodes": [
-      {
-        "id": "Schedule",
-        "type": "n8n-nodes-base.schedule",
-        "name": "Every Day at 9 AM",
-        "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "field": "cronExpression",
-                "expression": "0 9 * * *"
-              }
-            ]
-          }
-        },
-        "position": [250, 300]
-      },
-      {
-        "id": "Slack",
-        "type": "n8n-nodes-base.slack",
-        "name": "Send Message",
-        "parameters": {
-          "resource": "message",
-          "operation": "post",
-          "channel": "#general",
-          "text": "Good morning team!"
-        },
-        "position": [450, 300]
-      }
-    ],
-    "connections": {
-      "Every Day at 9 AM": {
-        "main": [
-          [
-            {
-              "node": "Send Message",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      }
-    }
-  }
-}
+```
+title: Daily Morning Slack Message
+summary: Sends 'Good morning team!' to #general every day at 9 AM
+credentialsNeeded:
+  - type: slackApi
+    name: Slack Account
+    requiredFor: Sending messages to Slack channels
+workflow:
+  name: Daily Morning Greeting
+  nodes:
+    - id: Schedule
+      type: n8n-nodes-base.schedule
+      name: Every Day at 9 AM
+      parameters:
+        rule:
+          interval:
+            - field: cronExpression
+              expression: 0 9 * * *
+      position: 250, 300
+    - id: Slack
+      type: n8n-nodes-base.slack
+      name: Send Message
+      parameters:
+        resource: message
+        operation: post
+        channel: #general
+        text: Good morning team!
+      position: 450, 300
+  connections:
+    Every Day at 9 AM:
+      main:
+        - node: Send Message
+          type: main
+          index: 0
 ```
 
 ### Example 2: Webhook with Data Processing
@@ -169,67 +128,53 @@ Return a JSON workflow plan:
 - Action: Receive JSON, transform data, store in Airtable
 
 **Plan:**
-```json
-{
-  "title": "Webhook to Airtable",
-  "summary": "Receives data via webhook, transforms it, and saves to Airtable",
-  "credentialsNeeded": [
-    {
-      "type": "airtableApi",
-      "name": "Airtable Account",
-      "requiredFor": "Storing records in Airtable"
-    }
-  ],
-  "workflow": {
-    "name": "Webhook to Airtable",
-    "nodes": [
-      {
-        "id": "Webhook",
-        "type": "n8n-nodes-base.webhook",
-        "name": "Webhook Trigger",
-        "parameters": {
-          "path": "data-intake",
-          "httpMethod": "POST"
-        },
-        "position": [250, 300]
-      },
-      {
-        "id": "Code",
-        "type": "n8n-nodes-base.code",
-        "name": "Transform Data",
-        "parameters": {
-          "language": "javascript",
-          "jsCode": "return items.map(item => ({\n  json: {\n    name: item.json.fullName,\n    email: item.json.emailAddress,\n    timestamp: new Date().toISOString()\n  }\n}));"
-        },
-        "position": [450, 300]
-      },
-      {
-        "id": "Airtable",
-        "type": "n8n-nodes-base.airtable",
-        "name": "Save to Airtable",
-        "parameters": {
-          "operation": "create",
-          "base": "appXXXXXXXXXX",
-          "table": "Contacts",
-          "fields": {
-            "Name": "={{ $json.name }}",
-            "Email": "={{ $json.email }}",
-            "Created": "={{ $json.timestamp }}"
-          }
-        },
-        "position": [650, 300]
-      }
-    ],
-    "connections": {
-      "Webhook Trigger": {
-        "main": [[{ "node": "Transform Data", "type": "main", "index": 0 }]]
-      },
-      "Transform Data": {
-        "main": [[{ "node": "Save to Airtable", "type": "main", "index": 0 }]]
-      }
-    }
-  }
-}
+```
+title: Webhook to Airtable
+summary: Receives data via webhook, transforms it, and saves to Airtable
+credentialsNeeded:
+  - type: airtableApi
+    name: Airtable Account
+    requiredFor: Storing records in Airtable
+workflow:
+  name: Webhook to Airtable
+  nodes:
+    - id: Webhook
+      type: n8n-nodes-base.webhook
+      name: Webhook Trigger
+      parameters:
+        path: data-intake
+        httpMethod: POST
+      position: 250, 300
+    - id: Code
+      type: n8n-nodes-base.code
+      name: Transform Data
+      parameters:
+        language: javascript
+        jsCode: return items.map(item => ({ json: { name: item.json.fullName, email: item.json.emailAddress, timestamp: new Date().toISOString() } }));
+      position: 450, 300
+    - id: Airtable
+      type: n8n-nodes-base.airtable
+      name: Save to Airtable
+      parameters:
+        operation: create
+        base: appXXXXXXXXXX
+        table: Contacts
+        fields:
+          Name: ={{ $json.name }}
+          Email: ={{ $json.email }}
+          Created: ={{ $json.timestamp }}
+      position: 650, 300
+  connections:
+    Webhook Trigger:
+      main:
+        - node: Transform Data
+          type: main
+          index: 0
+    Transform Data:
+      main:
+        - node: Save to Airtable
+          type: main
+          index: 0
 ```
 
 ## Best Practices
