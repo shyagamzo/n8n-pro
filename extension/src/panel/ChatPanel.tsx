@@ -14,7 +14,15 @@ type ChatPanelProps = {
   onSend: (text: string) => void
 }
 
-export default function ChatPanel({ open, onClose, messages, draft, sending, onSend }: ChatPanelProps): React.ReactElement | null {
+export default function ChatPanel({
+  open,
+  onClose,
+  messages,
+  draft,
+  sending,
+  onSend
+}: ChatPanelProps): React.ReactElement | null
+{
 
   // Presentational only
 
