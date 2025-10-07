@@ -57,7 +57,7 @@ chrome.runtime.onConnect.addListener((port) =>
         // Send any non-streamed tail as a token to merge into draft.
         port.postMessage({ type: 'token', token: reply } satisfies BackgroundMessage)
       }
-  
+
       port.postMessage({ type: 'done' } satisfies BackgroundMessage)
     }
     catch (err)
@@ -65,6 +65,24 @@ chrome.runtime.onConnect.addListener((port) =>
       port.postMessage({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
     }
   })
+})
+
+chrome.runtime.onMessage.addListener((message) =>
+{
+  const msg = message as ApplyPlanRequest
+  if (msg?.type !== 'apply_plan') return
+  ;(async () =>
+  {
+    try
+    {
+      const n8n = createN8nClient({})
+      await n8n.createWorkflow(msg.plan.workflow)
+    }
+    catch
+    {
+      // one-off; UI will show background errors through chat flow if needed later
+    }
+  })()
 })
 
 async function getOpenAiKey(): Promise<string | null>

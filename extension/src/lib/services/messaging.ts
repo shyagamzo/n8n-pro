@@ -18,7 +18,15 @@ export function createChatPort(): ChatPort
     },
     applyPlan(req: ApplyPlanRequest)
     {
-      port.postMessage(req)
+      try
+      {
+        // Use one-off messaging for apply plan to avoid depending on a long-lived port
+        chrome.runtime.sendMessage(req, () => void 0)
+      }
+      catch
+      {
+        // ignore
+      }
     },
     onMessage(cb)
     {
