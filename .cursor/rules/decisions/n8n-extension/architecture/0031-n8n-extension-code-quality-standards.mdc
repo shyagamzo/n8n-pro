@@ -15,26 +15,29 @@ Establish code quality standards and linting rules specifically for the n8n exte
 - **No unused variables** - Remove unused imports and variables
 - **Explicit return types** - Functions should have explicit return types
 
-## ESLint Rules
-- **Use semicolons** - Always end statements with semicolons
+## ESLint/Style Rules
+- **No semicolons** - Follow project style (no trailing semicolons)
 - **Use single quotes** - For strings, use single quotes
 - **4-space indentation** - For code, 2-space for JSON
-- **No console.log** - Use `console.warn` or `console.error` instead
+- **Opening braces on new line** - Allman style for functions/blocks
+- **Align assignments/props** - Align for readability when helpful
+- **No console.log** - Use `console.warn` or `console.error` instead; never log secrets
 - **Max line length** - 120 characters with exceptions for URLs and strings
 
 ## Code Style Pattern
 ```typescript
 // Good
-function handleClick(): void {
-    setState(prev => ({ ...prev, value: newValue }));
+function handleClick(): void
+{
+    setState(prev => ({ ...prev, value: newValue }))
 }
 
 // Bad
 function handleClick() {
     setState(prev => {
-        prev.value = newValue;
-        return prev;
-    });
+        prev.value = newValue
+        return prev
+    })
 }
 ```
 
@@ -43,6 +46,11 @@ function handleClick() {
 - **Provide meaningful error messages**
 - **Log errors** with context information
 - **Handle edge cases** gracefully
+
+### Streaming & Timeouts
+- **AbortController** for timeouts on network calls
+- **SSE parsing** hardened against malformed lines; ignore per-line failures
+- **No secrets in logs**; sanitize error outputs
 
 ## Performance Guidelines
 - **Use React.memo** for expensive components (when needed)
@@ -55,6 +63,11 @@ function handleClick() {
 - **Use descriptive names** - Component and function names should be clear
 - **Group related functionality** - Keep related code together
 - **Export at the bottom** - Use default exports for main components
+
+### Function & Helper Ordering
+- **Public-first**: Primary exported API at top; helpers below
+- **Decompose**: Break large functions into small, named helpers
+- **Naming**: Helpers named after their purpose (e.g., `readSseStream`, `processSseChunk`)
 
 ## Comments and Documentation
 - **Document complex logic** - Explain why, not what
