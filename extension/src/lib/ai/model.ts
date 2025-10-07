@@ -40,17 +40,20 @@ export function createOpenAiChatModel(options: ChatModelOptions): ChatModel
   function extractText(content: unknown): string
   {
     if (typeof content === 'string') return content
+
     if (Array.isArray(content))
     {
       return content
         .map((part) =>
         {
           if (typeof part === 'string') return part
+
           if (part && typeof part === 'object' && 'text' in (part as Record<string, unknown>))
           {
             const maybeText = (part as Record<string, unknown>).text
             return typeof maybeText === 'string' ? maybeText : ''
           }
+
           return ''
         })
         .join('')

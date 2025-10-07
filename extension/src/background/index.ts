@@ -1,65 +1,129 @@
-import type { ChatRequest, BackgroundMessage } from '../lib/types/messaging'
-// import { streamChatCompletion } from '../lib/services/openai'
-import { orchestrator } from '../lib/orchestrator'
+import type { ChatRequest, BackgroundMessage, ApplyPlanRequest } from '../lib/types/messaging'
 import type { ChatMessage } from '../lib/types/chat'
+import { orchestrator } from '../lib/orchestrator'
+import { createN8nClient } from '../lib/n8n'
+import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
   console.info('n8n Pro Extension installed')
 })
 
+function createSafePost(port: chrome.runtime.Port)
+{
+  let disconnected = false
+  port.onDisconnect.addListener(() => { disconnected = true })
+
+  return (message: BackgroundMessage): void =>
+  {
+    if (disconnected) return
+
+    try { port.postMessage(message) }
+    catch { /* ignore */ }
+  }
+}
+
+async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessage) => void): Promise<void>
+{
+  const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
+  const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
+  post({ type: 'token', token: '\nApplying plan…' } satisfies BackgroundMessage)
+
+  // Quick auth check
+  try
+  {
+    await n8n.getWorkflows()
+  }
+  catch (e)
+  {
+    const err = e as Error
+    post({ type: 'error', error: `n8n authorization failed. Check Base URL and API key. ${err.message}` } satisfies BackgroundMessage)
+    return
+  }
+
+  const result = await n8n.createWorkflow(msg.plan.workflow)
+  post({ type: 'token', token: `\nCreated workflow with id: ${result.id}` } satisfies BackgroundMessage)
+  post({ type: 'done' } satisfies BackgroundMessage)
+}
+
+async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void): Promise<void>
+{
+  const apiKey = await getOpenAiKey()
+
+  if (!apiKey)
+  {
+    post({ type: 'error', error: 'OpenAI API key not set. Configure it in Options.' } satisfies BackgroundMessage)
+    return
+  }
+
+  const plan = await orchestrator.plan()
+
+  post({ type: 'plan', plan } satisfies BackgroundMessage)
+
+  const reply: string = await orchestrator.handle({
+    apiKey,
+    messages: (msg.messages as ChatMessage[]),
+  }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
+
+  if (reply && reply.length > 0)
+  {
+    post({ type: 'token', token: reply } satisfies BackgroundMessage)
+  }
+
+  post({ type: 'done' } satisfies BackgroundMessage)
+}
+
 chrome.runtime.onConnect.addListener((port) =>
 {
   if (port.name !== 'chat') return
-  port.onMessage.addListener(async (msg: ChatRequest) =>
+  const post = createSafePost(port)
+  port.onMessage.addListener(async (msg: ChatRequest | ApplyPlanRequest) =>
   {
-    if (msg?.type !== 'chat') return
-
     try
     {
-      const apiKey = await getOpenAiKey()
-
-      if (!apiKey)
+      if (msg?.type === 'apply_plan')
       {
-        port.postMessage({ type: 'error', error: 'OpenAI API key not set. Configure it in Options.' } satisfies BackgroundMessage)
+        await handleApplyPlan(msg, post)
         return
       }
 
-      // Invoke orchestrator to handle classification/enrichment/planning/execution.
-      // The orchestrator will return a response string for now.
-      const reply: string = await orchestrator.handle({
-        apiKey,
-        messages: msg.messages as ChatMessage[],
-      }, (token) => port.postMessage({ type: 'token', token } satisfies BackgroundMessage))
-
-      // Ensure any remaining content ends up as final assistant message.
-      if (reply && reply.length > 0)
+      if (msg?.type === 'chat')
       {
-        // Send any non-streamed tail as a token to merge into draft.
-        port.postMessage({ type: 'token', token: reply } satisfies BackgroundMessage)
+        await handleChat(msg, post)
       }
-      port.postMessage({ type: 'done' } satisfies BackgroundMessage)
     }
     catch (err)
     {
-      port.postMessage({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
+      post({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
     }
   })
 })
 
-async function getOpenAiKey(): Promise<string | null>
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
 {
-  return new Promise((resolve) =>
+  const msg = message as ApplyPlanRequest
+  if (msg?.type !== 'apply_plan') return
+
+  ;(async () =>
   {
-    chrome.storage.local.get(['openai_api_key'], (res) =>
+    try
     {
-      const key = (res?.openai_api_key as string | undefined) ?? null
-      resolve(key)
-    })
-  })
-}
+      const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
+      const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
+      await n8n.createWorkflow(msg.plan.workflow)
+    }
+    catch
+    {
+      // one-off; UI will show background errors through chat flow if needed later
+    }
+  })()
 
+  // Immediately acknowledge to satisfy sendMessage callbacks, if any
+  try { sendResponse({ ok: true }) }
+  catch
+  {
+    // ignore
+  }
 
-
-
-
+  return true
+})

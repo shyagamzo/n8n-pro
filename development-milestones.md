@@ -27,8 +27,12 @@
 - [x] **Acceptance Criteria**: Orchestrator wired; end-to-end flow returns AI responses and is ready for agent expansion
 
 ### Milestone 1.4: Workflow Creation (Week 7-8)
+- [x] **Stub Planner & Plan Emission**: Static plan generation wired in background
+- [x] **n8n API Integration (Create)**: Apply plan via background using n8n API key
+- [x] **UI Plan Preview**: Apply/Cancel; cancel clears pending plan
+- [x] **Credential Notice (Stub)**: Placeholder message when credentialsNeeded present
 - [ ] **Initial Workflow Use Case**: Create simple workflows from user descriptions
-- [ ] **n8n API Integration**: Create, read, update workflows
+- [ ] **n8n API Integration (Read/Update)**: Read, update workflows
 - [ ] **Credential Detection**: Check for required credentials (by ID only)
 - [ ] **Non-Interruptive UX**: Optional credential setup guidance
 - [ ] **Acceptance Criteria**: User can create working workflows through chat
@@ -149,6 +153,6 @@
 
 ---
 
-**Current Focus**: Milestone 1.3 - Agent Orchestration
-**Next Milestone**: Milestone 1.4 - Workflow Creation
-**Overall MVP Progress**: 40% Complete
+**Current Focus**: Milestone 1.4 - Workflow Creation (stubbed flow in place)
+**Next Milestone**: Milestone 1.4 - Complete planner and cred checks
+**Overall MVP Progress**: 48% Complete

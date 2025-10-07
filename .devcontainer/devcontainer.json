@@ -37,10 +37,18 @@
                     "*.mdc": "markdown"
                 },
                 "chrome-devtools.port": 9222
+            },
+            "mcp": {
+                "mcpServers": {
+                    "chrome-devtools": {
+                        "command": "npx",
+                        "args": [ "-y", "chrome-devtools-mcp@latest" ]
+                    }
+                }
             }
         }
     },
-    "forwardPorts": [5678, 3000, 5173],
+    "forwardPorts": [ 5678, 3000, 5173 ],
     "portsAttributes": {
         "5678": {
             "label": "n8n Instance",

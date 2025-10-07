@@ -2,6 +2,8 @@ import { createChatPort } from './messaging'
 import { useChatStore } from '../state/chatStore'
 import { generateId } from '../utils/id'
 import type { ChatMessage, ChatStreamMessage } from '../types/chat'
+import type { BackgroundMessage, ApplyPlanRequest } from '../types/messaging'
+import type { Plan } from '../types/plan'
 
 export class ChatService
 {
@@ -9,9 +11,11 @@ export class ChatService
 
   public constructor()
   {
-    this.port.onMessage((m: ChatStreamMessage) =>
+    this.port.onMessage((raw: ChatStreamMessage | BackgroundMessage) =>
     {
-      const { addMessage, finishSending, setAssistantDraft } = useChatStore.getState()
+      const { addMessage, finishSending, setAssistantDraft, setPendingPlan } = useChatStore.getState()
+
+      const m = raw as ChatStreamMessage | BackgroundMessage
 
       if (m.type === 'token')
       {
@@ -30,6 +34,10 @@ export class ChatService
         finishSending()
         addMessage({ id: generateId(), role: 'assistant', text: `Error: ${m.error}` })
       }
+      else if (m.type === 'plan')
+      {
+        setPendingPlan((m.plan as Plan))
+      }
     })
   }
 
@@ -41,6 +49,12 @@ export class ChatService
     startSending()
     const messages: ChatMessage[] = useChatStore.getState().messages
     this.port.sendChat(messages)
+  }
+
+  public applyPlan(plan: Plan): void
+  {
+    const req: ApplyPlanRequest = { type: 'apply_plan', plan }
+    this.port.applyPlan(req)
   }
 }
 
