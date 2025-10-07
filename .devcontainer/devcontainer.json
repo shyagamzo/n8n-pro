@@ -59,7 +59,7 @@
     "remoteUser": "node",
     "workspaceFolder": "/workspaces/n8n-pro",
     "mounts": [
-        "source=${localWorkspaceFolder}/node_modules,target=/workspaces/n8n-pro/node_modules,type=bind,consistency=cached",
-        "source=${localWorkspaceFolder}/dist,target=/workspaces/n8n-pro/dist,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder}/extension/node_modules,target=/workspaces/n8n-pro/extension/node_modules,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/extension/dist,target=/workspaces/n8n-pro/extension/dist,type=bind,consistency=cached"
     ]
 }
