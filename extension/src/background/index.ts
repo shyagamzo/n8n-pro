@@ -56,13 +56,37 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
     return
   }
 
-  const plan = await orchestrator.plan()
+  // Fetch available credentials from n8n (optional, best-effort)
+  let availableCredentials: Array<{ id: string; name: string; type: string }> | undefined
+  try
+  {
+    const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
+    if (n8nApiKey)
+    {
+      const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
+      availableCredentials = await n8n.listCredentials()
+    }
+  }
+  catch (error)
+  {
+    // Credentials fetch is optional - continue without them
+    console.warn('Could not fetch n8n credentials:', error)
+  }
+
+  // Generate dynamic workflow plan based on conversation
+  const plan = await orchestrator.plan({
+    apiKey,
+    messages: (msg.messages as ChatMessage[]),
+    availableCredentials,
+  })
 
   post({ type: 'plan', plan } satisfies BackgroundMessage)
 
+  // Generate conversational response
   const reply: string = await orchestrator.handle({
     apiKey,
     messages: (msg.messages as ChatMessage[]),
+    availableCredentials,
   }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
 
   if (reply && reply.length > 0)

@@ -1,6 +1,7 @@
 export type CredentialRef = {
   type: string
   name?: string
+  requiredFor?: string
 }
 
 export type Plan = {
@@ -11,6 +12,7 @@ export type Plan = {
     name: string
     nodes: unknown[]
     connections: Record<string, unknown>
+    settings?: Record<string, unknown>
   }
 }
 
