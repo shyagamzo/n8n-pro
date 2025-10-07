@@ -48,6 +48,12 @@ Use emojis to categorize commits:
 - **🚀**: Releases and deployments
 
 ## Pull Request Standards
+## Small, Focused Commits (Strongly Recommended)
+- **One logical change per commit**: Keep diffs readable and reviewable.
+- **Commit early and often**: After each self-contained step (e.g., new component, service extraction, lint fix).
+- **Narrate intent**: Subject states the outcome; body explains why if non-obvious.
+- **Avoid mixed changes**: Do not combine refactors with functional changes in the same commit.
+
 
 ### PR Requirements
 - **Clear Title**: Descriptive title that explains the change

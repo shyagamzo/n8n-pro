@@ -30,6 +30,14 @@ Imports should follow this order:
 3. **Third-party libraries** (e.g., `@langchain/openai`, `zustand`)
 4. **Internal imports** (separated by one empty line)
 
+### Separation of Concerns (Extension)
+- **Content scripts are thin**: Only mount UI, toggle panel, and detect host page. No business logic.
+- **Background owns platform APIs**: Chrome runtime, storage, and network calls live behind services.
+- **Services**: Wrap Chrome ports/messaging and API calls; expose typed methods (no DOM/React here).
+- **Containers**: Bind services/state to presentational components.
+- **Presentational components**: UI only; no side-effects or platform calls.
+- **Styles**: Use shared `styles.ts` per feature to avoid large inline style objects.
+
 ### Import Alignment
 - Align imports vertically to the furthest closing bracket
 - Internal imports ordered from least close to closest

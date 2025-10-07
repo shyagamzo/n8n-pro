@@ -37,6 +37,14 @@ await data.process();               // Context: data processing
 - **Avoid redundant prefixes**: `getUser()` not `getUserData()`
 - **Name after domain concept**: `User`, `Workflow`, `Payment`
 
+## Folder Boundaries (When applicable)
+- **components/**: Presentational components (no business logic)
+- **containers/** or feature root: Components binding state/actions to presentational components
+- **services/**: Platform and external API interactions (network, runtime, storage)
+- **state/**: Store definitions/selectors
+- **types/**: Shared TypeScript types and contracts
+- **styles/**: Shared style constants or theme tokens
+
 ## Common Redundancy Patterns
 ```typescript
 // BAD → GOOD
