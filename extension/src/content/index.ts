@@ -7,32 +7,48 @@ function isN8nHost(): boolean {
   }
 }
 
-function injectTestButton(): void {
-  if (document.getElementById('n8n-pro-test-button')) return
+function injectTriggerAndPanel(): void {
+  if (document.getElementById('n8n-pro-trigger')) return
 
-  const button = document.createElement('button')
-  button.id = 'n8n-pro-test-button'
-  button.textContent = 'n8n Pro: Hello'
-  button.style.position = 'fixed'
-  button.style.bottom = '16px'
-  button.style.right = '16px'
-  button.style.zIndex = '2147483647'
-  button.style.padding = '8px 12px'
-  button.style.borderRadius = '8px'
-  button.style.background = '#4f46e5'
-  button.style.color = '#fff'
-  button.style.border = 'none'
-  button.style.cursor = 'pointer'
+  const mountId = 'n8n-pro-mount-root'
+  const root = document.createElement('div')
+  root.id = mountId
+  document.body.appendChild(root)
 
-  button.addEventListener('click', () => {
-    console.info('n8n Pro button clicked')
+  const trigger = document.createElement('button')
+  trigger.id = 'n8n-pro-trigger'
+  trigger.textContent = 'n8n Assistant'
+  trigger.style.position = 'fixed'
+  trigger.style.bottom = '16px'
+  trigger.style.right = '16px'
+  trigger.style.zIndex = '2147483647'
+  trigger.style.padding = '8px 12px'
+  trigger.style.borderRadius = '8px'
+  trigger.style.background = '#4f46e5'
+  trigger.style.color = '#fff'
+  trigger.style.border = 'none'
+  trigger.style.cursor = 'pointer'
+
+  trigger.addEventListener('click', async () => {
+    const { createRoot } = await import('react-dom/client')
+    const React = await import('react')
+    const { default: ChatPanel } = await import('../panel/ChatPanel')
+    const { useChatStore } = await import('../lib/state/chatStore')
+
+    const container = document.getElementById(mountId)!
+    if (!container.hasChildNodes()) {
+      const root = createRoot(container)
+      root.render(React.createElement(ChatPanel))
+    }
+    // open panel
+    useChatStore.getState().setOpen(true)
   })
 
-  document.body.appendChild(button)
+  document.body.appendChild(trigger)
 }
 
 if (isN8nHost()) {
-  injectTestButton()
+  injectTriggerAndPanel()
   console.info('n8n Pro content script initialized')
 }
 
