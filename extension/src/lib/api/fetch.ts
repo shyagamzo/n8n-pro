@@ -35,7 +35,8 @@ export async function apiFetch<T>(url: string, options: RequestOptions = {}): Pr
       },
       body: options.body ? JSON.stringify(options.body) : undefined,
       signal: controller.signal,
-      // credentials intentionally omitted; n8n typically uses API key auth
+      // Explicitly omit credentials to avoid sending cookies and affecting n8n UI sessions
+      credentials: 'omit',
     })
 
     const contentType = response.headers.get('content-type') || ''

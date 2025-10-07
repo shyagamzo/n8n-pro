@@ -1,0 +1,25 @@
+# Decision: Cookie Isolation for n8n API Calls in Extension
+
+## Context
+The extension creates workflows by calling a local n8n instance. Clicking "Apply" caused two issues: (1) a disconnected port error in the extension background/content messaging and (2) refreshing the page showed the n8n login screen, implying the n8n UI session cookie was affected.
+
+## Decision
+- All n8n REST calls from the extension must be cookie-isolated and rely solely on the `X-N8N-API-KEY` header.
+- Use `credentials: 'omit'` for all fetch requests to avoid sending cookies.
+- Default base URL is `http://127.0.0.1:5678` instead of `http://localhost:5678` to decouple from any `localhost` cookie scope behavior.
+
+## Implementation Details
+- `extension/src/lib/api/fetch.ts`: Set `credentials: 'omit'` on all requests.
+- `extension/src/lib/n8n/index.ts`: Change `DEFAULT_BASE_URL` to `http://127.0.0.1:5678`.
+- Background continues to inject `X-N8N-API-KEY` when available.
+
+## Alternatives Considered
+- Keep using `localhost` and rely on cookies never being sent (default). Rejected for explicitness and to avoid user/environment variability.
+- Clear cookies before requests. Rejected due to user experience impact and risk to the UI session.
+
+## Consequences
+- Prevents accidental session mutation or CSRF-like interactions with the n8n UI session.
+- More predictable behavior across browsers.
+
+## References
+- Files: `extension/src/lib/api/fetch.ts`, `extension/src/lib/n8n/index.ts`

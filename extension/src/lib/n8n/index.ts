@@ -1,7 +1,7 @@
 import { apiFetch } from '../api/fetch'
 import type { WorkflowSummary } from './types'
 
-const DEFAULT_BASE_URL = 'http://localhost:5678'
+const DEFAULT_BASE_URL = 'http://127.0.0.1:5678'
 
 export type N8nClientOptions = {
   baseUrl?: string

@@ -10,23 +10,50 @@ export type ChatPort = {
 
 export function createChatPort(): ChatPort
 {
-  const port = chrome.runtime.connect({ name: 'chat' })
-  return {
-    sendChat(messages: ChatMessage[])
+  let port = chrome.runtime.connect({ name: 'chat' })
+  let disconnected = false
+  port.onDisconnect.addListener(() => { disconnected = true })
+
+  const ensurePort = (): void =>
+  {
+    if (!disconnected) return
+    try
     {
-      port.postMessage({ type: 'chat', messages })
-    },
-    applyPlan(req: ApplyPlanRequest)
+      port = chrome.runtime.connect({ name: 'chat' })
+      disconnected = false
+      port.onDisconnect.addListener(() => { disconnected = true })
+    }
+    catch
     {
-      try
-      {
-        // Send via the existing long-lived port so background can reply on the same channel
-        port.postMessage(req)
-      }
+      // ignore
+    }
+  }
+
+  const safePost = (data: Record<string, unknown>): void =>
+  {
+    try { port.postMessage(data) }
+    catch
+    {
+      // reconnect once and retry
+      ensurePort()
+      try { port.postMessage(data) }
       catch
       {
         // ignore
       }
+    }
+  }
+
+  return {
+    sendChat(messages: ChatMessage[])
+    {
+      ensurePort()
+      safePost({ type: 'chat', messages })
+    },
+    applyPlan(req: ApplyPlanRequest)
+    {
+      ensurePort()
+      safePost(req)
     },
     onMessage(cb)
     {
