@@ -31,10 +31,13 @@
 - [x] **n8n API Integration (Create)**: Apply plan via background using n8n API key
 - [x] **UI Plan Preview**: Apply/Cancel; cancel clears pending plan
 - [x] **Credential Notice (Stub)**: Placeholder message when credentialsNeeded present
-- [ ] **Initial Workflow Use Case**: Create simple workflows from user descriptions
-- [ ] **n8n API Integration (Read/Update)**: Read, update workflows
-- [ ] **Credential Detection**: Check for required credentials (by ID only)
-- [ ] **Non-Interruptive UX**: Optional credential setup guidance
+- [x] **Dynamic Planner**: LLM-powered plan generation from user conversations with Loom parsing
+- [x] **Credential Detection**: Fetch and pass available n8n credentials to planner
+- [x] **Markdown Prompt Library**: Externalized agent prompts with n8n knowledge base
+- [x] **Loom Protocol**: Token-efficient format for inter-agent communication
+- [ ] **n8n API Integration (Read/Update)**: Read existing workflows, update workflows
+- [ ] **Initial Workflow Use Case**: End-to-end test creating workflows from chat
+- [ ] **Non-Interruptive UX**: Optional credential setup guidance UI
 - [ ] **Acceptance Criteria**: User can create working workflows through chat
 
 ### Milestone 1.5: Testing & Polish (Week 9-10)
@@ -153,6 +156,6 @@
 
 ---
 
-**Current Focus**: Milestone 1.4 - Workflow Creation (stubbed flow in place)
-**Next Milestone**: Milestone 1.4 - Complete planner and cred checks
-**Overall MVP Progress**: 48% Complete
+**Current Focus**: Milestone 1.4 - Workflow Creation (dynamic planner complete, testing pending)
+**Next Milestone**: Milestone 1.4 - n8n API read/update and end-to-end testing
+**Overall MVP Progress**: 62% Complete
