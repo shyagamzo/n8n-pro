@@ -3,6 +3,7 @@ import Panel from '../lib/components/Panel'
 import type { ChatMessage } from '../lib/types/chat'
 import MessagesList from './components/MessagesList'
 import ChatComposer from './components/ChatComposer'
+import { panelBodyColumn } from './styles'
 
 type ChatPanelProps = {
   open: boolean
@@ -20,7 +21,7 @@ export default function ChatPanel({ open, onClose, messages, draft, sending, onS
   if (!open) return null
   return (
     <Panel title="n8n Assistant" onClose={onClose}>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={panelBodyColumn}>
         <MessagesList messages={messages} draft={draft} sending={sending} />
         <ChatComposer sending={sending} onSend={(text) => onSend(text)} />
       </div>
