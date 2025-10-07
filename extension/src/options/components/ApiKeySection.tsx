@@ -86,11 +86,13 @@ export default function ApiKeySection(): React.ReactElement
   async function saveBase(): Promise<void>
   {
     const url = baseUrl.trim()
+
     if (!url)
     {
       setMessage('Enter a valid Base URL')
       return
     }
+
     setSaving(true)
     await setBaseUrl(url)
     setSaving(false)
