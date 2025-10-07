@@ -10,12 +10,12 @@
 - [x] **Acceptance Criteria**: Extension builds and content script detects n8n pages (localhost:5678)
 
 ### Milestone 1.2: Basic Chatbot Interface (Week 3-4)
-- [ ] **Design System Infrastructure**: Basic component library with n8n CSS variable integration
-- [ ] **Panel UI**: React-based floating panel with n8n design integration
-- [ ] **Chat Interface**: Basic message input/output, streaming responses
-- [ ] **LLM Integration**: OpenAI gpt-5 integration with LangChainJS
-- [ ] **Options Page**: API key management, basic settings
-- [ ] **Acceptance Criteria**: User can open panel, send messages, receive AI responses with consistent n8n styling
+- [x] **Design System Infrastructure**: Basic component library with n8n CSS variable integration
+- [x] **Panel UI**: React-based floating panel with n8n design integration
+- [x] **Chat Interface**: Basic message input/output, streaming responses
+- [x] **LLM Integration**: OpenAI gpt-4o-mini streaming via background service
+- [x] **Options Page**: API key management, basic settings
+- [x] **Acceptance Criteria**: User can open panel, send messages, receive AI responses with consistent n8n styling
 
 ### Milestone 1.3: Agent Orchestration (Week 5-6)
 - [ ] **LangGraph Setup**: Basic orchestrator with state management

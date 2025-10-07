@@ -12,7 +12,7 @@ Establish React component standards and patterns specifically for the n8n extens
 - **ALWAYS use React components** - Never use vanilla JavaScript DOM manipulation
 - **Use functional components** with hooks (`useState`, `useEffect`, etc.)
 - **Use TypeScript interfaces** for all props and state
-- **Use inline styles** for component styling (no CSS files for components)
+- **Prefer small inline styles or shared style constants** over large inline objects; keep complex style groups in `styles.ts`
 - **Use React event handlers** (`onClick`, `onChange`, `onKeyPress`, etc.)
 
 ## Component Structure Pattern
@@ -51,10 +51,15 @@ function Component({ prop1, prop2 }: ComponentProps): React.JSX.Element {
 - Prevent default behavior when needed: `e.preventDefault()`
 
 ## Styling Approach
-- Use inline styles with React state for dynamic styling
+- Use inline styles for simple cases; extract named constants for readability
 - Use CSS properties in camelCase: `backgroundColor`, `fontSize`
-- Use template literals for conditional styles
-- Keep styles close to components
+- Prefer shared `styles.ts` per feature for cross-component reuse
+- Keep components presentational; avoid mixing logic and styles with platform calls
+
+## Component Roles
+- **Presentational Components**: Render-only; no side effects
+- **Containers**: Bind services/state to presentational components
+- **Services**: Platform/API/messaging wrappers (no DOM/React)
 
 ## File Extensions
 - Use `.tsx` for React components

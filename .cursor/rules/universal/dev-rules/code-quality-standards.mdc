@@ -25,6 +25,12 @@ description: Universal code quality standards and best practices for all program
 - **Domain Boundaries**: Separate different business domains
 - **Layers**: Maintain clear architectural layers (presentation, business, data)
 
+### Practical Patterns (Apply across frameworks)
+- **Presentational vs Container**: Presentational components render UI only; containers orchestrate state and actions.
+- **Service Layer**: Wrap platform APIs (e.g., browser/runtime, network, filesystem) behind typed services.
+- **Messaging Abstractions**: Use small adapters to decouple transport (ports/events) from business logic.
+- **Centralized Styles**: Prefer small, named style constants or styles modules over large inline objects; keep trivial one-liners inline.
+
 ## Code Organization Principles
 - **Small, Reusable Units**: Break down code into smaller, organized, reusable units
 - **Refactor Before Extend**: When adding to large files, examine if refactoring is needed
