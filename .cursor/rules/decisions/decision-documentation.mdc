@@ -7,7 +7,7 @@ description: Standards for incorporating existing decisions into ongoing tasks a
 
 ## What Are Decision Documents?
 Structured records that capture the reasoning, context, and implications of important choices made during project development. They serve as a historical record and reference for future work.
-These will either be in a `decisions` or a `goldens` folder.
+These will either be in a `.cursor/rules/decisions/n8n-extension/<category>/*.mdc`.
 
 ## When to Use Decision Documents:
 **BEFORE executing any significant task**, read existing decision documents to understand and incorporate:
@@ -34,7 +34,7 @@ Create a new decision document when:
 Document every significant decision with sufficient detail for future reference. Never proceed with implementation without documenting the decision-making process.
 
 ## Requirements:
-- **File naming**: `0001-decision-name.md`, `0002-next-decision.md` in `decisions/` directory
+- **File naming**: `0001-decision-name.md`, `0002-next-decision.md` in `.cursor/rules/decisions/n8n-extension/<category>/<number>-<slug>.mdc`
 - **Structure**: Context, Decision, Implementation Details, Alternatives, Consequences, References
 - **Content**: Be specific, include examples, document reasoning, reference context
 - **Updates**: Update when implementation changes, cross-reference related decisions

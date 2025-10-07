@@ -14,7 +14,7 @@ Always reference established context, decisions, and patterns for the current pr
 - **Established conventions** - Naming, workflow, and process patterns
 
 ## Context Sources:
-- **Decision records** - Previous architectural and technical decisions
+- **Decision records** - Previous architectural and technical decisions (source in `.cursor/rules/decisions/n8n-extension/<category>/*.mdc`)
 - **Documentation** - Project README, architecture docs, API docs
 - **Code patterns** - Existing implementations and conventions
 - **Configuration files** - Build tools, linters, formatters
