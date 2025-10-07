@@ -1,6 +1,6 @@
 /**
  * Loom Protocol - Validator
- * 
+ *
  * Schema validation for Loom data structures.
  */
 
@@ -8,7 +8,7 @@ import type { LoomValue, LoomObject, LoomSchema, LoomFieldSchema, ValidationResu
 
 /**
  * Validate a value against a schema
- * 
+ *
  * @example
  * ```ts
  * const schema = {
@@ -24,7 +24,7 @@ import type { LoomValue, LoomObject, LoomSchema, LoomFieldSchema, ValidationResu
 export function validate(value: LoomValue, schema: LoomSchema): ValidationResult
 {
   const errors: ValidationError[] = []
-  
+
   if (typeof value !== 'object' || value === null || Array.isArray(value))
   {
     errors.push({
@@ -33,9 +33,9 @@ export function validate(value: LoomValue, schema: LoomSchema): ValidationResult
     })
     return { valid: false, errors }
   }
-  
+
   validateObject(value as LoomObject, schema, '$', errors)
-  
+
   return {
     valid: errors.length === 0,
     errors,
@@ -58,7 +58,7 @@ function validateObject(obj: LoomObject, schema: LoomSchema, path: string, error
       })
     }
   }
-  
+
   // Validate each field
   for (const [key, value] of Object.entries(obj))
   {
@@ -68,7 +68,7 @@ function validateObject(obj: LoomObject, schema: LoomSchema, path: string, error
       // Unknown field - skip in non-strict mode
       continue
     }
-    
+
     const fieldPath = `${path}.${key}`
     validateField(value, fieldSchema, fieldPath, errors)
   }
@@ -89,7 +89,7 @@ function validateField(value: LoomValue, schema: LoomFieldSchema, path: string, 
     })
     return
   }
-  
+
   // Enum validation
   if (schema.enum && !schema.enum.includes(value))
   {
@@ -98,7 +98,7 @@ function validateField(value: LoomValue, schema: LoomFieldSchema, path: string, 
       message: `Value must be one of: ${schema.enum.join(', ')}`,
     })
   }
-  
+
   // Custom validation
   if (schema.validate)
   {
@@ -112,7 +112,7 @@ function validateField(value: LoomValue, schema: LoomFieldSchema, path: string, 
       errors.push({ path, message: 'Custom validation failed' })
     }
   }
-  
+
   // Array item validation
   if (schema.type === 'array' && schema.items && Array.isArray(value))
   {
@@ -121,7 +121,7 @@ function validateField(value: LoomValue, schema: LoomFieldSchema, path: string, 
       validateField(item, schema.items!, `${path}[${index}]`, errors)
     })
   }
-  
+
   // Object property validation
   if (schema.type === 'object' && schema.properties && typeof value === 'object' && value !== null)
   {
@@ -138,17 +138,17 @@ function getType(value: LoomValue): string
   {
     return 'null'
   }
-  
+
   if (Array.isArray(value))
   {
     return 'array'
   }
-  
+
   if (typeof value === 'object')
   {
     return 'object'
   }
-  
+
   return typeof value
 }
 
@@ -158,12 +158,12 @@ function getType(value: LoomValue): string
 export class SchemaBuilder
 {
   _schema: LoomSchema = {}
-  
+
   field(key: string, type: LoomFieldSchema['type']): FieldBuilder
   {
     return new FieldBuilder(this._schema, key, type)
   }
-  
+
   build(): LoomSchema
   {
     return this._schema
@@ -178,7 +178,7 @@ class FieldBuilder
   _schema: LoomSchema
   _key: string
   _fieldSchema: LoomFieldSchema
-  
+
   constructor(
     schema: LoomSchema,
     key: string,
@@ -190,42 +190,42 @@ class FieldBuilder
     this._fieldSchema = { type }
     this._schema[key] = this._fieldSchema
   }
-  
+
   required(): this
   {
     this._fieldSchema.required = true
     return this
   }
-  
+
   enum(values: unknown[]): this
   {
     this._fieldSchema.enum = values
     return this
   }
-  
+
   validate(fn: (value: unknown) => boolean | string): this
   {
     this._fieldSchema.validate = fn
     return this
   }
-  
+
   items(type: LoomFieldSchema['type']): this
   {
     this._fieldSchema.items = { type }
     return this
   }
-  
+
   properties(schema: LoomSchema): this
   {
     this._fieldSchema.properties = schema
     return this
   }
-  
+
   field(key: string, type: LoomFieldSchema['type']): FieldBuilder
   {
     return new FieldBuilder(this._schema, key, type)
   }
-  
+
   build(): LoomSchema
   {
     return this._schema

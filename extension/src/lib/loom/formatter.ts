@@ -1,6 +1,6 @@
 /**
  * Loom Protocol - Formatter
- * 
+ *
  * Converts JavaScript objects to Loom text format.
  */
 
@@ -14,7 +14,7 @@ const DEFAULT_OPTIONS: Required<FormatOptions> = {
 
 /**
  * Format JavaScript object into Loom text
- * 
+ *
  * @example
  * ```ts
  * const obj = {
@@ -42,32 +42,32 @@ function formatValue(value: LoomValue, level: number, options: Required<FormatOp
   {
     return 'null'
   }
-  
+
   if (typeof value === 'boolean')
   {
     return value ? 'true' : 'false'
   }
-  
+
   if (typeof value === 'number')
   {
     return String(value)
   }
-  
+
   if (typeof value === 'string')
   {
     return value
   }
-  
+
   if (Array.isArray(value))
   {
     return formatArray(value, level, options)
   }
-  
+
   if (typeof value === 'object')
   {
     return formatObject(value as LoomObject, level, options)
   }
-  
+
   return ''
 }
 
@@ -117,8 +117,8 @@ function formatObject(obj: LoomObject, level: number, options: Required<FormatOp
       
       if (isSimpleArray && value.length <= 5)
       {
-        // Inline format for short simple arrays
-        const items = value.map(item => formatValue(item, 0, options)).join(', ')
+        // Inline format for short simple arrays - more compact
+        const items = value.map(item => String(item)).join(',')
         lines.push(`${indent}${key}: ${items}`)
       }
       else
@@ -145,7 +145,7 @@ function formatArray(arr: LoomValue[], level: number, options: Required<FormatOp
 {
   const indent = ' '.repeat(level * options.indent)
   const lines: string[] = []
-  
+
   for (const item of arr)
   {
     if (item === null)
@@ -175,7 +175,7 @@ function formatArray(arr: LoomValue[], level: number, options: Required<FormatOp
       lines.push(formatObject(item as LoomObject, level + 1, options))
     }
   }
-  
+
   return lines.join('\n')
 }
 

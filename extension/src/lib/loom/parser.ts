@@ -228,16 +228,24 @@ function parseArray(
     // Check if next lines are indented (nested item)
     const nextIndent = i + 1 < end ? getIndent(lines[i + 1]) : 0
 
-    if (nextIndent > indent && itemText === '')
+    if (nextIndent > indent)
     {
-      // Nested object/array as item
+      // Nested content under array item
       const nextLine = lines[i + 1].trim()
-
+      
       if (nextLine.startsWith('-'))
       {
         // Nested array
         const { array: nestedArray, consumed } = parseArray(lines, i + 1, end, nextIndent, options, errors)
-        array.push(nestedArray)
+        if (itemText)
+        {
+          // Item has inline value plus nested array - treat as object
+          array.push({ value: parseValue(itemText, options), nested: nestedArray })
+        }
+        else
+        {
+          array.push(nestedArray)
+        }
         i += consumed + 1
       }
       else
@@ -245,7 +253,27 @@ function parseArray(
         // Nested object
         const endIndex = findBlockEnd(lines, i + 1, end, nextIndent)
         const obj = parseLines(lines, i + 1, endIndex, nextIndent, options, errors)
-        array.push(obj)
+        
+        if (itemText)
+        {
+          // Item has inline key-value plus nested properties
+          const colonIndex = itemText.indexOf(':')
+          if (colonIndex > 0)
+          {
+            const key = itemText.slice(0, colonIndex).trim()
+            const value = itemText.slice(colonIndex + 1).trim()
+            array.push({ ...obj, [key]: parseValue(value, options) })
+          }
+          else
+          {
+            // No colon, treat as simple value with nested object
+            array.push({ _value: parseValue(itemText, options), ...obj })
+          }
+        }
+        else
+        {
+          array.push(obj)
+        }
         i = endIndex
       }
     }
@@ -339,7 +367,7 @@ function findBlockEnd(lines: string[], start: number, end: number, baseIndent: n
       return i
     }
   }
-  
+
   return end
 }
 

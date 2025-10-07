@@ -1,6 +1,6 @@
 /**
  * Loom Protocol - Type Definitions
- * 
+ *
  * A lightweight indentation-based protocol for structured data transmission.
  */
 
@@ -15,7 +15,7 @@ export type LoomObject = {
 /**
  * Supported value types in Loom
  */
-export type LoomValue = 
+export type LoomValue =
   | string
   | number
   | boolean
@@ -33,13 +33,13 @@ export type ParseOptions = {
    * @default true
    */
   allowComments?: boolean
-  
+
   /**
    * Strict mode - fail on invalid syntax
    * @default true
    */
   strict?: boolean
-  
+
   /**
    * Auto-detect types (numbers, booleans, null)
    * @default true
@@ -56,13 +56,13 @@ export type FormatOptions = {
    * @default 2
    */
   indent?: number
-  
+
   /**
    * Include comments in output
    * @default false
    */
   includeComments?: boolean
-  
+
   /**
    * Sort object keys alphabetically
    * @default false
@@ -78,12 +78,12 @@ export type ParseResult<T = LoomObject> = {
    * Parsed data
    */
   data: T
-  
+
   /**
    * Parse errors (if any)
    */
   errors: ParseError[]
-  
+
   /**
    * Whether parsing was successful
    */
@@ -98,12 +98,12 @@ export type ParseError = {
    * Line number (1-based)
    */
   line: number
-  
+
   /**
    * Error message
    */
   message: string
-  
+
   /**
    * Original line content
    */
@@ -125,28 +125,28 @@ export type LoomFieldSchema = {
    * Expected type
    */
   type: 'string' | 'number' | 'boolean' | 'null' | 'array' | 'object'
-  
+
   /**
    * Required field
    * @default false
    */
   required?: boolean
-  
+
   /**
    * Array item schema (if type is array)
    */
   items?: LoomFieldSchema
-  
+
   /**
    * Object property schemas (if type is object)
    */
   properties?: LoomSchema
-  
+
   /**
    * Allowed values (enum)
    */
   enum?: unknown[]
-  
+
   /**
    * Custom validation function
    */
@@ -161,7 +161,7 @@ export type ValidationResult = {
    * Whether validation passed
    */
   valid: boolean
-  
+
   /**
    * Validation errors
    */
@@ -176,7 +176,7 @@ export type ValidationError = {
    * Field path (e.g., "workflow.nodes[0].id")
    */
   path: string
-  
+
   /**
    * Error message
    */
