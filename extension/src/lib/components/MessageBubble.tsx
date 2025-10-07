@@ -1,5 +1,6 @@
 import React from 'react'
 import type { ChatMessage } from '../types/chat'
+import Markdown from './Markdown'
 
 type MessageBubbleProps = {
   message: ChatMessage
@@ -35,7 +36,7 @@ export default function MessageBubble({ message }: MessageBubbleProps): React.Re
 {
   return (
     <div style={getBubbleStyle(message.role)}>
-      {message.text}
+      {message.role === 'assistant' ? <Markdown content={message.text} /> : message.text}
     </div>
   )
 }
