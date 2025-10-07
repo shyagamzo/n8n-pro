@@ -10,14 +10,14 @@ type PlanPreviewProps = {
 export default function PlanPreview({ plan, onCancel }: PlanPreviewProps): React.ReactElement
 {
   const [showCredDetails, setShowCredDetails] = useState(false)
-  
+
   const hasCredentials = Array.isArray(plan.credentialsNeeded) && plan.credentialsNeeded.length > 0
 
   return (
     <div style={{ marginTop: 8, padding: 12, border: '1px solid #e5e7eb', borderRadius: 8, background: '#f9fafb' }}>
       <div style={{ fontWeight: 600, marginBottom: 6, fontSize: '14px' }}>{plan.title}</div>
       <div style={{ color: '#374151', marginBottom: 10, fontSize: '13px' }}>{plan.summary}</div>
-      
+
       {hasCredentials && (
         <div style={{ marginBottom: 10, padding: 8, background: '#fef3c7', border: '1px solid #fbbf24', borderRadius: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -26,7 +26,7 @@ export default function PlanPreview({ plan, onCancel }: PlanPreviewProps): React
               Credentials Required
             </span>
           </div>
-          
+
           <div style={{ fontSize: '12px', color: '#78350f', marginBottom: 6 }}>
             This workflow needs {plan.credentialsNeeded.length} credential{plan.credentialsNeeded.length > 1 ? 's' : ''}.
             {' '}You can set them up in n8n after creation.
@@ -87,7 +87,7 @@ export default function PlanPreview({ plan, onCancel }: PlanPreviewProps): React
           )}
         </div>
       )}
-      
+
       <div style={{ display: 'flex', gap: 8 }}>
         <button
           onClick={() => chat.applyPlan(plan)}
