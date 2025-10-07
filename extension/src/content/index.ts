@@ -11,9 +11,6 @@ function injectTriggerAndPanel(): void {
   if (document.getElementById('n8n-pro-trigger')) return
 
   const mountId = 'n8n-pro-mount-root'
-  const root = document.createElement('div')
-  root.id = mountId
-  document.body.appendChild(root)
 
   const trigger = document.createElement('button')
   trigger.id = 'n8n-pro-trigger'
@@ -30,17 +27,13 @@ function injectTriggerAndPanel(): void {
   trigger.style.cursor = 'pointer'
 
   trigger.addEventListener('click', async () => {
-    const { createRoot } = await import('react-dom/client')
     const React = await import('react')
-    const { default: ChatPanel } = await import('../panel/ChatPanel')
+    const { ensureMountRoot, mountReactOnce } = await import('../lib/ui/mount')
+    const { default: ChatContainer } = await import('../panel/ChatContainer')
     const { useChatStore } = await import('../lib/state/chatStore')
 
-    const container = document.getElementById(mountId)!
-    if (!container.hasChildNodes()) {
-      const root = createRoot(container)
-      root.render(React.createElement(ChatPanel))
-    }
-    // open panel
+    const container = ensureMountRoot(mountId)
+    mountReactOnce(container, React.createElement(ChatContainer))
     useChatStore.getState().setOpen(true)
   })
 
