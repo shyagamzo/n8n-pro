@@ -3,6 +3,7 @@ import Panel from '../lib/components/Panel'
 import Button from '../lib/components/Button'
 import Input from '../lib/components/Input'
 import type { ChatMessage } from '../lib/types/chat'
+import MessageBubble from '../lib/components/MessageBubble'
 
 type ChatPanelProps = {
   open: boolean
@@ -33,14 +34,7 @@ export default function ChatPanel({ open, onClose, messages, draft, sending, onS
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ flex: 1, padding: 12, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {messages.map((m) => (
-            <div key={m.id} style={{
-              alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-              background: m.role === 'user' ? 'var(--color-primary, #4f46e5)' : 'var(--color-surface-2, #f3f4f6)',
-              color: m.role === 'user' ? 'var(--color-on-primary, #fff)' : 'var(--color-text, #111827)',
-              padding: '8px 10px', borderRadius: 8, maxWidth: '80%'
-            }}>
-              {m.text}
-            </div>
+            <MessageBubble key={m.id} message={m} />
           ))}
           {sending || draft ? (
             <div style={{ alignSelf: 'flex-start', background: 'var(--color-surface-2, #f3f4f6)', color: 'var(--color-text, #111827)', padding: '8px 10px', borderRadius: 8, maxWidth: '80%' }}>
