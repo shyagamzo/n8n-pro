@@ -36,6 +36,7 @@
 - [ ] **Error Handling**: Graceful error handling and user feedback
 - [ ] **Security Review**: API key security, data handling validation
 - [ ] **Performance Optimization**: Basic performance improvements
+- [ ] **Markdown Rendering**: Render LLM responses with Markdown (headings, links, lists, code blocks)
 - [ ] **Documentation**: Basic README and setup instructions
 - [ ] **Acceptance Criteria**: Stable, secure extension ready for user testing
 
