@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension Structure
+description: Recommended extension structure—background, content, options, panel entries.
 ---
 
 # Decision Record: n8n Extension Structure

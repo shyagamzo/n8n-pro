@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension Design System Integration
+description: Integrate with n8n’s design—reuse CSS variables and map to extension design tokens.
 ---
 
 # Decision Record: n8n Extension Design System Integration

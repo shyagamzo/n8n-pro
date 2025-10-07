@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension Scaffold
+description: Extension scaffold (Vite + TypeScript + React) and manifest/entry setup—apply when bootstrapping or restructuring entries.
 ---
 
 # Decision Record: n8n Extension Scaffold

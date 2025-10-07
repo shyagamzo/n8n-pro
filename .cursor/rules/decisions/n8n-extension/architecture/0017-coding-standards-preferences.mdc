@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension Coding Standards
+description: Coding standards—TypeScript strictness, formatting, imports, naming, and refactoring guidance.
 ---
 
 # Decision Record: n8n Extension Coding Standards

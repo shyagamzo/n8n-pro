@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension State Management
+description: State management with Zustand—store design, immutability, typing, and patterns.
 ---
 
 # Decision Record: n8n Extension State Management

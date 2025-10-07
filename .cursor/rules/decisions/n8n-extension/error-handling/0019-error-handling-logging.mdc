@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: n8n Extension Error Handling
+description: Error handling and logging—error types, boundaries, user-facing messages, and structured logs.
 ---
 
 # Decision Record: n8n Extension Error Handling

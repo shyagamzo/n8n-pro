@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension User Interface Design
+description: Floating panel chat UI—layout, streaming responses, interaction patterns, and non-interruptive behaviors.
 ---
 
 # Decision Record: n8n Extension User Interface Design

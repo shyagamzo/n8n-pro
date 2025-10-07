@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: n8n Extension Agent and UX Principles
+description: AI agent orchestration, one-question-at-a-time clarification, and non-interruptive UX—use when designing agent flows or interactions.
 ---
 
 # Decision Record: n8n Extension Agent and UX Principles

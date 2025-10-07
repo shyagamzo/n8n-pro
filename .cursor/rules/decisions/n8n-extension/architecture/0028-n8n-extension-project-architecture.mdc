@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension Project Architecture
+description: Project architecture—directories, layers, separation of concerns, and naming conventions.
 ---
 
 # Decision Record: n8n Extension Project Architecture

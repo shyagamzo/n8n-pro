@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: n8n Extension Testing Strategy
+description: Testing strategy—Jest/testing-library/MSW; unit/integration focus and coverage targets.
 ---
 
 # Decision Record: n8n Extension Testing Strategy

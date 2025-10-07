@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: n8n Extension Git Workflow
+description: Git workflow—branch naming, commit conventions, PR process, releases, and versioning.
 ---
 
 # Decision Record: n8n Extension Git Workflow

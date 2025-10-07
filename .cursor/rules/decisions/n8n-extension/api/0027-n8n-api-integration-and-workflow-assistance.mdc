@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n API Integration and Workflow Assistance
+description: LLM-driven workflow assistance via n8n API—read/update workflows and credential checks.
 ---
 
 # Decision Record: n8n API Integration and Workflow Assistance

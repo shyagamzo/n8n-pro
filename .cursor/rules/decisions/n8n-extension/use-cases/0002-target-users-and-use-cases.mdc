@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension Target Users & Use Cases
+description: Target users and primary use cases—apply when scoping features, defaults, or examples.
 ---
 
 # Decision Record: n8n Extension Target Users & Use Cases

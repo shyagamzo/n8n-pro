@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: Styling and Design Tokens Integration (no Tailwind)
+description: Styling standards and design tokens (no Tailwind)—theme sync and token usage.
 ---
 
 # Decision Record: Styling and Design Tokens Integration (no Tailwind)

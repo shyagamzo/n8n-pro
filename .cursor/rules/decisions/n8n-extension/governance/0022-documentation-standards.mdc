@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: n8n Extension Documentation Standards
+description: Documentation standards—JSDoc, README structure, API docs, and maintenance practices.
 ---
 
 # Decision Record: n8n Extension Documentation Standards

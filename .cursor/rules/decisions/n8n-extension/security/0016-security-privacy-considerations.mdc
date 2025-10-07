@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: n8n Extension Security & Privacy
+description: Security and privacy—secure storage, minimal permissions, data minimization, and safe APIs.
 ---
 
 # Decision Record: n8n Extension Security & Privacy

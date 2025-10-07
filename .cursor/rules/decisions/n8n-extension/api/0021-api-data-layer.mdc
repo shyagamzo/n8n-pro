@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension API & Data Layer
+description: API/data layer—request/response validation, models, type guards, and fetch wrapper.
 ---
 
 # Decision Record: n8n Extension API & Data Layer

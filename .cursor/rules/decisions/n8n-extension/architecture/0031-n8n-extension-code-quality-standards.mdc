@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension Code Quality Standards
+description: Code quality—linting, typing, reviews, and refactoring policies for maintainability.
 ---
 
 # Decision Record: n8n Extension Code Quality Standards

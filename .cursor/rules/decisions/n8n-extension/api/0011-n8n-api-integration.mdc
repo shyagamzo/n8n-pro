@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension API Integration Strategy
+description: n8n API client design—authentication, workflow CRUD, pagination, retries, and error handling.
 ---
 
 # Decision Record: n8n Extension API Integration Strategy

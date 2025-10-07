@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension Technical Architecture
+description: Extension system architecture—components, layering, boundaries, and responsibilities.
 ---
 
 # Decision Record: n8n Extension Technical Architecture

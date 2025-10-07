@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: React Patterns and Vanilla JavaScript Avoidance for n8n Extension
+description: Preferred React patterns for the extension—avoid vanilla JS and enforce React-centric approaches.
 ---
 
 # Decision Record: React Patterns and Vanilla JavaScript Avoidance for n8n Extension

@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: "AI Integration and Multi-Agent Architecture for n8n Extension"
+description: AI multi-agent architecture—roles, orchestrator flow, coordination, and when to apply.
 ---
 
 # Decision Record: AI Integration and Multi-Agent Architecture for n8n Extension

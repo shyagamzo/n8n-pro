@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: Browser Extension Development Patterns for n8n Extension
+description: Browser extension development patterns—permissions, hot reload, debugging, and HMR.
 ---
 
 # Decision Record: Browser Extension Development Patterns for n8n Extension

@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension React Component Standards
+description: React component standards—props, composition, testing, and accessibility basics.
 ---
 
 # Decision Record: n8n Extension React Component Standards

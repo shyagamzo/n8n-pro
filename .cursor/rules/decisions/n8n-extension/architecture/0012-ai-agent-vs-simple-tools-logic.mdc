@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension AI Agent vs Simple Tools Logic
+description: Choose between multi-agent orchestration and simple tools—prefer simplicity; escalation criteria.
 ---
 
 # Decision Record: n8n Extension AI Agent vs Simple Tools Logic

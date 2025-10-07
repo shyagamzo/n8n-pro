@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: n8n Extension Use Case — Creating Initial Workflow
+description: Create an initial workflow with LLM assistance—scope, guidance, and MVP boundaries.
 ---
 
 # Decision Record: n8n Extension Use Case — Creating Initial Workflow

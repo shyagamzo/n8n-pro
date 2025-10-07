@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: n8n Extension Project Scope & Goals
+description: Project scope and goals for the n8n extension—use when deciding features, constraints, non-goals; emphasizes non-interruptive chatbot UX.
 ---
 
 # Decision Record: n8n Extension Project Scope & Goals

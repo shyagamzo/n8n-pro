@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: n8n Extension Development Environment
+description: Development setup—Node 22, yarn, Vite, load/unload unpacked extension, and debugging.
 ---
 
 # Decision Record: n8n Extension Development Environment

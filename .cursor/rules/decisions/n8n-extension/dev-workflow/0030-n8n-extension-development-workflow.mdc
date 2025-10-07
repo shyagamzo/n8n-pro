@@ -1,6 +1,6 @@
 ---
 alwaysApply: true
-description: n8n Extension Development Workflow
+description: Development workflow—build, watch, reload, debugging strategies, and common issues.
 ---
 
 # Decision Record: n8n Extension Development Workflow

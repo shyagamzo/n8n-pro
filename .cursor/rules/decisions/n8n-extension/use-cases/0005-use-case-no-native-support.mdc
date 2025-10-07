@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-description: "n8n Extension Use Case — No Built-in Support"
+description: When n8n lacks native node support—workarounds, patterns, and constraints.
 ---
 
 # Decision Record: n8n Extension Use Case — No Built-in Support
