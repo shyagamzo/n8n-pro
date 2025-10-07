@@ -18,7 +18,7 @@
 - [x] **Acceptance Criteria**: User can open panel, send messages, receive AI responses with consistent n8n styling
 
 ### Milestone 1.3: Agent Orchestration (Week 5-6)
-- [ ] **LangGraph Setup**: Basic orchestrator with state management
+- [ ] 🟡 **LangGraph Setup**: Basic orchestrator with state management
 - [ ] **Classifier Agent**: Route user requests to appropriate agents
 - [ ] **Enrichment Agent**: Ask clarifying questions (one at a time)
 - [ ] **Planner Agent**: Generate workflow plans
@@ -149,6 +149,6 @@
 
 ---
 
-**Current Focus**: Prepare Milestone 1.2 - Basic Chatbot Interface
-**Next Milestone**: Milestone 1.2 - Basic Chatbot Interface
-**Overall MVP Progress**: 10% Complete
+**Current Focus**: Milestone 1.3 - Agent Orchestration
+**Next Milestone**: Milestone 1.4 - Workflow Creation
+**Overall MVP Progress**: 40% Complete
