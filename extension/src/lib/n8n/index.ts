@@ -12,12 +12,20 @@ export function createN8nClient(options: N8nClientOptions = {})
 {
   const baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, '')
 
+  const authHeaders: Record<string, string> | undefined = options.apiKey
+    ? {
+        'X-N8N-API-KEY': options.apiKey,
+        // Some n8n setups/policies accept Authorization Bearer for PATs; include both safely
+        'Authorization': `Bearer ${options.apiKey}`
+      }
+    : undefined
+
   async function getWorkflows(): Promise<WorkflowSummary[]>
   {
     const url = `${baseUrl}/rest/workflows`
     return apiFetch<WorkflowSummary[]>(url, {
       method: 'GET',
-      headers: options.apiKey ? { 'X-N8N-API-KEY': options.apiKey } : undefined,
+      headers: authHeaders,
       timeoutMs: 10_000,
     })
   }
@@ -27,7 +35,7 @@ export function createN8nClient(options: N8nClientOptions = {})
     const url = `${baseUrl}/rest/workflows/${encodeURIComponent(id)}`
     return apiFetch<unknown>(url, {
       method: 'GET',
-      headers: options.apiKey ? { 'X-N8N-API-KEY': options.apiKey } : undefined,
+      headers: authHeaders,
       timeoutMs: 10_000,
     })
   }
@@ -37,7 +45,7 @@ export function createN8nClient(options: N8nClientOptions = {})
     const url = `${baseUrl}/rest/workflows`
     return apiFetch<{ id: string }>(url, {
       method: 'POST',
-      headers: options.apiKey ? { 'X-N8N-API-KEY': options.apiKey } : undefined,
+      headers: authHeaders,
       body,
       timeoutMs: 15_000,
     })
@@ -48,7 +56,7 @@ export function createN8nClient(options: N8nClientOptions = {})
     const url = `${baseUrl}/rest/workflows/${encodeURIComponent(id)}`
     return apiFetch<{ id: string }>(url, {
       method: 'PATCH',
-      headers: options.apiKey ? { 'X-N8N-API-KEY': options.apiKey } : undefined,
+      headers: authHeaders,
       body,
       timeoutMs: 15_000,
     })
@@ -60,7 +68,7 @@ export function createN8nClient(options: N8nClientOptions = {})
 
     return apiFetch<Array<{ id: string; name: string; type: string }>>(url, {
       method: 'GET',
-      headers: options.apiKey ? { 'X-N8N-API-KEY': options.apiKey } : undefined,
+      headers: authHeaders,
       timeoutMs: 10_000,
     })
   }
