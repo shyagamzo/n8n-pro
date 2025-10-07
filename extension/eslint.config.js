@@ -19,5 +19,18 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      'semi': ['error', 'never'],
+      'quotes': ['error', 'single', { avoidEscape: true }],
+      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
+      'max-len': ['warn', { code: 120, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true }],
+      'brace-style': ['warn', 'allman', { allowSingleLine: true }],
+      'object-curly-newline': ['off'],
+      'padding-line-between-statements': [
+        'warn',
+        { blankLine: 'always', prev: 'block-like', next: '*' },
+        { blankLine: 'always', prev: '*', next: 'block-like' },
+      ],
+    },
   },
 ])
