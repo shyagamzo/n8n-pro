@@ -15,6 +15,7 @@ type ChatPanelProps = {
     sending: boolean
     plan?: Plan | null
     onSend: (text: string) => void
+    onCancelPlan?: () => void
 }
 
 export default function ChatPanel({
@@ -24,7 +25,8 @@ export default function ChatPanel({
     draft,
     plan,
     sending,
-    onSend
+    onSend,
+    onCancelPlan
 }: ChatPanelProps): React.ReactElement | null
 {
 
@@ -35,7 +37,7 @@ export default function ChatPanel({
         <Panel title="n8n Assistant" onClose={onClose}>
             <div style={panelBodyColumn}>
                 <MessagesList messages={messages} draft={draft} sending={sending} />
-                {plan ? <PlanPreview plan={plan} onCancel={() => { /* container clears plan */ }} /> : null}
+                {plan ? <PlanPreview plan={plan} onCancel={() => { if (typeof onCancelPlan === 'function') onCancelPlan() }} /> : null}
                 <ChatComposer sending={sending} onSend={(text) => onSend(text)} />
             </div>
         </Panel>

@@ -18,7 +18,8 @@ chrome.runtime.onConnect.addListener((port) =>
     {
       try
       {
-        const n8n = createN8nClient({})
+        const n8nApiKey = await getN8nApiKey()
+        const n8n = createN8nClient({ apiKey: n8nApiKey ?? undefined })
         const result = await n8n.createWorkflow(msg.plan.workflow)
         port.postMessage({ type: 'token', token: `\nCreated workflow with id: ${result.id}` } satisfies BackgroundMessage)
         port.postMessage({ type: 'done' } satisfies BackgroundMessage)
@@ -75,7 +76,8 @@ chrome.runtime.onMessage.addListener((message) =>
   {
     try
     {
-      const n8n = createN8nClient({})
+      const n8nApiKey = await getN8nApiKey()
+      const n8n = createN8nClient({ apiKey: n8nApiKey ?? undefined })
       await n8n.createWorkflow(msg.plan.workflow)
     }
     catch
@@ -92,6 +94,18 @@ async function getOpenAiKey(): Promise<string | null>
     chrome.storage.local.get(['openai_api_key'], (res) =>
     {
       const key = (res?.openai_api_key as string | undefined) ?? null
+      resolve(key)
+    })
+  })
+}
+
+async function getN8nApiKey(): Promise<string | null>
+{
+  return new Promise((resolve) =>
+  {
+    chrome.storage.local.get(['n8n_api_key'], (res) =>
+    {
+      const key = (res?.n8n_api_key as string | undefined) ?? null
       resolve(key)
     })
   })
