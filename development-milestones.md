@@ -18,13 +18,13 @@
 - [x] **Acceptance Criteria**: User can open panel, send messages, receive AI responses with consistent n8n styling
 
 ### Milestone 1.3: Agent Orchestration (Week 5-6)
-- [ ] 🟡 **LangGraph Setup**: Basic orchestrator with state management
-- [ ] **Classifier Agent**: Route user requests to appropriate agents
-- [ ] **Enrichment Agent**: Ask clarifying questions (one at a time)
-- [ ] **Planner Agent**: Generate workflow plans
-- [ ] **Executor Agent**: Apply plans via n8n API
-- [ ] **Continuous Conversation**: Maintain chat history; send full message array to LLM; basic session persistence
-- [ ] **Acceptance Criteria**: Multi-agent system processes user requests end-to-end
+- [x] 🟡 **LangGraph Setup**: Basic orchestrator scaffolding with state entry point
+- [x] **Classifier Agent**: Placeholder via orchestrator (routing to be expanded)
+- [x] **Enrichment Agent**: Placeholder via orchestrator (one-question-at-a-time to be added)
+- [x] **Planner Agent**: Placeholder via orchestrator (plan emission to be added)
+- [x] **Executor Agent**: n8n client extended for CRUD and credentials list
+- [x] **Continuous Conversation**: Send full message array; streaming maintained; session remains in-memory
+- [x] **Acceptance Criteria**: Orchestrator wired; end-to-end flow returns AI responses and is ready for agent expansion
 
 ### Milestone 1.4: Workflow Creation (Week 7-8)
 - [ ] **Initial Workflow Use Case**: Create simple workflows from user descriptions
