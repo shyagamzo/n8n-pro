@@ -4,7 +4,8 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label?: string
 }
 
-export default function Input({ label, ...props }: InputProps): React.ReactElement {
+export default function Input({ label, ...props }: InputProps): React.ReactElement
+{
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
       {label && <span style={{ color: 'var(--color-text, #111827)' }}>{label}</span>}
@@ -21,5 +22,3 @@ export default function Input({ label, ...props }: InputProps): React.ReactEleme
     </label>
   )
 }
-
-

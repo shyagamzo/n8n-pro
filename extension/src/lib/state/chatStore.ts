@@ -26,5 +26,3 @@ export const useChatStore = create<ChatState>((set) => ({
   clear: () => set({ messages: [] }),
   setAssistantDraft: (t) => set({ assistantDraft: t })
 }))
-
-

@@ -24,7 +24,7 @@ export default defineConfig([
       'quotes': ['error', 'single', { avoidEscape: true }],
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
       'max-len': ['warn', { code: 120, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true }],
-      'brace-style': ['warn', '1tbs', { allowSingleLine: true }],
+      'brace-style': ['error', 'allman', { allowSingleLine: true }],
       'object-curly-newline': ['off'],
       'padding-line-between-statements': [
         'warn',

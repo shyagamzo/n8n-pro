@@ -9,7 +9,8 @@ type MessagesListProps = {
   sending: boolean
 }
 
-export default function MessagesList({ messages, draft, sending }: MessagesListProps): React.ReactElement {
+export default function MessagesList({ messages, draft, sending }: MessagesListProps): React.ReactElement 
+{
   return (
     <div style={messagesList}>
       {messages.map((m) => (

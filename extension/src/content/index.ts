@@ -1,13 +1,18 @@
-function isN8nHost(): boolean {
-  try {
+function isN8nHost(): boolean
+{
+  try
+  {
     const { hostname, port } = window.location
     return hostname === 'localhost' && port === '5678'
-  } catch {
+  }
+  catch
+  {
     return false
   }
 }
 
-function injectTriggerAndPanel(): void {
+function injectTriggerAndPanel(): void
+{
   if (document.getElementById('n8n-pro-trigger')) return
 
   const mountId = 'n8n-pro-mount-root'
@@ -26,7 +31,8 @@ function injectTriggerAndPanel(): void {
   trigger.style.border = 'none'
   trigger.style.cursor = 'pointer'
 
-  trigger.addEventListener('click', async () => {
+  trigger.addEventListener('click', async () =>
+  {
     const React = await import('react')
     const { ensureMountRoot, mountReactOnce } = await import('../lib/ui/mount')
     const { default: ChatContainer } = await import('../panel/ChatContainer')
@@ -40,7 +46,8 @@ function injectTriggerAndPanel(): void {
   document.body.appendChild(trigger)
 }
 
-if (isN8nHost()) {
+if (isN8nHost())
+{
   injectTriggerAndPanel()
   console.info('n8n Pro content script initialized')
 }

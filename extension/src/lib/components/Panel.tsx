@@ -6,30 +6,41 @@ type PanelProps = {
   children: React.ReactNode
 }
 
-export default function Panel({ title, onClose, children }: PanelProps): React.ReactElement {
+export default function Panel({ title, onClose, children }: PanelProps): React.ReactElement
+{
   const [position, setPosition] = useState({ x: 24, y: 24 })
   const [size, setSize] = useState({ w: 420, h: 560 })
   const dragging = useRef<null | { offsetX: number; offsetY: number }>(null)
   const resizing = useRef<null | { startX: number; startY: number; startW: number; startH: number }>(null)
 
-  useEffect(() => {
-    function onMove(e: MouseEvent) {
-      if (dragging.current) {
+  useEffect(() =>
+  {
+    function onMove(e: MouseEvent)
+    {
+      if (dragging.current)
+      {
         setPosition({ x: e.clientX - dragging.current.offsetX, y: e.clientY - dragging.current.offsetY })
       }
-      if (resizing.current) {
+
+      if (resizing.current)
+      {
         const dx = e.clientX - resizing.current.startX
         const dy = e.clientY - resizing.current.startY
         setSize({ w: Math.max(320, resizing.current.startW + dx), h: Math.max(360, resizing.current.startH + dy) })
       }
     }
-    function onUp() {
+
+    function onUp()
+    {
       dragging.current = null
       resizing.current = null
     }
+
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-    return () => {
+
+    return () =>
+    {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
@@ -55,7 +66,8 @@ export default function Panel({ title, onClose, children }: PanelProps): React.R
       }}
     >
       <div
-        onMouseDown={(e) => {
+        onMouseDown={(e) =>
+        {
           const rect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect()
           dragging.current = { offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top }
         }}
@@ -77,7 +89,8 @@ export default function Panel({ title, onClose, children }: PanelProps): React.R
       </div>
       <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
       <div
-        onMouseDown={(e) => {
+        onMouseDown={(e) =>
+        {
           const rect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect()
           resizing.current = { startX: e.clientX, startY: e.clientY, startW: rect.width, startH: rect.height }
         }}
@@ -86,5 +99,3 @@ export default function Panel({ title, onClose, children }: PanelProps): React.R
     </div>
   )
 }
-
-

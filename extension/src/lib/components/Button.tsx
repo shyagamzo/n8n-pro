@@ -16,7 +16,8 @@ export default function Button({
   disabled,
   variant = 'primary',
   className
-}: ButtonProps): React.ReactElement {
+}: ButtonProps): React.ReactElement
+{
   const base = {
     padding: '8px 12px',
     borderRadius: 8,
@@ -42,5 +43,3 @@ export default function Button({
     </button>
   )
 }
-
-

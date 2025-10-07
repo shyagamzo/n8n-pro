@@ -13,7 +13,7 @@ export async function streamChatCompletion(
   opts: OpenAiStreamOptions = {}
 ): Promise<void>
 {
-  const model     = opts.model ?? DEFAULT_MODEL
+  const model = opts.model ?? DEFAULT_MODEL
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS
 
   const body = buildChatBody(userText, model)
@@ -21,7 +21,7 @@ export async function streamChatCompletion(
   const resp = await fetchWithTimeout(
     'https://api.openai.com/v1/chat/completions',
     {
-      method : 'POST',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
@@ -42,7 +42,7 @@ function buildChatBody(userText: string, model: string): unknown
     model,
     messages: [
       { role: 'system', content: 'You are an assistant that helps build and improve n8n workflows.' },
-      { role: 'user',    content: userText }
+      { role: 'user', content: userText }
     ],
     stream: true
   }
@@ -51,12 +51,14 @@ function buildChatBody(userText: string, model: string): unknown
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response>
 {
   const controller = new AbortController()
-  const timer      = setTimeout(() => controller.abort(), timeoutMs)
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
 
-  try {
+  try
+  {
     return await fetch(url, { ...init, signal: controller.signal })
   }
-  finally {
+  finally
+  {
     clearTimeout(timer)
   }
 }
@@ -66,9 +68,9 @@ async function readSseStream(resp: Response, onToken: (t: string) => void): Prom
   const body = resp.body
   if (!body) throw new Error('Missing response body')
 
-  const reader  = body.getReader()
+  const reader = body.getReader()
   const decoder = new TextDecoder()
-  let done      = false
+  let done = false
 
   while (!done)
   {
@@ -76,8 +78,8 @@ async function readSseStream(resp: Response, onToken: (t: string) => void): Prom
     done = readerDone
     if (!value) continue
 
-    const chunk       = decoder.decode(value, { stream: !done })
-    const shouldStop  = processSseChunk(chunk, onToken)
+    const chunk = decoder.decode(value, { stream: !done })
+    const shouldStop = processSseChunk(chunk, onToken)
     if (shouldStop) return
   }
 }
@@ -92,14 +94,18 @@ function processSseChunk(chunk: string, onToken: (t: string) => void): boolean
     const data = line.slice(5).trim()
     if (data === '[DONE]') return true
 
-    try {
-      const json  = JSON.parse(data)
+    try
+    {
+      const json = JSON.parse(data)
       const delta = json?.choices?.[0]?.delta?.content
       if (typeof delta === 'string') onToken(delta)
-    } catch {
+    }
+    catch
+    {
       // ignore malformed SSE lines
     }
   }
+
   return false
 }
 

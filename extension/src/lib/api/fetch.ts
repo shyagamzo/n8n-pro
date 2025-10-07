@@ -1,8 +1,10 @@
-export class ApiError extends Error {
+export class ApiError extends Error
+{
   public readonly status: number
   public readonly url: string
   public readonly body?: unknown
-  constructor(message: string, status: number, url: string, body?: unknown) {
+  constructor(message: string, status: number, url: string, body?: unknown)
+  {
     super(message)
     this.name = 'ApiError'
     this.status = status
@@ -18,11 +20,13 @@ export type RequestOptions = {
   timeoutMs?: number
 }
 
-export async function apiFetch<T>(url: string, options: RequestOptions = {}): Promise<T> {
+export async function apiFetch<T>(url: string, options: RequestOptions = {}): Promise<T>
+{
   const controller = new AbortController()
   const timeoutId = options.timeoutMs ? setTimeout(() => controller.abort(), options.timeoutMs) : undefined
 
-  try {
+  try
+  {
     const response = await fetch(url, {
       method: options.method ?? 'GET',
       headers: {
@@ -38,18 +42,25 @@ export async function apiFetch<T>(url: string, options: RequestOptions = {}): Pr
     const isJson = contentType.includes('application/json')
     const parsed = isJson ? await response.json().catch(() => undefined) : await response.text().catch(() => undefined)
 
-    if (!response.ok) {
+    if (!response.ok)
+    {
       throw new ApiError(`Request failed with status ${response.status}`, response.status, url, parsed)
     }
 
     return (parsed as T)
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
+  }
+  catch (error)
+  {
+    if (error instanceof DOMException && error.name === 'AbortError')
+    {
       throw new ApiError('Request timed out', 408, url)
     }
+
     if (error instanceof ApiError) throw error
     throw new ApiError('Network error', 0, url)
-  } finally {
+  }
+  finally
+  {
     if (timeoutId) clearTimeout(timeoutId)
   }
 }

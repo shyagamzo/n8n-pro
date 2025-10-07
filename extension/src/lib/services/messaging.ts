@@ -6,17 +6,23 @@ export type ChatPort = {
   disconnect: () => void
 }
 
-export function createChatPort(): ChatPort {
+export function createChatPort(): ChatPort
+{
   const port = chrome.runtime.connect({ name: 'chat' })
   return {
-    sendChat(text: string) {
+    sendChat(text: string)
+    {
       port.postMessage({ type: 'chat', text })
     },
-    onMessage(cb) {
+    onMessage(cb)
+    {
       port.onMessage.addListener((m: ChatStreamMessage) => cb(m))
     },
-    disconnect() {
-      try { port.disconnect() } catch {
+    disconnect()
+    {
+      try { port.disconnect() }
+      catch
+      {
         // ignore
       }
     }

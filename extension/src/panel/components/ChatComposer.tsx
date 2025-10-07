@@ -8,10 +8,12 @@ type ChatComposerProps = {
   onSend: (text: string) => void
 }
 
-export default function ChatComposer({ sending, onSend }: ChatComposerProps): React.ReactElement {
+export default function ChatComposer({ sending, onSend }: ChatComposerProps): React.ReactElement
+{
   const [input, setInput] = useState('')
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) =>
+  {
     e.preventDefault()
     const text = input.trim()
     if (!text) return

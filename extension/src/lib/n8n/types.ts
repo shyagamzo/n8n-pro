@@ -5,8 +5,3 @@ export type WorkflowSummary = {
   createdAt?: string
   updatedAt?: string
 }
-
-
-
-
-

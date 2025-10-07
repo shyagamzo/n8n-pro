@@ -3,20 +3,29 @@ import { useChatStore } from '../state/chatStore'
 import { generateId } from '../utils/id'
 import type { ChatStreamMessage } from '../types/chat'
 
-export class ChatService {
+export class ChatService
+{
   private port = createChatPort()
 
-  public constructor() {
-    this.port.onMessage((m: ChatStreamMessage) => {
+  public constructor()
+  {
+    this.port.onMessage((m: ChatStreamMessage) =>
+    {
       const { addMessage, finishSending, setAssistantDraft } = useChatStore.getState()
-      if (m.type === 'token') {
+
+      if (m.type === 'token')
+      {
         setAssistantDraft((useChatStore.getState().assistantDraft + m.token).slice())
-      } else if (m.type === 'done') {
+      }
+      else if (m.type === 'done')
+      {
         const text = useChatStore.getState().assistantDraft
         if (text) addMessage({ id: generateId(), role: 'assistant', text })
         setAssistantDraft('')
         finishSending()
-      } else if (m.type === 'error') {
+      }
+      else if (m.type === 'error')
+      {
         setAssistantDraft('')
         finishSending()
         addMessage({ id: generateId(), role: 'assistant', text: `Error: ${m.error}` })
@@ -24,7 +33,8 @@ export class ChatService {
     })
   }
 
-  public send(text: string): void {
+  public send(text: string): void
+  {
     const { addMessage, startSending, setAssistantDraft } = useChatStore.getState()
     addMessage({ id: generateId(), role: 'user', text })
     setAssistantDraft('')

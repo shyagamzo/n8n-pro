@@ -8,10 +8,12 @@ export type N8nClientOptions = {
   apiKey?: string // stored in background only; not used from content scripts
 }
 
-export function createN8nClient(options: N8nClientOptions = {}) {
+export function createN8nClient(options: N8nClientOptions = {})
+{
   const baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, '')
 
-  async function getWorkflows(): Promise<WorkflowSummary[]> {
+  async function getWorkflows(): Promise<WorkflowSummary[]>
+  {
     const url = `${baseUrl}/rest/workflows`
     return apiFetch<WorkflowSummary[]>(url, {
       method: 'GET',
@@ -24,8 +26,3 @@ export function createN8nClient(options: N8nClientOptions = {}) {
     getWorkflows,
   }
 }
-
-
-
-
-

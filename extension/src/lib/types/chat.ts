@@ -10,5 +10,3 @@ export type ChatStreamMessage =
   | { type: 'token'; token: string }
   | { type: 'done' }
   | { type: 'error'; error: string }
-
-

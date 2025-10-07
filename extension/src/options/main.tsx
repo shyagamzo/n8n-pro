@@ -3,11 +3,10 @@ import Options from './Options'
 
 const container = document.getElementById('root')
 
-if (container) {
+if (container)
+{
   const root = createRoot(container)
   root.render(<Options />)
 }
 
-export {}
-
-
+export { }

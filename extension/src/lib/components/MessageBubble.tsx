@@ -5,14 +5,16 @@ type MessageBubbleProps = {
   message: ChatMessage
 }
 
-function getBubbleStyle(role: ChatMessage['role']): React.CSSProperties {
+function getBubbleStyle(role: ChatMessage['role']): React.CSSProperties
+{
   const base: React.CSSProperties = {
     padding: '8px 10px',
     borderRadius: 8,
     maxWidth: '80%'
   }
 
-  if (role === 'user') {
+  if (role === 'user')
+  {
     return {
       ...base,
       alignSelf: 'flex-end',
@@ -29,12 +31,11 @@ function getBubbleStyle(role: ChatMessage['role']): React.CSSProperties {
   }
 }
 
-export default function MessageBubble({ message }: MessageBubbleProps): React.ReactElement {
+export default function MessageBubble({ message }: MessageBubbleProps): React.ReactElement
+{
   return (
     <div style={getBubbleStyle(message.role)}>
       {message.text}
     </div>
   )
 }
-
-

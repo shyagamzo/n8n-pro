@@ -2,28 +2,34 @@ import React, { useEffect, useState } from 'react'
 import Input from '../lib/components/Input'
 import Button from '../lib/components/Button'
 
-export default function Options(): React.ReactElement {
+export default function Options(): React.ReactElement
+{
   const [keyMasked, setKeyMasked] = useState<string>('')
   const [keyInput, setKeyInput] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string>('')
 
-  function maskKey(key: string): string {
+  function maskKey(key: string): string
+  {
     if (!key) return ''
     const head = key.slice(0, 4)
     const tail = key.slice(-4)
     return `${head}${'*'.repeat(Math.max(0, key.length - 8))}${tail}`
   }
 
-  useEffect(() => {
-    chrome.storage.local.get(['openai_api_key'], (res) => {
+  useEffect(() =>
+  {
+    chrome.storage.local.get(['openai_api_key'], (res) =>
+    {
       const raw = (res?.openai_api_key as string | undefined) ?? ''
       setKeyMasked(maskKey(raw))
     })
   }, [])
 
-  async function save(): Promise<void> {
-    if (!keyInput.trim()) {
+  async function save(): Promise<void>
+  {
+    if (!keyInput.trim())
+    {
       setMessage('Enter a valid key')
       return
     }
@@ -37,7 +43,8 @@ export default function Options(): React.ReactElement {
     setTimeout(() => setMessage(''), 1500)
   }
 
-  async function clear(): Promise<void> {
+  async function clear(): Promise<void>
+  {
     setSaving(true)
     await new Promise<void>((resolve) => chrome.storage.local.remove(['openai_api_key'], () => resolve()))
     setKeyMasked('')
