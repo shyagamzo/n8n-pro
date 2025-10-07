@@ -20,6 +20,8 @@ chrome.runtime.onConnect.addListener((port) =>
       {
         const n8nApiKey = await getN8nApiKey()
         const n8n = createN8nClient({ apiKey: n8nApiKey ?? undefined })
+        // Acknowledge receipt to keep UI channel confident
+        port.postMessage({ type: 'token', token: '\nApplying plan…' } satisfies BackgroundMessage)
         const result = await n8n.createWorkflow(msg.plan.workflow)
         port.postMessage({ type: 'token', token: `\nCreated workflow with id: ${result.id}` } satisfies BackgroundMessage)
         port.postMessage({ type: 'done' } satisfies BackgroundMessage)
