@@ -1,0 +1,125 @@
+---
+alwaysApply: true
+description: Prefer computed operations and filesystem operations before file generation for better performance
+---
+
+# Computed Operations First
+
+## Core Principle
+**Prefer computed operations, filesystem operations, and algorithmic solutions before file generation and regeneration.**
+
+## Performance Optimization Strategy
+
+### 1. File Movement Before Regeneration
+When moving or restructuring files, use filesystem operations first, then edit in place:
+
+```bash
+# GOOD - Move then edit
+mv old/path/file.js new/path/file.js
+# Then edit the moved file in place
+
+# BAD - Regenerate entire file in new location
+# This is slower and loses git history
+```
+
+**Use Cases:**
+- Moving files to new directories
+- Renaming files or directories
+- Restructuring project layout
+- Refactoring file organization
+
+### 2. Algorithmic Solutions Before Manual Generation
+For tasks involving multiple files or data processing, create temporary scripts:
+
+```bash
+# GOOD - Algorithmic approach
+# 1. Create temporary script
+# 2. Run script to process files
+# 3. Validate results
+# 4. Delete temporary script
+
+# BAD - Manual file-by-file operations
+# This is slower and error-prone
+```
+
+**Use Cases:**
+- Bulk file operations (rename, move, delete)
+- Data transformation across multiple files
+- Code generation from templates
+- Batch processing operations
+- Search and replace across codebase
+
+### 3. Filesystem Operations for Bulk Tasks
+Use standard filesystem commands for bulk operations:
+
+```bash
+# File operations
+find . -name "*.old" -delete
+mv old_dir/* new_dir/
+cp template/* destination/
+
+# Text processing
+sed -i 's/old/new/g' *.js
+grep -r "pattern" . --include="*.ts"
+```
+
+### 4. Validation Before Cleanup
+Always validate results before removing temporary files:
+
+```bash
+# 1. Run operation
+# 2. Check results
+# 3. Verify correctness
+# 4. Only then cleanup temporary files
+```
+
+## Implementation Pattern
+
+### Stage 1: Analysis
+- Identify if task can be solved algorithmically
+- Determine if filesystem operations are applicable
+- Plan the most efficient approach
+
+### Stage 2: Computed Operations
+- Use temporary scripts for complex operations
+- Leverage filesystem commands for bulk tasks
+- Apply algorithmic solutions where possible
+
+### Stage 3: Validation
+- Verify results are correct
+- Check that all files are in expected state
+- Ensure no data loss or corruption
+
+### Stage 4: Cleanup
+- Remove temporary files and scripts
+- Clean up any intermediate artifacts
+- Document any permanent changes
+
+## When to Use Each Approach
+
+### Use Computed Operations When:
+- Processing multiple files with same logic
+- Performing bulk transformations
+- Moving/renaming many files
+- Data processing tasks
+- Template-based generation
+
+### Use File Generation When:
+- Creating completely new files
+- Complex one-off transformations
+- Files require significant customization
+- No existing files to work with
+
+## Performance Benefits
+- **Faster execution**: Filesystem operations are faster than file generation
+- **Preserves history**: Moving files maintains git history
+- **Less memory usage**: No need to load entire files into memory
+- **Atomic operations**: Filesystem operations are more reliable
+- **Batch processing**: Handle multiple files simultaneously
+
+## What NOT to do
+- Regenerate files when simple moves would work
+- Process files one-by-one when batch operations are possible
+- Skip validation before cleanup
+- Use file generation for simple transformations
+- Ignore existing filesystem tools and commands
