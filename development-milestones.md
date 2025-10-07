@@ -23,6 +23,7 @@
 - [ ] **Enrichment Agent**: Ask clarifying questions (one at a time)
 - [ ] **Planner Agent**: Generate workflow plans
 - [ ] **Executor Agent**: Apply plans via n8n API
+- [ ] **Continuous Conversation**: Maintain chat history; send full message array to LLM; basic session persistence
 - [ ] **Acceptance Criteria**: Multi-agent system processes user requests end-to-end
 
 ### Milestone 1.4: Workflow Creation (Week 7-8)
