@@ -1,6 +1,6 @@
 import type { ChatMessage } from '../types/chat'
 import { ChatOpenAI } from '@langchain/openai'
-import { AIMessage, HumanMessage, SystemMessage, type BaseMessage, type MessageContent } from '@langchain/core/messages'
+import { AIMessage, HumanMessage, SystemMessage, type BaseMessage } from '@langchain/core/messages'
 
 export type ChatModelOptions = {
   apiKey: string
@@ -37,20 +37,39 @@ export function createOpenAiChatModel(options: ChatModelOptions): ChatModel
     })
   }
 
-  function extractText(content: string | MessageContent[]): string
+  function extractText(content: unknown): string
   {
     if (typeof content === 'string') return content
-    // Only extract text parts from multi-part content
-    return content
-      .map((part) => (typeof part === 'string' ? part : 'text' in part ? (part.text ?? '') : ''))
-      .join('')
+    if (Array.isArray(content))
+    {
+      return content
+        .map((part) =>
+        {
+          if (typeof part === 'string') return part
+          if (part && typeof part === 'object' && 'text' in (part as Record<string, unknown>))
+          {
+            const maybeText = (part as Record<string, unknown>).text
+            return typeof maybeText === 'string' ? maybeText : ''
+          }
+          return ''
+        })
+        .join('')
+    }
+
+    if (content && typeof content === 'object' && 'text' in (content as Record<string, unknown>))
+    {
+      const maybeText = (content as Record<string, unknown>).text
+      return typeof maybeText === 'string' ? maybeText : ''
+    }
+
+    return ''
   }
 
   return {
     async generateText(messages: ChatMessage[]): Promise<string>
     {
       const res = await llm.invoke(toLcMessages(messages))
-      return extractText(res.content as string | MessageContent[])
+      return extractText(res.content)
     }
   }
 }

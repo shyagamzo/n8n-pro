@@ -5,6 +5,8 @@ import manifest from './manifest.config'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Ensure built asset URLs are relative to the extension, not the page origin
+  base: '',
   plugins: [react(), crx({ manifest })],
   server: {
     cors: { origin: '*' },
