@@ -56,7 +56,8 @@ export function createN8nClient(options: N8nClientOptions = {})
 
   async function listCredentials(): Promise<Array<{ id: string; name: string; type: string }>>
   {
-    const url = `${baseUrl}/rest/credentials` 
+    const url = `${baseUrl}/rest/credentials`
+
     return apiFetch<Array<{ id: string; name: string; type: string }>>(url, {
       method: 'GET',
       headers: options.apiKey ? { 'X-N8N-API-KEY': options.apiKey } : undefined,
