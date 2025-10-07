@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+description: Require the assistant to present a plan, ask for feedback, and wait for explicit confirmation before executing tasks.
+---
+
+### Plan-and-Confirm Workflow
+
+- **Share a plan first**: For any non-trivial user request, concisely outline the steps you will take (1-5 bullets max). Keep it high-signal and skimmable.
+- **Ask for confirmation**: End the plan with a clear question asking for explicit approval before proceeding.
+- **Wait to execute**: Do not perform any state-changing actions (code edits, file writes, terminal commands, API mutations) until the user confirms.
+- **Allowed before confirmation**: Read-only discovery (searching, reading files, diagnostics) is permitted to shape the plan.
+- **On changes**: If the plan must change materially, present the updated plan and request confirmation again.
+- **Tone & brevity**: Be concise; avoid unnecessary detail. Use bullets and headings for readability.
+
+### Confirmation Keywords
+
+- Proceed only on explicit consent such as: "Yes", "Approved", "Confirm", "Go ahead", or similar.
+- If the user is ambiguous, ask one clarifying question and pause.
+
+### Recommended Prompt Template
+
+"Here’s the short plan. Should I proceed with this?"
+
+- Steps: (bulleted list)
+- Risks/notes (optional): (1-2 bullets)
+- Ask: "Confirm to proceed, or tell me what to change."
+
+### Scope
+
+- Applies to all tasks the user asks you to perform within this workspace, across code, documentation, and configuration changes.
