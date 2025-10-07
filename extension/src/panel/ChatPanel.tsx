@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Panel from '../lib/components/Panel'
 import Button from '../lib/components/Button'
 import Input from '../lib/components/Input'
