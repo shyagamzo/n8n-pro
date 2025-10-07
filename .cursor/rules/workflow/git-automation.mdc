@@ -50,6 +50,7 @@ These rules automate Git usage within Cursor when executing tasks. The assistant
 | 📦 | package | Installed/updated/downgraded a dependency |
 | ✅ | check mark button | Added or modified unit tests |
 | 🐳 | whale | Container/DevContainer related changes |
+| 📚 | books | Changes to LLM agent rules |
 
 ## PR Workflow
 - When a task is completed:
