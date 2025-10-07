@@ -232,7 +232,7 @@ function parseArray(
     {
       // Nested content under array item
       const nextLine = lines[i + 1].trim()
-      
+
       if (nextLine.startsWith('-'))
       {
         // Nested array
@@ -253,7 +253,7 @@ function parseArray(
         // Nested object
         const endIndex = findBlockEnd(lines, i + 1, end, nextIndent)
         const obj = parseLines(lines, i + 1, endIndex, nextIndent, options, errors)
-        
+
         if (itemText)
         {
           // Item has inline key-value plus nested properties

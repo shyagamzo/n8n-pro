@@ -5,29 +5,29 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
 ## Trigger Nodes
 
 ### Manual Trigger
-**Type:** `n8n-nodes-base.manualTrigger`  
-**Use:** Testing and manual workflow execution  
+**Type:** `n8n-nodes-base.manualTrigger`
+**Use:** Testing and manual workflow execution
 **Parameters:** None required
 
 ### Schedule Trigger
-**Type:** `n8n-nodes-base.scheduleTrigger` or `n8n-nodes-base.schedule`  
-**Use:** Run workflows on a schedule  
+**Type:** `n8n-nodes-base.scheduleTrigger` or `n8n-nodes-base.schedule`
+**Use:** Run workflows on a schedule
 **Parameters:**
 - `rule.interval`: Interval configuration
   - `cronExpression`: Cron format (e.g., "0 9 * * *" for 9 AM daily)
   - Or interval fields: `minutes`, `hours`, `days`, `weeks`
 
 ### Webhook
-**Type:** `n8n-nodes-base.webhook`  
-**Use:** Trigger via HTTP request  
+**Type:** `n8n-nodes-base.webhook`
+**Use:** Trigger via HTTP request
 **Parameters:**
 - `path`: URL path (e.g., "my-webhook")
 - `httpMethod`: GET, POST, PUT, DELETE
 - `responseMode`: "onReceived" or "lastNode"
 
 ### HTTP Request (Polling)
-**Type:** `n8n-nodes-base.httpRequest`  
-**Use:** Poll an endpoint on a schedule  
+**Type:** `n8n-nodes-base.httpRequest`
+**Use:** Poll an endpoint on a schedule
 **Parameters:**
 - `url`: Endpoint URL
 - `method`: HTTP method
@@ -37,8 +37,8 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
 ## Core Nodes
 
 ### HTTP Request
-**Type:** `n8n-nodes-base.httpRequest`  
-**Use:** Make HTTP API calls  
+**Type:** `n8n-nodes-base.httpRequest`
+**Use:** Make HTTP API calls
 **Parameters:**
 - `url`: API endpoint
 - `method`: GET, POST, PUT, PATCH, DELETE
@@ -47,16 +47,16 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
 - `headerParameters`: Custom headers
 
 ### Code
-**Type:** `n8n-nodes-base.code`  
-**Use:** Custom JavaScript/Python code  
+**Type:** `n8n-nodes-base.code`
+**Use:** Custom JavaScript/Python code
 **Parameters:**
 - `language`: "javascript" or "python"
 - `jsCode` or `pythonCode`: Code to execute
 - Available: `items`, `$input`, `$json`, `$node`
 
 ### Set
-**Type:** `n8n-nodes-base.set`  
-**Use:** Transform and set data fields  
+**Type:** `n8n-nodes-base.set`
+**Use:** Transform and set data fields
 **Parameters:**
 - `mode`: "manual" or "expression"
 - `fields`: Array of field mappings
@@ -64,23 +64,23 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
   - `value`: Field value or expression
 
 ### Merge
-**Type:** `n8n-nodes-base.merge`  
-**Use:** Combine data from multiple branches  
+**Type:** `n8n-nodes-base.merge`
+**Use:** Combine data from multiple branches
 **Parameters:**
 - `mode`: "append", "combine", "merge"
 - `options`: Merge options
 
 ### Split In Batches
-**Type:** `n8n-nodes-base.splitInBatches`  
-**Use:** Process large datasets in batches  
+**Type:** `n8n-nodes-base.splitInBatches`
+**Use:** Process large datasets in batches
 **Parameters:**
 - `batchSize`: Number of items per batch
 
 ## Logic Nodes
 
 ### IF
-**Type:** `n8n-nodes-base.if`  
-**Use:** Conditional branching  
+**Type:** `n8n-nodes-base.if`
+**Use:** Conditional branching
 **Parameters:**
 - `conditions.boolean`: Array of conditions
   - `value1`: First value
@@ -88,24 +88,24 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
   - `value2`: Second value
 
 ### Switch
-**Type:** `n8n-nodes-base.switch`  
-**Use:** Multiple conditional branches  
+**Type:** `n8n-nodes-base.switch`
+**Use:** Multiple conditional branches
 **Parameters:**
 - `mode`: "expression" or "rules"
 - `output`: Route selection
 - `rules`: Array of rule conditions
 
 ### Filter
-**Type:** `n8n-nodes-base.filter`  
-**Use:** Filter items based on conditions  
+**Type:** `n8n-nodes-base.filter`
+**Use:** Filter items based on conditions
 **Parameters:**
 - `conditions`: Filter conditions
 
 ## Service Nodes
 
 ### Slack
-**Type:** `n8n-nodes-base.slack`  
-**Use:** Slack integration  
+**Type:** `n8n-nodes-base.slack`
+**Use:** Slack integration
 **Resources:**
 - `message`: Send/update messages
 - `channel`: Create/manage channels
@@ -119,8 +119,8 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
 - `message.delete`: Delete message
 
 ### Gmail
-**Type:** `n8n-nodes-base.gmail`  
-**Use:** Gmail integration  
+**Type:** `n8n-nodes-base.gmail`
+**Use:** Gmail integration
 **Resources:**
 - `message`: Send/read emails
 - `draft`: Manage drafts
@@ -133,8 +133,8 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
   - `message`: Email body
 
 ### Google Sheets
-**Type:** `n8n-nodes-base.googleSheets`  
-**Use:** Google Sheets integration  
+**Type:** `n8n-nodes-base.googleSheets`
+**Use:** Google Sheets integration
 **Operations:**
 - `append`: Add rows
 - `update`: Update rows
@@ -142,24 +142,24 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
 - `delete`: Delete rows
 
 ### Airtable
-**Type:** `n8n-nodes-base.airtable`  
-**Use:** Airtable database operations  
+**Type:** `n8n-nodes-base.airtable`
+**Use:** Airtable database operations
 **Parameters:**
 - `operation`: create, update, delete, get, list
 - `base`: Base ID
 - `table`: Table name
 
 ### Notion
-**Type:** `n8n-nodes-base.notion`  
-**Use:** Notion workspace integration  
+**Type:** `n8n-nodes-base.notion`
+**Use:** Notion workspace integration
 **Resources:**
 - `database`: Database operations
 - `page`: Page operations
 - `block`: Block operations
 
 ### Discord
-**Type:** `n8n-nodes-base.discord`  
-**Use:** Discord bot integration  
+**Type:** `n8n-nodes-base.discord`
+**Use:** Discord bot integration
 **Resources:**
 - `message`: Send messages
 - `channel`: Channel operations
@@ -168,36 +168,36 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
 ## Error Handling
 
 ### Error Trigger
-**Type:** `n8n-nodes-base.errorTrigger`  
-**Use:** Catch errors from other workflows  
+**Type:** `n8n-nodes-base.errorTrigger`
+**Use:** Catch errors from other workflows
 **Parameters:** Workflow selection
 
 ### Stop And Error
-**Type:** `n8n-nodes-base.stopAndError`  
-**Use:** Stop workflow with custom error  
+**Type:** `n8n-nodes-base.stopAndError`
+**Use:** Stop workflow with custom error
 **Parameters:**
 - `errorMessage`: Custom error message
 
 ## Data Transformation
 
 ### Aggregate
-**Type:** `n8n-nodes-base.aggregate`  
-**Use:** Aggregate data (sum, count, etc.)  
+**Type:** `n8n-nodes-base.aggregate`
+**Use:** Aggregate data (sum, count, etc.)
 **Parameters:**
 - `operation`: aggregate, group, split
 - `fieldsToAggregate`: Fields to aggregate
 
 ### Sort
-**Type:** `n8n-nodes-base.sort`  
-**Use:** Sort items  
+**Type:** `n8n-nodes-base.sort`
+**Use:** Sort items
 **Parameters:**
 - `sortFieldsUi`: Sort configuration
   - `fieldName`: Field to sort by
   - `order`: ascending or descending
 
 ### Limit
-**Type:** `n8n-nodes-base.limit`  
-**Use:** Limit number of items  
+**Type:** `n8n-nodes-base.limit`
+**Use:** Limit number of items
 **Parameters:**
 - `maxItems`: Maximum items to pass through
 

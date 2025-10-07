@@ -78,17 +78,17 @@ function formatObject(obj: LoomObject, level: number, options: Required<FormatOp
 {
   const indent = ' '.repeat(level * options.indent)
   const lines: string[] = []
-  
+
   let keys = Object.keys(obj)
   if (options.sortKeys)
   {
     keys = keys.sort()
   }
-  
+
   for (const key of keys)
   {
     const value = obj[key]
-    
+
     if (value === null)
     {
       lines.push(`${indent}${key}: null`)
@@ -108,13 +108,13 @@ function formatObject(obj: LoomObject, level: number, options: Required<FormatOp
     else if (Array.isArray(value))
     {
       // Check if it's a simple array (all primitives)
-      const isSimpleArray = value.every(item => 
-        typeof item === 'string' || 
-        typeof item === 'number' || 
+      const isSimpleArray = value.every(item =>
+        typeof item === 'string' ||
+        typeof item === 'number' ||
         typeof item === 'boolean' ||
         item === null
       )
-      
+
       if (isSimpleArray && value.length <= 5)
       {
         // Inline format for short simple arrays - more compact
@@ -134,7 +134,7 @@ function formatObject(obj: LoomObject, level: number, options: Required<FormatOp
       lines.push(formatObject(value as LoomObject, level + 1, options))
     }
   }
-  
+
   return lines.join('\n')
 }
 

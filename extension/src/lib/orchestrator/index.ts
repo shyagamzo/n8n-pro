@@ -25,13 +25,13 @@ class Orchestrator
       includeNodesReference: true,
       includeConstraints: true,
     })
-    
+
     // Prepend system message to conversation
     const messagesWithSystem: ChatMessage[] = [
       { id: 'system', role: 'system', text: systemPrompt },
       ...input.messages,
     ]
-    
+
     const model = createOpenAiChatModel({ apiKey: input.apiKey })
     const response = await model.generateText(messagesWithSystem)
     return response

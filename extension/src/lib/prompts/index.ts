@@ -1,6 +1,6 @@
 /**
  * Prompt Library - Organized system prompts for AI agents
- * 
+ *
  * This module loads markdown prompts and provides type-safe access.
  * Prompts are stored as markdown files for easy editing and version control.
  */
@@ -29,17 +29,17 @@ export type PromptOptions = {
    * Include n8n nodes reference documentation
    */
   includeNodesReference?: boolean
-  
+
   /**
    * Include common workflow patterns
    */
   includeWorkflowPatterns?: boolean
-  
+
   /**
    * Include system constraints
    */
   includeConstraints?: boolean
-  
+
   /**
    * Additional context to inject (e.g., available credentials, existing workflows)
    */
@@ -67,7 +67,7 @@ export const sharedKnowledge = {
 
 /**
  * Get the base system prompt for an agent
- * 
+ *
  * @param agent - Agent type
  * @returns Raw markdown prompt
  */
@@ -78,11 +78,11 @@ export function getAgentPrompt(agent: AgentType): string
 
 /**
  * Build a complete system prompt with optional additions
- * 
+ *
  * @param agent - Agent type
  * @param options - Prompt composition options
  * @returns Composed system prompt
- * 
+ *
  * @example
  * ```ts
  * const prompt = buildPrompt('planner', {
@@ -97,26 +97,26 @@ export function getAgentPrompt(agent: AgentType): string
 export function buildPrompt(agent: AgentType, options: PromptOptions = {}): string
 {
   const sections: string[] = []
-  
+
   // Start with base agent prompt
   sections.push(agentPrompts[agent])
-  
+
   // Add shared knowledge sections if requested
   if (options.includeNodesReference)
   {
     sections.push('\n---\n\n# Available n8n Nodes\n\n' + sharedKnowledge.n8nNodes)
   }
-  
+
   if (options.includeWorkflowPatterns)
   {
     sections.push('\n---\n\n# Workflow Patterns\n\n' + sharedKnowledge.patterns)
   }
-  
+
   if (options.includeConstraints)
   {
     sections.push('\n---\n\n# System Constraints\n\n' + sharedKnowledge.constraints)
   }
-  
+
   // Inject dynamic context if provided
   if (options.context)
   {
@@ -126,32 +126,32 @@ export function buildPrompt(agent: AgentType, options: PromptOptions = {}): stri
       sections.push('\n---\n\n# Current Context\n\n' + contextSection)
     }
   }
-  
+
   return sections.join('\n')
 }
 
 /**
  * Format context object into readable text for injection
- * 
+ *
  * @param context - Context data to format
  * @returns Formatted context string
  */
 function formatContext(context: Record<string, unknown>): string
 {
   const lines: string[] = []
-  
+
   for (const [key, value] of Object.entries(context))
   {
     if (value === undefined || value === null) continue
-    
+
     // Convert key from camelCase to Title Case
     const title = key
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, (str) => str.toUpperCase())
       .trim()
-    
+
     lines.push(`## ${title}`)
-    
+
     if (Array.isArray(value))
     {
       if (value.length === 0)
@@ -183,23 +183,23 @@ function formatContext(context: Record<string, unknown>): string
     {
       lines.push(String(value))
     }
-    
+
     lines.push('') // Empty line between sections
   }
-  
+
   return lines.join('\n')
 }
 
 /**
  * Validate that all required prompts are loaded
  * Useful for testing and debugging
- * 
+ *
  * @returns Object with validation results
  */
 export function validatePrompts(): { valid: boolean; missing: string[] }
 {
   const missing: string[] = []
-  
+
   for (const [agent, prompt] of Object.entries(agentPrompts))
   {
     if (!prompt || prompt.trim().length === 0)
@@ -207,11 +207,11 @@ export function validatePrompts(): { valid: boolean; missing: string[] }
       missing.push(`Agent prompt: ${agent}`)
     }
   }
-  
+
   if (!sharedKnowledge.n8nNodes) missing.push('Shared knowledge: n8n-nodes-reference')
   if (!sharedKnowledge.patterns) missing.push('Shared knowledge: workflow-patterns')
   if (!sharedKnowledge.constraints) missing.push('Shared knowledge: constraints')
-  
+
   return {
     valid: missing.length === 0,
     missing,

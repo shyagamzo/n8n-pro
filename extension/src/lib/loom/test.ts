@@ -265,7 +265,7 @@ test('Validate valid data', () =>
     .field('age', 'number')
     .field('enabled', 'boolean')
     .build()
-  
+
   const data = { name: 'Test', age: 30, enabled: true }
   const result = validate(data, mySchema)
   assert(result.valid, 'Valid data should pass validation')
@@ -278,7 +278,7 @@ test('Detect missing required field', () =>
     .field('name', 'string').required()
     .field('age', 'number')
     .build()
-  
+
   const data = { age: 30 }
   const result = validate(data, mySchema)
   assert(!result.valid, 'Missing required field should fail')
@@ -292,7 +292,7 @@ test('Detect type mismatch', () =>
     .field('name', 'string')
     .field('age', 'number')
     .build()
-  
+
   const data = { name: 'Test', age: 'thirty' }
   const result = validate(data as LoomObject, mySchema)
   assert(!result.valid, 'Type mismatch should fail')
@@ -304,11 +304,11 @@ test('Validate enum values', () =>
   const mySchema = schema()
     .field('status', 'string').enum(['active', 'inactive', 'pending'])
     .build()
-  
+
   const validData = { status: 'active' }
   const result1 = validate(validData, mySchema)
   assert(result1.valid, 'Valid enum should pass')
-  
+
   const invalidData = { status: 'invalid' }
   const result2 = validate(invalidData, mySchema)
   assert(!result2.valid, 'Invalid enum should fail')
@@ -335,7 +335,7 @@ extractedEntities:
   assert(result.success, 'Should parse successfully')
   assert(result.data.intent === 'WORKFLOW_CREATE', 'Intent should match')
   assert(result.data.confidence === 0.95, 'Confidence should match')
-  
+
   const entities = result.data.extractedEntities as LoomObject
   assert(entities.trigger === 'schedule', 'Trigger should match')
   assert(entities.services === 'slack', 'Services should match')
@@ -366,10 +366,10 @@ workflow:
   const result = parse(loom)
   assert(result.success, 'Should parse successfully')
   assert(result.data.title === 'Daily Slack Message', 'Title should match')
-  
+
   const workflow = result.data.workflow as LoomObject
   assert(workflow.name === 'Morning Greeting', 'Workflow name should match')
-  
+
   const nodes = workflow.nodes as LoomObject[]
   assert(nodes.length === 2, 'Should have 2 nodes')
   assert(nodes[0].id === 'schedule', 'First node should be schedule')
@@ -394,18 +394,18 @@ test('Compare token efficiency: Classifier response', () =>
       actions: ['send']
     }
   }
-  
+
   const json = JSON.stringify(data)
   const loom = format(data)
-  
+
   const jsonChars = json.length
   const loomChars = loom.length
   const reduction = Math.round((1 - loomChars / jsonChars) * 100)
-  
+
   console.log(`  ${YELLOW}JSON:${RESET} ${jsonChars} chars (~${Math.ceil(jsonChars / 4)} tokens)`)
   console.log(`  ${YELLOW}Loom:${RESET} ${loomChars} chars (~${Math.ceil(loomChars / 4)} tokens)`)
   console.log(`  ${GREEN}Reduction:${RESET} ${reduction}%`)
-  
+
   assert(loomChars < jsonChars, 'Loom should be smaller than JSON')
   // Note: Nested objects may not always be smaller due to indentation
   // Main benefit is readability and LLM generation, not always token count for small objects
@@ -424,18 +424,18 @@ test('Compare token efficiency: Workflow plan', () =>
       ]
     }
   }
-  
+
   const json = JSON.stringify(data)
   const loom = format(data)
-  
+
   const jsonChars = json.length
   const loomChars = loom.length
   const reduction = Math.round((1 - loomChars / jsonChars) * 100)
-  
+
   console.log(`  ${YELLOW}JSON:${RESET} ${jsonChars} chars (~${Math.ceil(jsonChars / 4)} tokens)`)
   console.log(`  ${YELLOW}Loom:${RESET} ${loomChars} chars (~${Math.ceil(loomChars / 4)} tokens)`)
   console.log(`  ${GREEN}Reduction:${RESET} ${reduction}%`)
-  
+
   // Loom's benefit is readability and LLM-friendly format
   // For deeply nested structures, indentation may add chars but improves parseability
   console.log(`  ${BLUE}Note:${RESET} Loom optimizes for LLM readability, not just byte count`)
