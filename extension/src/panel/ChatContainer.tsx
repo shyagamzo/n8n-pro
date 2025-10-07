@@ -5,7 +5,7 @@ import { chat } from '../lib/services/chat'
 
 export default function ChatContainer(): React.ReactElement | null 
 {
-  const { isOpen, setOpen, messages, assistantDraft, sending } = useChatStore()
+  const { isOpen, setOpen, messages, assistantDraft, sending, pendingPlan } = useChatStore()
 
   return (
     <ChatPanel
@@ -14,6 +14,7 @@ export default function ChatContainer(): React.ReactElement | null
       messages={messages}
       draft={assistantDraft}
       sending={sending}
+      plan={pendingPlan ?? null}
       onSend={(text) => chat.send(text)}
     />
   )

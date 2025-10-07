@@ -1,7 +1,8 @@
-import type { ChatRequest, BackgroundMessage } from '../lib/types/messaging'
+import type { ChatRequest, BackgroundMessage, ApplyPlanRequest } from '../lib/types/messaging'
 // import { streamChatCompletion } from '../lib/services/openai'
 import { orchestrator } from '../lib/orchestrator'
 import type { ChatMessage } from '../lib/types/chat'
+import { createN8nClient } from '../lib/n8n'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
@@ -11,8 +12,24 @@ chrome.runtime.onInstalled.addListener(() =>
 chrome.runtime.onConnect.addListener((port) =>
 {
   if (port.name !== 'chat') return
-  port.onMessage.addListener(async (msg: ChatRequest) =>
+  port.onMessage.addListener(async (msg: ChatRequest | ApplyPlanRequest) =>
   {
+    if (msg?.type === 'apply_plan')
+    {
+      try
+      {
+        const n8n = createN8nClient({})
+        const result = await n8n.createWorkflow(msg.plan.workflow)
+        port.postMessage({ type: 'token', token: `\nCreated workflow with id: ${result.id}` } satisfies BackgroundMessage)
+        port.postMessage({ type: 'done' } satisfies BackgroundMessage)
+      }
+      catch (err)
+      {
+        port.postMessage({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
+      }
+      return
+    }
+
     if (msg?.type !== 'chat') return
 
     try
@@ -25,8 +42,10 @@ chrome.runtime.onConnect.addListener((port) =>
         return
       }
 
-      // Invoke orchestrator to handle classification/enrichment/planning/execution.
-      // The orchestrator will return a response string for now.
+      // Generate a plan and send it to the UI; then also produce a textual reply
+      const plan = await orchestrator.plan()
+      port.postMessage({ type: 'plan', plan } satisfies BackgroundMessage)
+
       const reply: string = await orchestrator.handle({
         apiKey,
         messages: msg.messages as ChatMessage[],
@@ -38,6 +57,7 @@ chrome.runtime.onConnect.addListener((port) =>
         // Send any non-streamed tail as a token to merge into draft.
         port.postMessage({ type: 'token', token: reply } satisfies BackgroundMessage)
       }
+  
       port.postMessage({ type: 'done' } satisfies BackgroundMessage)
     }
     catch (err)

@@ -1,4 +1,5 @@
 import type { ChatMessage } from '../types/chat'
+import type { Plan } from '../types/plan'
 import { createOpenAiChatModel } from '../ai/model'
 
 export type OrchestratorInput = {
@@ -21,6 +22,28 @@ class Orchestrator
     const model = createOpenAiChatModel({ apiKey: input.apiKey })
     const response = await model.generateText(input.messages)
     return response
+  }
+
+  public async plan(): Promise<Plan>
+  {
+    // MVP plan: create a simple workflow with a manual trigger and a code node
+    return {
+      title: 'Create simple workflow',
+      summary: 'Manual trigger followed by a Code node that returns a greeting.',
+      credentialsNeeded: [],
+      workflow: {
+        name: 'Demo workflow',
+        nodes: [
+          { id: 'Manual Trigger', type: 'n8n-nodes-base.manualTrigger', name: 'Manual Trigger', parameters: {} },
+          { id: 'Code', type: 'n8n-nodes-base.code', name: 'Code', parameters: { language: 'javascript', functionCode: 'return [{ greeting: "Hello from n8n" }];' } },
+        ],
+        connections: {
+          'Manual Trigger': {
+            main: [ [ { node: 'Code', type: 'main', index: 0 } ] ]
+          }
+        }
+      }
+    }
   }
 }
 
