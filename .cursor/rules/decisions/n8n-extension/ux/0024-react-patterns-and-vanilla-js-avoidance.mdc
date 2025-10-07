@@ -1,0 +1,67 @@
+---
+alwaysApply: false
+description: React Patterns and Vanilla JavaScript Avoidance for n8n Extension
+---
+
+# Decision Record: React Patterns and Vanilla JavaScript Avoidance for n8n Extension
+
+## Goal
+Establish React-first development patterns for the n8n extension, avoiding vanilla JavaScript DOM manipulation in favor of React components and patterns.
+
+## Core Principle
+**NEVER use vanilla JavaScript DOM manipulation when React alternatives exist.**
+
+## React Standards for n8n Extension
+- **ALWAYS use React components** - Never use vanilla JavaScript DOM manipulation
+- **Use functional components** with hooks (`useState`, `useEffect`, etc.)
+- **Use TypeScript interfaces** for all props and state
+- **Use inline styles** for component styling (no CSS files for components)
+- **Use React event handlers** (`onClick`, `onChange`, `onKeyPress`, etc.)
+
+## Component Structure Pattern
+```typescript
+interface ComponentProps {
+    // Define all props with types
+}
+
+function Component({ prop1, prop2 }: ComponentProps): React.JSX.Element {
+    const [state, setState] = React.useState<Type>(initialValue);
+    
+    React.useEffect(() => {
+        // Effect logic
+        return () => {
+            // Cleanup
+        };
+    }, [dependencies]);
+    
+    return (
+        <div style={{ /* inline styles */ }}>
+            {/* JSX content */}
+        </div>
+    );
+}
+```
+
+## Content Script Patterns for n8n Extension
+- **Create React root** for injecting React apps into n8n pages
+- **Use pointer-events: none** on container, **pointer-events: auto** on interactive elements
+- **Check for existing elements** before injection to prevent duplicates
+- **Handle page navigation** and dynamic content loading in n8n
+
+## When Vanilla JS is Acceptable
+- **Creating React root containers** (one-time setup)
+- **Chrome extension APIs** (chrome.runtime, chrome.storage)
+- **Browser APIs** (fetch, setTimeout, etc.)
+- **Third-party library integration** (when no React wrapper exists)
+
+## File Extensions
+- Use `.tsx` for React components
+- Use `.ts` for TypeScript utilities and services
+- Update [vite.config.ts](mdc:vite.config.ts) when adding new entry points
+
+## Why This Approach
+- **Consistency** with React ecosystem and patterns
+- **Type safety** with TypeScript integration
+- **Maintainability** through component-based architecture
+- **Performance** through React's optimization strategies
+- **Developer experience** with familiar React patterns

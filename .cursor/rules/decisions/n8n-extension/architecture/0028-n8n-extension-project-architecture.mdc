@@ -1,0 +1,69 @@
+---
+alwaysApply: false
+description: n8n Extension Project Architecture
+---
+
+# Decision Record: n8n Extension Project Architecture
+
+## Goal
+Define the core project architecture and structure for the n8n Pro Extension, a Chrome/Edge browser extension that provides AI-powered assistance for n8n workflow automation.
+
+## Project Overview
+This is a Chrome/Edge browser extension that provides AI-powered assistance for n8n workflow automation. The extension uses React + TypeScript with a multi-agent AI system.
+
+## Core Architecture
+
+### Entry Points
+- **Content Script**: [src/content/index.tsx](mdc:src/content/index.tsx) - Main React app injected into n8n pages
+- **Background Worker**: [src/background/index.ts](mdc:src/background/index.ts) - Service worker for AI orchestration
+- **Popup Interface**: [src/popup/index.tsx](mdc:src/popup/index.tsx) - Extension popup UI
+- **Options Page**: [src/options/index.tsx](mdc:src/options/index.tsx) - Settings and configuration
+- **Panel**: [src/panel/index.tsx](mdc:src/panel/index.tsx) - Standalone panel component (legacy)
+
+### Key Services
+- **Orchestrator**: [src/lib/services/orchestrator.ts](mdc:src/lib/services/orchestrator.ts) - Central message routing and AI coordination
+- **n8n Client**: [src/lib/services/n8n-api-service.ts](mdc:src/lib/services/n8n-api-service.ts) - n8n API client management
+- **Panel Injector**: [src/lib/services/panel-injector.ts](mdc:src/lib/services/panel-injector.ts) - Legacy panel injection (now handled by React)
+
+### Configuration Files
+- **Build Config**: [vite.config.ts](mdc:vite.config.ts) - Vite build configuration with multiple entry points
+- **TypeScript Config**: [tsconfig.json](mdc:tsconfig.json) - TypeScript configuration with strict settings
+- **ESLint Config**: [eslint.config.js](mdc:eslint.config.js) - ESLint v9 configuration for code quality
+- **Manifest**: [public/manifest.json](mdc:public/manifest.json) - Chrome extension manifest
+
+## Communication Flow
+```
+User Input → Content Script → Background Worker → AI Agents → n8n API
+                ↓
+Panel UI ← Background Worker ← AI Response ← LLM Provider
+```
+
+## File Structure
+```
+src/
+├── background/     # Service worker
+├── content/        # Content script (React app)
+├── popup/          # Extension popup
+├── options/        # Options page
+├── panel/          # Standalone panel (legacy)
+└── lib/            # Shared utilities and services
+    ├── api/        # API clients
+    ├── components/ # React components
+    ├── services/   # Business logic
+    ├── types/      # TypeScript definitions
+    └── utils/      # Utility functions
+```
+
+## Development Phases
+See [development-milestones.md](mdc:development-milestones.md) for current progress and upcoming milestones.
+
+## Project Checklist
+See [project-checklist.md](mdc:project-checklist.md) for detailed task tracking and completion status.
+
+## Why This Architecture
+- **Multi-entry point design** enables different extension interfaces (popup, options, content script)
+- **Service worker architecture** provides background processing and AI orchestration
+- **React-based content script** enables rich UI integration with n8n pages
+- **Modular service structure** promotes code reusability and maintainability
+- **TypeScript integration** ensures type safety across all components
+- **Vite build system** provides fast development and optimized production builds

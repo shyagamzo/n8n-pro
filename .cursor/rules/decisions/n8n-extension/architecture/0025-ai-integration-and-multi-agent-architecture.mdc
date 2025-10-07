@@ -1,0 +1,88 @@
+---
+alwaysApply: false
+description: "AI Integration and Multi-Agent Architecture for n8n Extension"
+---
+
+# Decision Record: AI Integration and Multi-Agent Architecture for n8n Extension
+
+## Goal
+Establish a multi-agent AI system for the n8n extension that provides intelligent workflow assistance through specialized AI agents.
+
+## Multi-Agent Architecture
+The extension uses a multi-agent system with specialized roles:
+
+### Agent Types
+- **Classifier Agent**: Determines user intent and routes to appropriate agent
+- **Enrichment Agent**: Gathers additional context and asks clarifying questions
+- **Planner Agent**: Creates step-by-step plans for complex tasks
+- **Executor Agent**: Performs actions and executes workflows
+- **Orchestrator**: Coordinates between agents and manages the conversation flow
+
+## Message Flow
+```
+User Input → Classifier → Enrichment → Planner → Executor → Response
+                ↓
+            Orchestrator (coordinates all agents)
+```
+
+## LLM Integration Strategy
+- **Use LangChainJS** for LLM provider abstraction
+- **Support multiple providers** (OpenAI, Anthropic, local models)
+- **Implement streaming responses** for better UX
+- **Handle rate limiting** and retry logic
+- **Cache responses** when appropriate
+
+## n8n API Integration
+- **Use custom fetch wrapper** with retry logic and error handling
+- **Implement proper authentication** with API keys
+- **Handle rate limiting** and connection issues
+- **Validate API responses** before processing
+- **Cache frequently accessed data**
+
+## AI Workflow Assistance Capabilities
+The AI system can help with:
+
+### Workflow Creation
+- **Generate workflow templates** based on user requirements
+- **Suggest node configurations** for common use cases
+- **Create connections** between nodes
+- **Optimize workflow structure**
+
+### Workflow Analysis
+- **Identify bottlenecks** and performance issues
+- **Suggest improvements** for efficiency
+- **Detect common patterns** and anti-patterns
+- **Provide debugging assistance**
+
+### Workflow Execution
+- **Monitor execution status** in real-time
+- **Handle errors** and provide solutions
+- **Suggest retry strategies** for failed executions
+- **Analyze execution data** and results
+
+## Error Handling Strategy
+- **Graceful degradation** when AI services are unavailable
+- **Fallback responses** for common scenarios
+- **User-friendly error messages** with actionable suggestions
+- **Logging and monitoring** for debugging
+
+## Security Considerations
+- **Never expose API keys** in client-side code
+- **Validate all user input** before sending to AI services
+- **Sanitize AI responses** before displaying to users
+- **Implement rate limiting** to prevent abuse
+- **Use secure communication** for all API calls
+
+## Performance Optimization
+- **Stream responses** for long-running operations
+- **Cache common responses** to reduce API calls
+- **Implement request deduplication** for identical queries
+- **Use background processing** for non-critical operations
+- **Optimize payload sizes** for faster transmission
+
+## Why This Approach
+- **Specialized agents** provide focused expertise for different aspects of workflow management
+- **Orchestrator pattern** ensures smooth coordination between agents
+- **Multi-provider support** provides flexibility and redundancy
+- **Streaming responses** improve user experience for long-running operations
+- **Comprehensive error handling** ensures robust operation in various scenarios

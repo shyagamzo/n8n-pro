@@ -1,0 +1,125 @@
+---
+alwaysApply: true
+description: n8n Extension Testing Strategy
+---
+
+# Decision Record: n8n Extension Testing Strategy
+
+## n8n Extension Specific Testing
+
+### Test Pyramid Approach
+- **Unit Tests (80%)**: Test individual functions, components, and utilities in isolation
+- **Integration Tests (20%)**: Test interactions between modules and external APIs
+- **No E2E Tests**: Skip end-to-end testing for MVP
+
+### n8n Extension Testing Frameworks
+- **Jest**: Primary testing framework for JavaScript/TypeScript
+- **@testing-library/react**: React component testing utilities
+- **@testing-library/jest-dom**: Custom Jest matchers for DOM testing
+- **@testing-library/user-event**: User interaction simulation
+- **MSW (Mock Service Worker)**: Mock HTTP requests for n8n API testing
+- **Chrome Extension Testing**: Use Chrome extension testing utilities
+
+### n8n Extension Manual Testing
+- **Manual Verification**: Manual testing of extension functionality
+- **User Acceptance Testing**: Manual testing with real users
+- **Chrome Extension Testing**: Manual testing in Chrome environment
+
+## Test Structure
+
+### Unit Tests
+- Test individual functions and utilities in isolation
+- Use AAA pattern (Arrange, Act, Assert)
+- Focus on behavior and expected outcomes
+
+### Component Tests
+- Test React components with user interactions
+- Use testing-library for component testing
+- Focus on user behavior and component output
+
+### Integration Tests
+- Test API client interactions with n8n
+- Use MSW (Mock Service Worker) for HTTP mocking
+- Test agent orchestration and workflow creation
+
+## Test Organization
+
+### File Structure
+- Organize tests by type (unit, integration, components)
+- Co-locate test files with source files
+- Use separate directories for mocks and fixtures
+
+### Test Naming Convention
+- **Unit Tests**: `*.test.ts` or `*.spec.ts`
+- **Integration Tests**: `*.integration.test.ts`
+- **Test Files**: Co-located with source files or in `__tests__` directory
+
+## Mocking Strategy
+- Mock Chrome extension APIs (storage, runtime, messaging)
+- Mock n8n API responses for consistent testing
+- Mock LLM responses for agent testing
+
+## Test Data Management
+
+### Fixtures
+- **Workflow Data**: Sample workflows for testing
+- **Message Data**: Sample chat messages
+- **API Responses**: Mock API response data
+- **User Data**: Test user configurations
+
+### Test Utilities
+```typescript
+// Test utilities for common operations
+export const testUtils = {
+    createMockWorkflow: (overrides = {}) => ({
+        id: 'test-workflow',
+        name: 'Test Workflow',
+        nodes: [],
+        connections: {},
+        ...overrides
+    }),
+    
+    createMockMessage: (overrides = {}) => ({
+        id: 'test-message',
+        text: 'Test message',
+        sender: 'user',
+        timestamp: new Date(),
+        ...overrides
+    })
+};
+```
+
+## Coverage Requirements
+
+### Coverage Targets
+- **Unit Tests**: 80% code coverage minimum
+- **Integration Tests**: 70% coverage of API interactions
+- **Critical Paths**: 100% coverage of core workflow creation logic
+- **Error Handling**: 90% coverage of error scenarios
+
+### Coverage Exclusions
+- **Configuration files**: Exclude config files from coverage
+- **Type definitions**: Exclude TypeScript type files
+- **Test files**: Exclude test files themselves
+- **Generated code**: Exclude any generated or build artifacts
+
+## CI/CD Integration
+
+### Test Execution
+- **Pre-commit**: Run unit tests before commits
+- **Pull Requests**: Run full test suite on PRs
+- **Main Branch**: Run all tests on main branch
+- **Coverage Reports**: Generate and track coverage reports
+
+### Test Environments
+- **Local Development**: Fast unit and component tests
+- **CI Environment**: Full test suite with mocked external dependencies
+- **Staging**: Manual testing with real n8n instance
+- **Production**: Manual smoke tests only
+
+## Open Items
+- **Test Data Seeding**: Strategy for test data management
+- **Performance Testing**: Load testing for extension performance
+- **Visual Regression**: Screenshot testing for UI consistency
+- **Accessibility Testing**: Automated accessibility testing
+- **E2E Testing**: Consider adding E2E tests in future versions
