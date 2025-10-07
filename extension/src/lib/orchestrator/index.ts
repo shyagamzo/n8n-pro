@@ -78,7 +78,7 @@ class Orchestrator
     try
     {
       const parsed = parseLoom(loomResponse)
-      
+
       if (!parsed.success || !parsed.data)
       {
         throw new Error('Failed to parse Loom response: ' + parsed.errors.map(e => e.message).join(', '))
@@ -92,7 +92,7 @@ class Orchestrator
     {
       console.error('Plan parsing error:', error)
       console.error('LLM response:', loomResponse)
-      
+
       // Fallback to a basic plan
       return this.fallbackPlan(input.messages)
     }
@@ -112,7 +112,7 @@ class Orchestrator
     })
 
     const workflow = loomData.workflow as Record<string, unknown> || {}
-    
+
     return {
       title,
       summary,
@@ -138,19 +138,19 @@ class Orchestrator
       workflow: {
         name: 'Fallback Workflow',
         nodes: [
-          { 
-            id: 'manual-trigger', 
-            type: 'n8n-nodes-base.manualTrigger', 
+          {
+            id: 'manual-trigger',
+            type: 'n8n-nodes-base.manualTrigger',
             name: 'When clicking "Execute Workflow"',
             parameters: {},
             position: [250, 300],
           },
-          { 
-            id: 'code', 
-            type: 'n8n-nodes-base.code', 
+          {
+            id: 'code',
+            type: 'n8n-nodes-base.code',
             name: 'Process Data',
-            parameters: { 
-              language: 'javascript', 
+            parameters: {
+              language: 'javascript',
               jsCode: 'return [{ message: "Please refine your request for a more specific workflow" }];',
             },
             position: [450, 300],
