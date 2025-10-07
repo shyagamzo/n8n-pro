@@ -3,6 +3,7 @@ import type { ChatRequest, BackgroundMessage, ApplyPlanRequest } from '../lib/ty
 import { orchestrator } from '../lib/orchestrator'
 import type { ChatMessage } from '../lib/types/chat'
 import { createN8nClient } from '../lib/n8n'
+import { getOpenAiKey, getN8nApiKey } from '../lib/services/settings'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
@@ -109,32 +110,3 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
   }
   return true
 })
-
-async function getOpenAiKey(): Promise<string | null>
-{
-  return new Promise((resolve) =>
-  {
-    chrome.storage.local.get(['openai_api_key'], (res) =>
-    {
-      const key = (res?.openai_api_key as string | undefined) ?? null
-      resolve(key)
-    })
-  })
-}
-
-async function getN8nApiKey(): Promise<string | null>
-{
-  return new Promise((resolve) =>
-  {
-    chrome.storage.local.get(['n8n_api_key'], (res) =>
-    {
-      const key = (res?.n8n_api_key as string | undefined) ?? null
-      resolve(key)
-    })
-  })
-}
-
-
-
-
-
