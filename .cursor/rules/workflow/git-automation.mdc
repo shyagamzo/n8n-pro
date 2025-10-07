@@ -1,0 +1,74 @@
+---
+alwaysApply: true
+description: Automate Git branching and committing inside Cursor tasks per project contribution guidelines.
+globs: "*"
+---
+# Git Automation Rules for Tasks
+
+These rules automate Git usage within Cursor when executing tasks. The assistant will proactively create branches, commit changes, and prepare PRs following the Contribution Guidelines emoji conventions and formats.
+
+## Decision: When to Automate Git
+- At the start of each task, determine if automatic Git integration is necessary.
+- Criteria for automating:
+  - Multi-file or multi-step changes
+  - Changes impacting build, configuration, or public interfaces
+  - Tasks expected to take >10 minutes or require iterations
+  - Any change requiring review or traceability
+- If criteria are met, ASK the user: “Should I enable automatic Git integration for this task (branching and periodic commits)?”
+- If the user declines, work on the current branch and avoid automatic commits; still provide a final commit suggestion summary.
+
+## Branch Strategy
+- Create a new branch at task start unless explicitly instructed to work on the current branch.
+- Base branch preference: use `develop` if it exists; otherwise use `master`.
+- Branch naming format: `<emoji>/<module>/<name-of-feature-or-fix>`
+  - Example: `➕/core/loading-automation`
+  - Keep names concise, kebab-case.
+
+## Commit Standards
+- Start commit messages with a relevant emoji, then a short, clear subject.
+  - Examples:
+    - `➕ Implemented automatic module loading`
+    - `🐛 Fixed module loading automation fails in SSR`
+- Make small, precise commits for small units of work. Commit after each logical change.
+
+## Emoji Map (Commit/Branch Prefixes)
+| Emoji | Name | Use when you have... |
+| ----- | ---- | --------------------- |
+| ✨ | sparkles | Scaffolded a new component, service or module |
+| 🐛 | bug | Fixed a bug |
+| ➕ | plus sign | Added files or new feature implementations |
+| ➖ | minus sign | Removed files or feature implementations |
+| ♻ | recycling symbol | Refactored code |
+| 📂 | open file folder | Changed folder structures without refactoring code |
+| 🎨 | artist palette | Improved code layout/order/structure without refactoring |
+| ⚡ | high voltage | Optimized performance/imports/package size |
+| 📃 | page with curl | Added/modified docs, inline comments, or .md files |
+| 🚀 | rocket | Deployment-related changes (version bump, pipeline config) |
+| 🔧 | wrench | Added/modified configuration file |
+| 💄 | lipstick | Improved UI, styling or visual layout |
+| 📱 | mobile phone | Improved responsiveness |
+| 📦 | package | Installed/updated/downgraded a dependency |
+| ✅ | check mark button | Added or modified unit tests |
+| 🐳 | whale | Container/DevContainer related changes |
+
+## PR Workflow
+- When a task is completed:
+  - Ensure the branch is up-to-date with the base branch (prefer `develop`, else `master`).
+  - Push branch to origin.
+  - Open a PR including: what changed, why, and how; checklist; and links to tasks/issues.
+  - Assign reviewers and label the PR (e.g., `feature`, `bug`, `documentation`, `refactor`, `chore`).
+  - Discuss big features or breaking changes before implementation.
+
+## Execution Rules
+- Before edits: verify git repo and current branch; create a new branch if needed based on the task type and emoji.
+- After edits: run lint/build if applicable; stage only relevant files; commit with an emoji-first subject.
+- On merge requests: fast-forward if possible; otherwise use a merge commit with a descriptive message.
+- Keep history clean; avoid committing generated artifacts unless required; never commit secrets.
+
+## Safety & Conflicts
+- On conflicts: stop and ask for guidance, showing a concise conflict summary.
+- Do not push secrets or credentials. Exclude lockfiles unless dependency updates are part of the task.
+
+## Metadata
+- This rule applies across the workspace and aligns with the Contribution Guidelines emoji conventions.
+
