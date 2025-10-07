@@ -8,19 +8,19 @@ export default function Options(): React.ReactElement {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string>('')
 
-  useEffect(() => {
-    chrome.storage.local.get(['openai_api_key'], (res) => {
-      const raw = (res?.openai_api_key as string | undefined) ?? ''
-      setKeyMasked(maskKey(raw))
-    })
-  }, [])
-
   function maskKey(key: string): string {
     if (!key) return ''
     const head = key.slice(0, 4)
     const tail = key.slice(-4)
     return `${head}${'*'.repeat(Math.max(0, key.length - 8))}${tail}`
   }
+
+  useEffect(() => {
+    chrome.storage.local.get(['openai_api_key'], (res) => {
+      const raw = (res?.openai_api_key as string | undefined) ?? ''
+      setKeyMasked(maskKey(raw))
+    })
+  }, [])
 
   async function save(): Promise<void> {
     if (!keyInput.trim()) {
