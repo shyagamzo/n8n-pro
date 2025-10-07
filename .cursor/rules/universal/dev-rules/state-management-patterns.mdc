@@ -34,6 +34,11 @@ Organize stores by business domain:
 - **Computed Values**: Derive computed values from base state rather than storing them
 - **State Validation**: Validate state changes to maintain data integrity
 
+### UI Boundaries
+- **Presentational components** consume store selectors and props only
+- **Containers** own orchestration and call services/mutations
+- **No platform API calls from components**; use services instead
+
 ## State Management Approaches
 
 ### Lightweight Solutions

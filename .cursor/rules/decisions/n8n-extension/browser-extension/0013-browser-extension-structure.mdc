@@ -11,31 +11,27 @@ Chrome/Edge extension with three main components working together to provide AI-
 ## Core Components
 
 ### 1. Content Script (`src/content/`)
-- **Purpose**: Inject into n8n pages, detect n8n editor, mount chatbot panel
+- **Purpose**: Thin injection/mount layer
 - **Responsibilities**:
   - Detect n8n editor canvas presence
-  - Inject trigger button into n8n UI
-  - Mount floating chatbot panel (React app)
-  - Handle n8n theme integration (CSS variables)
-  - Relay user interactions to background worker
+  - Inject trigger button and mount panel container
+  - Keep logic minimal; no platform API calls or business logic
+  - Theme reading only; no secrets or API keys
 
 ### 2. Background Service Worker (`src/background/`)
-- **Purpose**: Orchestrate AI agents, handle API calls, manage state
+- **Purpose**: Platform/API orchestration
 - **Responsibilities**:
-  - Run LangChainJS + LangGraph orchestrator
-  - Execute AI agent workflows (Classifier → Enrichment → Planner → Executor)
-  - Make n8n API calls via custom fetch wrapper
-  - Manage conversation state and memory
-  - Handle LLM provider communication (OpenAI)
+  - Own Chrome APIs (runtime, storage, messaging)
+  - Delegate LLM/n8n calls to services
+  - Stream responses via ports (messaging abstraction)
+  - No UI logic here
 
 ### 3. Panel UI (`src/panel/`)
-- **Purpose**: User interface for chatbot interaction
+- **Purpose**: Presentation + container split
 - **Responsibilities**:
-  - React-based chat interface
-  - Display workflow diffs and previews
-  - Show credential setup guidance (non-interruptive)
-  - Stream AI responses from background worker
-  - Handle user input and selections
+  - Presentational components: pure UI (e.g., `MessageBubble`, `MessagesList`, `ChatComposer`)
+  - Containers: bind services/state to presentational components (e.g., `ChatContainer`)
+  - Shared styles via `styles.ts` to avoid large inline style objects
 
 ## Communication Flow
 ```
@@ -57,17 +53,15 @@ Panel UI ← Background Worker ← AI Response ← LLM Provider
 src/
 ├── background/
 │   ├── index.ts              # Service worker entry
-│   ├── orchestrator.ts       # LangGraph state machine
-│   ├── agents/               # AI agent implementations
-│   └── api/                  # n8n API client
+│   └── orchestrator.ts       # LangGraph state machine (future)
 ├── content/
 │   ├── inject.ts            # n8n detection and injection
 │   ├── panel-mount.ts       # React panel mounting
 │   └── theme-integration.ts  # n8n CSS variable reading
 ├── panel/
-│   ├── App.tsx              # Main React app
+│   ├── ChatContainer.tsx    # Container binds store/services to UI
 │   ├── components/          # Chat, diffs, credential guides
-│   └── hooks/               # State management
+│   └── styles.ts            # Shared style constants for panel
 └── options/
     └── index.html           # Settings page
 ```

@@ -39,6 +39,12 @@ Handle different types of network and API errors appropriately:
 - **Error handling**: Implement appropriate error handling logic for different error types
 - **Graceful degradation**: Offer fallback options when services are unavailable
 
+### Streaming & Abort Handling
+- **Timeouts**: Use `AbortController` with sensible timeouts for long-running requests
+- **Partial Results**: For streaming protocols (SSE/websocket), surface partial progress safely
+- **Resilience**: Ignore malformed chunks but fail decisively on transport errors
+- **No Secrets in Logs**: Never log API keys, tokens, or sensitive payloads
+
 ### Resource Errors
 Handle resource availability and cleanup properly:
 - **Pre-check resources**: Verify resources exist before attempting to use them (files, database connections, external services)
