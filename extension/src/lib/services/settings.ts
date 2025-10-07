@@ -58,4 +58,19 @@ export async function clearN8nApiKey(): Promise<void>
   return clearStorageKey(N8N_KEY)
 }
 
+export async function getBaseUrl(): Promise<string>
+{
+  return getStorageString('n8n_base_url')
+}
+
+export async function setBaseUrl(url: string): Promise<void>
+{
+  return setStorageString('n8n_base_url', url)
+}
+
+export async function clearBaseUrl(): Promise<void>
+{
+  return clearStorageKey('n8n_base_url')
+}
+
 

@@ -2,7 +2,7 @@ import type { ChatRequest, BackgroundMessage, ApplyPlanRequest } from '../lib/ty
 import type { ChatMessage } from '../lib/types/chat'
 import { orchestrator } from '../lib/orchestrator'
 import { createN8nClient } from '../lib/n8n'
-import { getOpenAiKey, getN8nApiKey } from '../lib/services/settings'
+import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
@@ -25,9 +25,22 @@ function createSafePost(port: chrome.runtime.Port)
 
 async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessage) => void): Promise<void>
 {
-  const n8nApiKey = await getN8nApiKey()
-  const n8n = createN8nClient({ apiKey: n8nApiKey ?? undefined })
+  const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
+  const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
   post({ type: 'token', token: '\nApplying plan…' } satisfies BackgroundMessage)
+
+  // Quick auth check
+  try
+  {
+    await n8n.getWorkflows()
+  }
+  catch (e)
+  {
+    const err = e as Error
+    post({ type: 'error', error: `n8n authorization failed. Check Base URL and API key. ${err.message}` } satisfies BackgroundMessage)
+    return
+  }
+
   const result = await n8n.createWorkflow(msg.plan.workflow)
   post({ type: 'token', token: `\nCreated workflow with id: ${result.id}` } satisfies BackgroundMessage)
   post({ type: 'done' } satisfies BackgroundMessage)
@@ -95,8 +108,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
   {
     try
     {
-      const n8nApiKey = await getN8nApiKey()
-      const n8n = createN8nClient({ apiKey: n8nApiKey ?? undefined })
+      const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
+      const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
       await n8n.createWorkflow(msg.plan.workflow)
     }
     catch

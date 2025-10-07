@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Input from '../../lib/components/Input'
 import Button from '../../lib/components/Button'
-import { getOpenAiKey, setOpenAiKey, clearOpenAiKey, getN8nApiKey, setN8nApiKey, clearN8nApiKey } from '../../lib/services/settings'
+import { getOpenAiKey, setOpenAiKey, clearOpenAiKey, getN8nApiKey, setN8nApiKey, clearN8nApiKey, getBaseUrl, setBaseUrl, clearBaseUrl } from '../../lib/services/settings'
 
 function maskKey(key: string): string
 {
@@ -20,11 +20,13 @@ export default function ApiKeySection(): React.ReactElement
 
   const [n8nKeyMasked, setN8nKeyMasked] = useState('')
   const [n8nKeyInput,  setN8nKeyInput]  = useState('')
+  const [baseUrl, setBaseUrlInput] = useState('')
 
   useEffect(() =>
   {
     void getOpenAiKey().then((raw) => setKeyMasked(maskKey(raw)))
     void getN8nApiKey().then((raw) => setN8nKeyMasked(maskKey(raw)))
+    void getBaseUrl().then((raw) => setBaseUrlInput(raw || 'http://localhost:5678'))
   }, [])
 
   async function save(): Promise<void>
@@ -81,6 +83,29 @@ export default function ApiKeySection(): React.ReactElement
     setSaving(false)
   }
 
+  async function saveBase(): Promise<void>
+  {
+    const url = baseUrl.trim()
+    if (!url)
+    {
+      setMessage('Enter a valid Base URL')
+      return
+    }
+    setSaving(true)
+    await setBaseUrl(url)
+    setSaving(false)
+    setMessage('Base URL saved')
+    setTimeout(() => setMessage(''), 1500)
+  }
+
+  async function clearBase(): Promise<void>
+  {
+    setSaving(true)
+    await clearBaseUrl()
+    setBaseUrlInput('')
+    setSaving(false)
+  }
+
   return (
     <section style={{ marginTop: 16 }}>
       <h3>OpenAI API Key</h3>
@@ -112,6 +137,16 @@ export default function ApiKeySection(): React.ReactElement
           <Input label="New key" placeholder="n8n API Key" value={n8nKeyInput} onChange={(e) => setN8nKeyInput(e.currentTarget.value)} />
         </div>
         <Button onClick={() => void saveN8n()} disabled={saving || !n8nKeyInput.trim()}>Save</Button>
+      </div>
+
+      <h3 style={{ marginTop: 24 }}>n8n Base URL</h3>
+      <p style={{ color: '#4b5563' }}>Default is http://localhost:5678. Change if your instance differs.</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+        <div style={{ flex: 1 }}>
+          <Input label="Base URL" placeholder="http://localhost:5678" value={baseUrl} onChange={(e) => setBaseUrlInput(e.currentTarget.value)} />
+        </div>
+        <Button variant="secondary" onClick={() => void clearBase()} disabled={saving || !baseUrl}>Clear</Button>
+        <Button onClick={() => void saveBase()} disabled={saving || !baseUrl.trim()}>Save</Button>
       </div>
     </section>
   )

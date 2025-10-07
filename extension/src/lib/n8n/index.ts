@@ -22,7 +22,7 @@ export function createN8nClient(options: N8nClientOptions = {})
 
   async function getWorkflows(): Promise<WorkflowSummary[]>
   {
-    const url = `${baseUrl}/rest/workflows`
+    const url = `${baseUrl}/api/v1/workflows`
     return apiFetch<WorkflowSummary[]>(url, {
       method: 'GET',
       headers: authHeaders,
@@ -32,7 +32,7 @@ export function createN8nClient(options: N8nClientOptions = {})
 
   async function getWorkflow(id: string): Promise<unknown>
   {
-    const url = `${baseUrl}/rest/workflows/${encodeURIComponent(id)}`
+    const url = `${baseUrl}/api/v1/workflows/${encodeURIComponent(id)}`
     return apiFetch<unknown>(url, {
       method: 'GET',
       headers: authHeaders,
@@ -42,7 +42,7 @@ export function createN8nClient(options: N8nClientOptions = {})
 
   async function createWorkflow(body: unknown): Promise<{ id: string }>
   {
-    const url = `${baseUrl}/rest/workflows`
+    const url = `${baseUrl}/api/v1/workflows`
     return apiFetch<{ id: string }>(url, {
       method: 'POST',
       headers: authHeaders,
@@ -53,7 +53,7 @@ export function createN8nClient(options: N8nClientOptions = {})
 
   async function updateWorkflow(id: string, body: unknown): Promise<{ id: string }>
   {
-    const url = `${baseUrl}/rest/workflows/${encodeURIComponent(id)}`
+    const url = `${baseUrl}/api/v1/workflows/${encodeURIComponent(id)}`
     return apiFetch<{ id: string }>(url, {
       method: 'PATCH',
       headers: authHeaders,
@@ -64,7 +64,7 @@ export function createN8nClient(options: N8nClientOptions = {})
 
   async function listCredentials(): Promise<Array<{ id: string; name: string; type: string }>>
   {
-    const url = `${baseUrl}/rest/credentials`
+    const url = `${baseUrl}/api/v1/credentials`
 
     return apiFetch<Array<{ id: string; name: string; type: string }>>(url, {
       method: 'GET',
