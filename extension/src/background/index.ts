@@ -70,7 +70,7 @@ chrome.runtime.onConnect.addListener((port) =>
   })
 })
 
-chrome.runtime.onMessage.addListener((message) =>
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
 {
   const msg = message as ApplyPlanRequest
   if (msg?.type !== 'apply_plan') return
@@ -87,6 +87,9 @@ chrome.runtime.onMessage.addListener((message) =>
       // one-off; UI will show background errors through chat flow if needed later
     }
   })()
+  // Immediately acknowledge to satisfy sendMessage callbacks, if any
+  try { sendResponse({ ok: true }) } catch { /* ignore */ }
+  return true
 })
 
 async function getOpenAiKey(): Promise<string | null>
