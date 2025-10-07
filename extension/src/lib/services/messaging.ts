@@ -1,7 +1,7 @@
-import type { ChatStreamMessage } from '../types/chat'
+import type { ChatStreamMessage, ChatMessage } from '../types/chat'
 
 export type ChatPort = {
-  sendChat: (text: string) => void
+  sendChat: (messages: ChatMessage[]) => void
   onMessage: (cb: (m: ChatStreamMessage) => void) => void
   disconnect: () => void
 }
@@ -10,9 +10,9 @@ export function createChatPort(): ChatPort
 {
   const port = chrome.runtime.connect({ name: 'chat' })
   return {
-    sendChat(text: string)
+    sendChat(messages: ChatMessage[])
     {
-      port.postMessage({ type: 'chat', text })
+      port.postMessage({ type: 'chat', messages })
     },
     onMessage(cb)
     {
