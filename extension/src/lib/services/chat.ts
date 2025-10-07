@@ -1,7 +1,7 @@
 import { createChatPort } from './messaging'
 import { useChatStore } from '../state/chatStore'
 import { generateId } from '../utils/id'
-import type { ChatStreamMessage } from '../types/chat'
+import type { ChatMessage, ChatStreamMessage } from '../types/chat'
 
 export class ChatService
 {
@@ -39,7 +39,8 @@ export class ChatService
     addMessage({ id: generateId(), role: 'user', text })
     setAssistantDraft('')
     startSending()
-    this.port.sendChat(text)
+    const messages: ChatMessage[] = useChatStore.getState().messages
+    this.port.sendChat(messages)
   }
 }
 

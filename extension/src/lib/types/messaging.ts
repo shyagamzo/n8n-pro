@@ -1,4 +1,6 @@
-export type ChatRequest = { type: 'chat'; text: string }
+import type { ChatMessage } from '../types/chat'
+
+export type ChatRequest = { type: 'chat'; messages: ChatMessage[] }
 
 export type BackgroundMessage =
   | { type: 'token'; token: string }

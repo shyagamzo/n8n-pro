@@ -1,5 +1,7 @@
 import type { ChatRequest, BackgroundMessage } from '../lib/types/messaging'
-import { streamChatCompletion } from '../lib/services/openai'
+// import { streamChatCompletion } from '../lib/services/openai'
+import { orchestrator } from '../lib/orchestrator'
+import type { ChatMessage } from '../lib/types/chat'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
@@ -23,11 +25,19 @@ chrome.runtime.onConnect.addListener((port) =>
         return
       }
 
-      await streamChatCompletion(apiKey, msg.text, (token) =>
-      {
-        port.postMessage({ type: 'token', token } satisfies BackgroundMessage)
-      })
+      // Invoke orchestrator to handle classification/enrichment/planning/execution.
+      // The orchestrator will return a response string for now.
+      const reply: string = await orchestrator.handle({
+        apiKey,
+        messages: msg.messages as ChatMessage[],
+      }, (token) => port.postMessage({ type: 'token', token } satisfies BackgroundMessage))
 
+      // Ensure any remaining content ends up as final assistant message.
+      if (reply && reply.length > 0)
+      {
+        // Send any non-streamed tail as a token to merge into draft.
+        port.postMessage({ type: 'token', token: reply } satisfies BackgroundMessage)
+      }
       port.postMessage({ type: 'done' } satisfies BackgroundMessage)
     }
     catch (err)

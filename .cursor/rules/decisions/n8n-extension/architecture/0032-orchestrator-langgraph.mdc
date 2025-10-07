@@ -1,0 +1,30 @@
+# Decision: Orchestrator and Agents (LangGraph) for MVP
+
+## Context
+We need a minimal orchestrator to support Milestone 1.3 of the MVP: route chat messages through a multi-agent flow and prepare for n8n workflow operations. The codebase already includes streaming UI and an OpenAI integration, but lacks LangGraph orchestration and agent structure.
+
+## Decision
+Adopt a thin orchestrator using LangChain ChatOpenAI with a placeholder LangGraph entry point. For MVP, return a single non-streaming response while keeping streaming tokens for UX. Expand to a full graph (classifier → enrichment → planner → executor) next.
+
+## Implementation Details
+- Add `@langchain/langgraph` package.
+- Create `extension/src/lib/ai/model.ts` with a provider-agnostic `ChatModel` using `ChatOpenAI`.
+- Add `extension/src/lib/orchestrator/index.ts` exposing `orchestrator.handle(input, onToken)`.
+- Update background to accept the full chat history and call orchestrator; stream tokens back to UI.
+- Extend `n8n` client with list/get/create/update workflows and list credentials (IDs/names only).
+
+## Alternatives Considered
+- Direct OpenAI streaming only: rejected for lack of agent structure and n8n integration path.
+- Full LangGraph implementation now: deferred to keep scope small and ship incrementally.
+
+## Consequences
+- We deliver a working orchestrator contract and wiring quickly.
+- Future work: replace placeholder handler with actual LangGraph graph and agents, and add draft diff previews.
+
+## References
+- `extension/src/lib/ai/model.ts`
+- `extension/src/lib/orchestrator/index.ts`
+- `extension/src/background/index.ts`
+- `extension/src/lib/n8n/index.ts`
+- Decisions: 0007, 0025, 0012, 0021, 0011, 0027
+

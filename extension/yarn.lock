@@ -628,6 +628,58 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@langchain/langgraph-checkpoint@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@langchain/langgraph-checkpoint@npm:0.1.1"
+  dependencies:
+    uuid: "npm:^10.0.0"
+  peerDependencies:
+    "@langchain/core": ">=0.2.31 <0.4.0 || ^1.0.0-alpha"
+  checksum: 10c0/31ce2c2998321e82f96f7e6743c82a2588573b4dbde5b70f692f78c506874ef0a6444c8399d8ce83da9589712045b19324d54bada518c900013844123f6f8d43
+  languageName: node
+  linkType: hard
+
+"@langchain/langgraph-sdk@npm:~0.1.0":
+  version: 0.1.9
+  resolution: "@langchain/langgraph-sdk@npm:0.1.9"
+  dependencies:
+    "@types/json-schema": "npm:^7.0.15"
+    p-queue: "npm:^6.6.2"
+    p-retry: "npm:4"
+    uuid: "npm:^9.0.0"
+  peerDependencies:
+    "@langchain/core": ">=0.2.31 <0.4.0 || ^1.0.0-alpha"
+    react: ^18 || ^19
+    react-dom: ^18 || ^19
+  peerDependenciesMeta:
+    "@langchain/core":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10c0/8c36d0a01b0bcf15c6894e5232ff103db691a15730a92207307667da9b512467c35ebbe6f8149920439a5a9900456f6c960d6c00b1f9843c9dc4857aefaa8293
+  languageName: node
+  linkType: hard
+
+"@langchain/langgraph@npm:^0.4.9":
+  version: 0.4.9
+  resolution: "@langchain/langgraph@npm:0.4.9"
+  dependencies:
+    "@langchain/langgraph-checkpoint": "npm:^0.1.1"
+    "@langchain/langgraph-sdk": "npm:~0.1.0"
+    uuid: "npm:^10.0.0"
+    zod: "npm:^3.25.32"
+  peerDependencies:
+    "@langchain/core": ">=0.3.58 < 0.4.0"
+    zod-to-json-schema: ^3.x
+  peerDependenciesMeta:
+    zod-to-json-schema:
+      optional: true
+  checksum: 10c0/abb6d34d11192b7268ee301f5865de5d19105470f84d58f6b4fbf43934add0263dd054e6ca87e2e57b3d624694afe0f84d0d976ddd4d6c129bef839adf60d3a6
+  languageName: node
+  linkType: hard
+
 "@langchain/openai@npm:0.6.14, @langchain/openai@npm:>=0.1.0 <0.7.0":
   version: 0.6.14
   resolution: "@langchain/openai@npm:0.6.14"
@@ -1937,6 +1989,7 @@ __metadata:
     "@crxjs/vite-plugin": "npm:2.2.0"
     "@eslint/js": "npm:9.37.0"
     "@langchain/core": "npm:0.3.78"
+    "@langchain/langgraph": "npm:^0.4.9"
     "@langchain/openai": "npm:0.6.14"
     "@types/chrome": "npm:0.1.22"
     "@types/node": "npm:24.7.0"
@@ -3530,6 +3583,15 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 10c0/eab18c27fe4ab9fb9709a5d5f40119b45f2ec8314f8d4cf12ce27e4c6f4ffa4a6321dc7db6c515068fa373c075b49691ba969f0010bf37f44c37ca40cd6bf7fe
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^9.0.0":
+  version: 9.0.1
+  resolution: "uuid@npm:9.0.1"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 10c0/1607dd32ac7fc22f2d8f77051e6a64845c9bce5cd3dd8aa0070c074ec73e666a1f63c7b4e0f4bf2bc8b9d59dc85a15e17807446d9d2b17c8485fbc2147b27f9b
   languageName: node
   linkType: hard
 
