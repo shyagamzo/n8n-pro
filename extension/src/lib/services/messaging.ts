@@ -20,9 +20,8 @@ export function createChatPort(): ChatPort
     {
       try
       {
-        // Use one-off messaging for apply plan to avoid depending on a long-lived port
-        // Do not pass a callback to avoid requiring a response.
-        chrome.runtime.sendMessage(req)
+        // Send via the existing long-lived port so background can reply on the same channel
+        port.postMessage(req)
       }
       catch
       {
