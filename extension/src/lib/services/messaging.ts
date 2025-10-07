@@ -17,6 +17,7 @@ export function createChatPort(): ChatPort
   const ensurePort = (): void =>
   {
     if (!disconnected) return
+
     try
     {
       port = chrome.runtime.connect({ name: 'chat' })
@@ -36,6 +37,7 @@ export function createChatPort(): ChatPort
     {
       // reconnect once and retry
       ensurePort()
+
       try { port.postMessage(data) }
       catch
       {

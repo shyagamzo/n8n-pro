@@ -13,9 +13,11 @@ function createSafePost(port: chrome.runtime.Port)
 {
   let disconnected = false
   port.onDisconnect.addListener(() => { disconnected = true })
+
   return (message: BackgroundMessage): void =>
   {
     if (disconnected) return
+
     try { port.postMessage(message) }
     catch { /* ignore */ }
   }
@@ -34,6 +36,7 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
 async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void): Promise<void>
 {
   const apiKey = await getOpenAiKey()
+
   if (!apiKey)
   {
     post({ type: 'error', error: 'OpenAI API key not set. Configure it in Options.' } satisfies BackgroundMessage)
@@ -41,6 +44,7 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
   }
 
   const plan = await orchestrator.plan()
+
   post({ type: 'plan', plan } satisfies BackgroundMessage)
 
   const reply: string = await orchestrator.handle({
@@ -69,6 +73,7 @@ chrome.runtime.onConnect.addListener((port) =>
         await handleApplyPlan(msg, post)
         return
       }
+
       if (msg?.type === 'chat')
       {
         await handleChat(msg, post)
@@ -85,6 +90,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
 {
   const msg = message as ApplyPlanRequest
   if (msg?.type !== 'apply_plan') return
+
   ;(async () =>
   {
     try
@@ -98,11 +104,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
       // one-off; UI will show background errors through chat flow if needed later
     }
   })()
+
   // Immediately acknowledge to satisfy sendMessage callbacks, if any
   try { sendResponse({ ok: true }) }
   catch
   {
     // ignore
   }
+
   return true
 })

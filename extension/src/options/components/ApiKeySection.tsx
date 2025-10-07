@@ -57,11 +57,13 @@ export default function ApiKeySection(): React.ReactElement
   async function saveN8n(): Promise<void>
   {
     const next = n8nKeyInput.trim()
+
     if (!next)
     {
       setMessage('Enter a valid n8n API key')
       return
     }
+
     setSaving(true)
     await setN8nApiKey(next)
     setN8nKeyMasked(maskKey(next))
