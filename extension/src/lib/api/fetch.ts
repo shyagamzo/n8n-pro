@@ -45,7 +45,15 @@ export async function apiFetch<T>(url: string, options: RequestOptions = {}): Pr
 
     if (!response.ok)
     {
-      throw new ApiError(`Request failed with status ${response.status}`, response.status, url, parsed)
+      const statusText = response.statusText || ''
+      let details = ''
+
+      if (typeof parsed === 'string') details = parsed
+      else if (parsed && typeof parsed === 'object') details = (parsed as { message?: string }).message || JSON.stringify(parsed)
+
+      const message = `Request failed ${response.status}${statusText ? ' ' + statusText : ''}${details ? `: ${details}` : ''}`
+
+      throw new ApiError(message, response.status, url, parsed)
     }
 
     return (parsed as T)

@@ -1,7 +1,6 @@
 import type { ChatRequest, BackgroundMessage, ApplyPlanRequest } from '../lib/types/messaging'
-// import { streamChatCompletion } from '../lib/services/openai'
-import { orchestrator } from '../lib/orchestrator'
 import type { ChatMessage } from '../lib/types/chat'
+import { orchestrator } from '../lib/orchestrator'
 import { createN8nClient } from '../lib/n8n'
 import { getOpenAiKey, getN8nApiKey } from '../lib/services/settings'
 
@@ -10,77 +9,74 @@ chrome.runtime.onInstalled.addListener(() =>
   console.info('n8n Pro Extension installed')
 })
 
-chrome.runtime.onConnect.addListener((port) =>
+function createSafePost(port: chrome.runtime.Port)
 {
-  if (port.name !== 'chat') return
-
   let disconnected = false
   port.onDisconnect.addListener(() => { disconnected = true })
-
-  const safePost = (message: BackgroundMessage): void =>
+  return (message: BackgroundMessage): void =>
   {
     if (disconnected) return
     try { port.postMessage(message) }
-    catch
-    {
-      // ignore
-    }
+    catch { /* ignore */ }
+  }
+}
+
+async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessage) => void): Promise<void>
+{
+  const n8nApiKey = await getN8nApiKey()
+  const n8n = createN8nClient({ apiKey: n8nApiKey ?? undefined })
+  post({ type: 'token', token: '\nApplying plan…' } satisfies BackgroundMessage)
+  const result = await n8n.createWorkflow(msg.plan.workflow)
+  post({ type: 'token', token: `\nCreated workflow with id: ${result.id}` } satisfies BackgroundMessage)
+  post({ type: 'done' } satisfies BackgroundMessage)
+}
+
+async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void): Promise<void>
+{
+  const apiKey = await getOpenAiKey()
+  if (!apiKey)
+  {
+    post({ type: 'error', error: 'OpenAI API key not set. Configure it in Options.' } satisfies BackgroundMessage)
+    return
   }
 
+  const plan = await orchestrator.plan()
+  post({ type: 'plan', plan } satisfies BackgroundMessage)
+
+  const reply: string = await orchestrator.handle({
+    apiKey,
+    messages: (msg.messages as ChatMessage[]),
+  }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
+
+  if (reply && reply.length > 0)
+  {
+    post({ type: 'token', token: reply } satisfies BackgroundMessage)
+  }
+
+  post({ type: 'done' } satisfies BackgroundMessage)
+}
+
+chrome.runtime.onConnect.addListener((port) =>
+{
+  if (port.name !== 'chat') return
+  const post = createSafePost(port)
   port.onMessage.addListener(async (msg: ChatRequest | ApplyPlanRequest) =>
   {
-    if (msg?.type === 'apply_plan')
-    {
-      try
-      {
-        const n8nApiKey = await getN8nApiKey()
-        const n8n = createN8nClient({ apiKey: n8nApiKey ?? undefined })
-        // Acknowledge receipt to keep UI channel confident
-        safePost({ type: 'token', token: '\nApplying plan…' } satisfies BackgroundMessage)
-        const result = await n8n.createWorkflow(msg.plan.workflow)
-        safePost({ type: 'token', token: `\nCreated workflow with id: ${result.id}` } satisfies BackgroundMessage)
-        safePost({ type: 'done' } satisfies BackgroundMessage)
-      }
-      catch (err)
-      {
-        safePost({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
-      }
-      return
-    }
-
-    if (msg?.type !== 'chat') return
-
     try
     {
-      const apiKey = await getOpenAiKey()
-
-      if (!apiKey)
+      if (msg?.type === 'apply_plan')
       {
-        safePost({ type: 'error', error: 'OpenAI API key not set. Configure it in Options.' } satisfies BackgroundMessage)
+        await handleApplyPlan(msg, post)
         return
       }
-
-      // Generate a plan and send it to the UI; then also produce a textual reply
-      const plan = await orchestrator.plan()
-      safePost({ type: 'plan', plan } satisfies BackgroundMessage)
-
-      const reply: string = await orchestrator.handle({
-        apiKey,
-        messages: msg.messages as ChatMessage[],
-      }, (token) => safePost({ type: 'token', token } satisfies BackgroundMessage))
-
-      // Ensure any remaining content ends up as final assistant message.
-      if (reply && reply.length > 0)
+      if (msg?.type === 'chat')
       {
-        // Send any non-streamed tail as a token to merge into draft.
-        safePost({ type: 'token', token: reply } satisfies BackgroundMessage)
+        await handleChat(msg, post)
       }
-
-      safePost({ type: 'done' } satisfies BackgroundMessage)
     }
     catch (err)
     {
-      safePost({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
+      post({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
     }
   })
 })
