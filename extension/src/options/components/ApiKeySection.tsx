@@ -26,11 +26,13 @@ export default function ApiKeySection(): React.ReactElement
   async function save(): Promise<void>
   {
     const next = keyInput.trim()
+
     if (!next)
     {
       setMessage('Enter a valid key')
       return
     }
+
     setSaving(true)
     await setOpenAiKey(next)
     setKeyMasked(maskKey(next))
