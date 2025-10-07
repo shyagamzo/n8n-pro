@@ -43,10 +43,13 @@ export function createN8nClient(options: N8nClientOptions = {})
   async function createWorkflow(body: unknown): Promise<{ id: string }>
   {
     const url = `${baseUrl}/api/v1/workflows`
+    const payload = (typeof body === 'object' && body !== null)
+      ? { ...(body as Record<string, unknown>), settings: (body as { settings?: unknown }).settings ?? {} }
+      : body
     return apiFetch<{ id: string }>(url, {
       method: 'POST',
       headers: authHeaders,
-      body,
+      body: payload,
       timeoutMs: 15_000,
     })
   }
