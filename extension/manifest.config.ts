@@ -20,7 +20,12 @@ const manifest: ManifestV3Export = {
     }
   ],
   options_page: 'src/options/index.html',
-  host_permissions: ['http://localhost:5678/*', 'https://localhost:5678/*'],
+  host_permissions: [
+    'http://localhost:5678/*',
+    'https://localhost:5678/*',
+    'http://127.0.0.1:5678/*',
+    'https://127.0.0.1:5678/*'
+  ],
   permissions: ['storage', 'scripting']
 }
 
