@@ -21,7 +21,8 @@ export function createChatPort(): ChatPort
       try
       {
         // Use one-off messaging for apply plan to avoid depending on a long-lived port
-        chrome.runtime.sendMessage(req, () => void 0)
+        // Do not pass a callback to avoid requiring a response.
+        chrome.runtime.sendMessage(req)
       }
       catch
       {
