@@ -1,17 +1,35 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Panel from '../lib/components/Panel'
 import Button from '../lib/components/Button'
 import Input from '../lib/components/Input'
-import { useChatStore } from '../lib/state/chatStore'
+import type { ChatMessage } from '../lib/types/chat'
 
-export default function ChatPanel(): React.ReactElement | null {
-  const { isOpen, setOpen, messages, addMessage, startSending, finishSending, sending } = useChatStore()
+type ChatPanelProps = {
+  open: boolean
+  onClose: () => void
+  messages: ChatMessage[]
+  draft: string
+  sending: boolean
+  onSend: (text: string) => void
+}
+
+export default function ChatPanel({ open, onClose, messages, draft, sending, onSend }: ChatPanelProps): React.ReactElement | null {
   const [input, setInput] = useState('')
-  const portRef = useRef<chrome.runtime.Port | null>(null)
-  const [streamBuffer, setStreamBuffer] = useState('')
 
-  const container = useMemo(() => (
-    <Panel title="n8n Assistant" onClose={() => setOpen(false)}>
+  useEffect(() => {
+    // no side-effects here; panel is purely presentational
+  }, [])
+
+  const sendMessage = useCallback(async (): Promise<void> => {
+    if (!input.trim()) return
+    const text = input.trim()
+    setInput('')
+    onSend(text)
+  }, [input, onSend])
+
+  if (!open) return null
+  return (
+    <Panel title="n8n Assistant" onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ flex: 1, padding: 12, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {messages.map((m) => (
@@ -24,9 +42,9 @@ export default function ChatPanel(): React.ReactElement | null {
               {m.text}
             </div>
           ))}
-          {sending || streamBuffer ? (
+          {sending || draft ? (
             <div style={{ alignSelf: 'flex-start', background: 'var(--color-surface-2, #f3f4f6)', color: 'var(--color-text, #111827)', padding: '8px 10px', borderRadius: 8, maxWidth: '80%' }}>
-              {streamBuffer || '…'}
+              {draft || '…'}
             </div>
           ) : null}
         </div>
@@ -38,50 +56,7 @@ export default function ChatPanel(): React.ReactElement | null {
         </form>
       </div>
     </Panel>
-  ), [isOpen, messages, input, sending, streamBuffer])
-
-  useEffect(() => {
-    if (!isOpen) return
-    // lazy open port
-    if (!portRef.current) {
-      const port = chrome.runtime.connect({ name: 'chat' })
-      port.onMessage.addListener((msg: any) => {
-        if (msg?.type === 'token') {
-          setStreamBuffer((prev) => prev + (msg.token as string))
-        } else if (msg?.type === 'done') {
-          if (streamBuffer) {
-            addMessage({ id: crypto.randomUUID(), role: 'assistant', text: streamBuffer })
-            setStreamBuffer('')
-          }
-          finishSending()
-        } else if (msg?.type === 'error') {
-          finishSending()
-          setStreamBuffer('')
-          addMessage({ id: crypto.randomUUID(), role: 'assistant', text: `Error: ${msg.error}` })
-        }
-      })
-      portRef.current = port
-    }
-    return () => {
-      // keep port alive while panel open
-    }
-  }, [isOpen])
-
-  async function sendMessage(): Promise<void> {
-    if (!input.trim()) return
-    const text = input.trim()
-    addMessage({ id: crypto.randomUUID(), role: 'user', text })
-    setInput('')
-    startSending()
-    setStreamBuffer('')
-    if (!portRef.current) {
-      portRef.current = chrome.runtime.connect({ name: 'chat' })
-    }
-    portRef.current.postMessage({ type: 'chat', text })
-  }
-
-  if (!isOpen) return null
-  return container
+  )
 }
 
 
