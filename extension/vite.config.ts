@@ -6,4 +6,21 @@ import manifest from './manifest.config'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), crx({ manifest })],
+  server: {
+    cors: { origin: '*' },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+    },
+    strictPort: true,
+    host: 'localhost',
+    port: 5173,
+    origin: 'http://localhost:5173',
+    hmr: {
+      host: 'localhost',
+      protocol: 'ws',
+      port: 5173,
+    },
+  },
 })

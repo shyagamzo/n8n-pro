@@ -9,7 +9,8 @@ const manifest: ManifestV3Export = {
     default_popup: 'src/options/index.html'
   },
   background: {
-    service_worker: 'src/background/index.ts'
+    service_worker: 'src/background/index.ts',
+    type: 'module'
   },
   content_scripts: [
     {
