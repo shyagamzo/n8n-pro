@@ -25,20 +25,20 @@ description: Development setup—Node 22, yarn, Vite, load/unload unpacked exten
 - **webextension-polyfill**: Cross-browser compatibility for extension APIs
 
 ### React & UI
-- **React**: ^18.3.1 for UI components
-- **React DOM**: ^18.3.1 for rendering React components
-- **Zustand**: ^4.5.5 lightweight state management for panel UI
+- **React**: 19.x for UI components
+- **React DOM**: 19.x for rendering React components
+- **Zustand**: 5.x lightweight state management for panel UI
 
 ### AI & Orchestration
-- **langchain**: ^0.3.0 for AI agent orchestration
-- **@langchain/openai**: ^0.3.0 OpenAI integration for LangChain
-- **@langchain/core**: ^0.3.0 Core LangChain functionality
+- **langchain**: 0.3.35 for AI agent orchestration
+- **@langchain/openai**: 0.6.14 OpenAI integration for LangChain
+- **@langchain/core**: 0.3.78 Core LangChain functionality
 
 ### Development Tools
-- **TypeScript**: ^5.5.4 for type safety
-- **Vite**: ^6.0.1 for build tooling
-- **@vitejs/plugin-react**: ^4.3.3 React support for Vite
-- **ESLint**: ^9.15.0 code linting and quality
+- **TypeScript**: 5.9.x for type safety
+- **Vite**: 7.x for build tooling
+- **@vitejs/plugin-react**: 5.x React support for Vite
+- **ESLint**: 9.37.x code linting and quality
 
 ## Project Structure
 ```

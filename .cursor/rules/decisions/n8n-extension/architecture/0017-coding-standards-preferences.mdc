@@ -13,10 +13,10 @@ description: Coding standards—TypeScript strictness, formatting, imports, nami
 - **Node.js 22**: Latest LTS version
 
 ### Language & Framework Choices
-- **TypeScript**: Strict mode enabled, ^5.5.4
-- **React**: ^18.3.1 for UI components
-- **Zustand**: ^4.5.5 for state management
-- **LangChainJS**: ^0.3.0 for AI orchestration
+- **TypeScript**: Strict mode enabled, 5.9.x
+- **React**: 19.x for UI components
+- **Zustand**: 5.x for state management
+- **LangChainJS**: 0.3.x for AI orchestration
 
 ### n8n Extension Specific Formatting
 - **4 spaces** for indentation (except .json files)
