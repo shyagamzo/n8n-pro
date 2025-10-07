@@ -9,12 +9,15 @@ chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== 'chat') return
   port.onMessage.addListener(async (msg: ChatRequest) => {
     if (msg?.type !== 'chat') return
+
     try {
       const apiKey = await getOpenAiKey()
+
       if (!apiKey) {
         port.postMessage({ type: 'error', error: 'OpenAI API key not set. Configure it in Options.' } satisfies BackgroundMessage)
         return
       }
+
       await streamChatCompletion(apiKey, msg.text, (token) => {
         port.postMessage({ type: 'token', token } satisfies BackgroundMessage)
       })

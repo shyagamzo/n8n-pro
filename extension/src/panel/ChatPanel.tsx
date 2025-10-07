@@ -21,8 +21,7 @@ export default function ChatPanel({
   draft,
   sending,
   onSend
-}: ChatPanelProps): React.ReactElement | null
-{
+}: ChatPanelProps): React.ReactElement | null {
 
   // Presentational only
 

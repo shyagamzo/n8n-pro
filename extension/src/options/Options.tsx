@@ -27,6 +27,7 @@ export default function Options(): React.ReactElement {
       setMessage('Enter a valid key')
       return
     }
+
     setSaving(true)
     await new Promise<void>((resolve) => chrome.storage.local.set({ openai_api_key: keyInput.trim() }, () => resolve()))
     setKeyMasked(maskKey(keyInput.trim()))
