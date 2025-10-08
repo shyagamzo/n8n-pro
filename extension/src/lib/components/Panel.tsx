@@ -146,7 +146,7 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
           userSelect: 'none'
         }}
       >
-        <div style={{ fontWeight: typography.fontWeightBold, color: colors.text }}>{title}</div>
+        <div style={{ fontWeight: typography.fontWeightBold, color: colors.textMuted }}>{title}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing['2xs'] }}>
           {onNewSession && (
             <button
@@ -176,7 +176,7 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
               New Session
             </button>
           )}
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', fontSize: typography.fontSizeL, cursor: 'pointer', color: colors.text }}>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', fontSize: typography.fontSizeL, cursor: 'pointer', color: colors.textMuted }}>
             ×
           </button>
         </div>
