@@ -1,14 +1,44 @@
 /* Options page styles */
 .options-container {
   font-family: 'Inter', system-ui, Arial, sans-serif;
-  padding: var(--spacing-xs, 0.75rem);
+  padding: var(--spacing-s, 1rem);
   max-width: 560px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .api-key-message {
   color: var(--color-success, #10b981);
+  padding: var(--spacing-2xs, 0.5rem);
+  background: rgba(16, 185, 129, 0.1);
+  border-left: 3px solid var(--color-success, #10b981);
+  border-radius: 0 var(--border-radius-small, 0.25rem) var(--border-radius-small, 0.25rem) 0;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .api-key-subsection {
   margin-top: var(--spacing-l, 1.5rem);
+  padding-top: var(--spacing-s, 1rem);
+  border-top: 1px solid var(--color-foreground-light, #4f5166);
 }

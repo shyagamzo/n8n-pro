@@ -8,6 +8,8 @@
 
 .form-label-text {
   color: var(--color-text-dark, #ffffff);
+  font-weight: var(--font-weight-medium, 500);
+  transition: color 0.2s ease;
 }
 
 .form-input,
@@ -20,6 +22,26 @@
   background: var(--color-background-light, #1a1a24);
   color: var(--color-text-dark, #ffffff);
   outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-input:hover,
+.form-textarea:hover {
+  border-color: var(--color-primary, #ff6d5a);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: var(--color-primary, #ff6d5a);
+  box-shadow: 0 0 0 3px rgba(255, 109, 90, 0.2), 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: var(--color-background-base, #2d2e3a);
+}
+
+.form-input:focus + .form-label-text,
+.form-textarea:focus + .form-label-text {
+  color: var(--color-primary, #ff6d5a);
 }
 
 .form-textarea {

@@ -1,12 +1,15 @@
 /* Panel component styles */
 .panel-body {
   height: 100%;
-  background: var(--color-background-light, #1a1a24);
+  background: linear-gradient(180deg, 
+    var(--color-background-light, #1a1a24) 0%, 
+    var(--color-background-base, #2d2e3a) 100%
+  );
 }
 
 .messages-list {
   padding: var(--spacing-s, 1rem);
-  background: var(--color-background-light, #1a1a24);
+  background: transparent;
 }
 
 .message-wrapper--assistant {
@@ -14,15 +17,50 @@
 }
 
 .draft-bubble {
-  background: var(--color-chat-bot-background, #2d2e3a);
+  background: linear-gradient(135deg, 
+    var(--color-chat-bot-background, #2d2e3a) 0%, 
+    var(--color-background-xlight, #3a3b4a) 100%
+  );
   color: var(--color-chat-bot-text, #ffffff);
   padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
-  border-radius: var(--border-radius-large, 0.75rem);
+  border-radius: var(--border-radius-large, 0.75rem) var(--border-radius-large, 0.75rem) var(--border-radius-large, 0.75rem) var(--border-radius-small, 0.25rem);
   align-self: flex-start;
   max-width: 80%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--color-foreground-light, #4f5166);
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.3s ease-out;
+  position: relative;
+}
+
+.draft-bubble::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, 
+    var(--color-primary, #ff6d5a) 0%, 
+    var(--color-primary-shade, #e55a47) 100%
+  );
+  border-radius: var(--border-radius-large, 0.75rem) 0 0 var(--border-radius-large, 0.75rem);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .composer-row {
   padding: var(--spacing-s, 1rem);
-  background: var(--color-background-light, #1a1a24);
+  background: var(--color-background-base, #2d2e3a);
+  border-top: 1px solid var(--color-foreground-light, #4f5166);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
 }

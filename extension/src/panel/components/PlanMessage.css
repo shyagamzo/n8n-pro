@@ -1,6 +1,13 @@
 /* Plan Message styles */
 .plan-message-title {
   margin-bottom: var(--spacing-3xs, 0.375rem);
+  background: linear-gradient(135deg, 
+    var(--color-primary, #ff6d5a) 0%, 
+    var(--color-primary-shade, #e55a47) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .plan-message-summary {
@@ -11,22 +18,48 @@
   display: inline-block;
   margin-right: var(--spacing-3xs, 0.375rem);
   color: var(--color-warning, #f59e0b);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 .plan-message-toggle {
   font-size: var(--font-size-3xs, 0.625rem);
   margin-top: var(--spacing-3xs, 0.375rem);
   text-decoration: underline;
+  transition: all 0.2s ease;
+}
+
+.plan-message-toggle:hover {
+  color: var(--color-primary, #ff6d5a);
+  transform: translateX(2px);
 }
 
 .plan-message-apply-button {
-  background: var(--color-success, #10b981);
+  background: linear-gradient(135deg, 
+    var(--color-success, #10b981) 0%, 
+    var(--color-success-shade, #059669) 100%
+  );
   color: var(--color-text-dark, #ffffff);
   font-weight: var(--font-weight-medium, 500);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
 }
 
 .plan-message-apply-button:hover {
-  background: var(--color-success-shade, #059669);
+  background: linear-gradient(135deg, 
+    var(--color-success-shade, #059669) 0%, 
+    var(--color-success, #10b981) 100%
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
 }
 
 .plan-message-info {
@@ -35,6 +68,18 @@
 
 .plan-message-cred-details {
   font-size: var(--font-size-3xs, 0.625rem);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .plan-message-cred-item {
@@ -42,4 +87,10 @@
   padding: var(--spacing-4xs, 0.25rem);
   background: var(--color-background-base, #2d2e3a);
   border-radius: var(--border-radius-small, 0.25rem);
+  transition: all 0.2s ease;
+}
+
+.plan-message-cred-item:hover {
+  background: var(--color-background-xlight, #3a3b4a);
+  transform: translateX(2px);
 }

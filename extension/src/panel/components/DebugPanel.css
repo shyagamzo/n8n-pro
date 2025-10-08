@@ -1,23 +1,65 @@
 /* Debug Panel styles */
 .debug-panel-collapsed {
   padding: var(--spacing-2xs, 0.5rem);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .debug-panel-toggle {
   padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
   font-size: var(--font-size-2xs, 0.75rem);
-  background: var(--color-background-base, #2d2e3a);
+  background: linear-gradient(135deg, 
+    var(--color-background-base, #2d2e3a) 0%, 
+    var(--color-background-xlight, #3a3b4a) 100%
+  );
   color: var(--color-text-base, #c5c7d0);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.debug-panel-toggle:hover {
+  background: linear-gradient(135deg, 
+    var(--color-background-xlight, #3a3b4a) 0%, 
+    var(--color-background-base, #2d2e3a) 100%
+  );
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .debug-panel {
   margin-top: var(--spacing-xs, 0.75rem);
   max-height: 600px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .debug-panel-header {
   border-top-left-radius: var(--border-radius-base, 0.5rem);
   border-top-right-radius: var(--border-radius-base, 0.5rem);
+  background: linear-gradient(135deg, 
+    var(--color-background-base, #2d2e3a) 0%, 
+    var(--color-background-xlight, #3a3b4a) 100%
+  );
 }
 
 .debug-panel-close {
@@ -35,12 +77,20 @@
   padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
   font-size: var(--font-size-2xs, 0.75rem);
   color: var(--color-text-base, #c5c7d0);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.debug-panel-tab:hover {
+  color: var(--color-text-dark, #ffffff);
+  background: rgba(255, 109, 90, 0.05);
 }
 
 .debug-panel-tab--active {
   color: var(--color-primary, #ff6d5a);
   border-bottom: 2px solid var(--color-primary, #ff6d5a);
   font-weight: var(--font-weight-medium, 500);
+  background: rgba(255, 109, 90, 0.1);
 }
 
 .debug-panel-content {
@@ -50,21 +100,28 @@
 .debug-panel-label {
   margin-bottom: var(--spacing-2xs, 0.5rem);
   color: var(--color-text-dark, #ffffff);
+  font-weight: var(--font-weight-medium, 500);
 }
 
 .debug-panel-pre {
   margin: 0;
   color: var(--color-success, #10b981);
   max-height: 400px;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .debug-panel-validation-info {
   padding: var(--spacing-xs, 0.75rem);
-  background: var(--color-background-base, #2d2e3a);
+  background: linear-gradient(135deg, 
+    var(--color-background-base, #2d2e3a) 0%, 
+    var(--color-background-xlight, #3a3b4a) 100%
+  );
   border-radius: var(--border-radius-small, 0.25rem);
   font-size: var(--font-size-2xs, 0.75rem);
   line-height: 1.8;
   margin-bottom: var(--spacing-xs, 0.75rem);
+  border: 1px solid var(--color-foreground-light, #4f5166);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .debug-panel-list {
@@ -75,6 +132,11 @@
 .debug-panel-list-item {
   margin-bottom: var(--spacing-2xs, 0.5rem);
   font-size: var(--font-size-2xs, 0.75rem);
+  transition: transform 0.2s ease;
+}
+
+.debug-panel-list-item:hover {
+  transform: translateX(2px);
 }
 
 .debug-panel-node-type {
@@ -91,21 +153,38 @@
 .debug-panel-help {
   margin-top: var(--spacing-xs, 0.75rem);
   padding: var(--spacing-2xs, 0.5rem);
-  background: var(--color-background-xlight, #3a3b4a);
+  background: linear-gradient(90deg, 
+    rgba(255, 109, 90, 0.1) 0%, 
+    transparent 100%
+  );
   border-left: 3px solid var(--color-primary, #ff6d5a);
   font-size: var(--font-size-3xs, 0.625rem);
   color: var(--color-text-base, #c5c7d0);
+  border-radius: 0 var(--border-radius-small, 0.25rem) var(--border-radius-small, 0.25rem) 0;
 }
 
 .debug-panel-footer {
   padding: var(--spacing-xs, 0.75rem);
-  background: var(--color-background-light, #1a1a24);
+  background: linear-gradient(135deg, 
+    var(--color-background-light, #1a1a24) 0%, 
+    var(--color-background-base, #2d2e3a) 100%
+  );
   border-bottom-left-radius: var(--border-radius-base, 0.5rem);
   border-bottom-right-radius: var(--border-radius-base, 0.5rem);
+  border-top: 1px solid var(--color-foreground-light, #4f5166);
 }
 
 .debug-panel-copy-button {
   background: var(--color-background-base, #2d2e3a);
   border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
   color: var(--color-text-dark, #ffffff);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.debug-panel-copy-button:hover {
+  background: var(--color-background-xlight, #3a3b4a);
+  border-color: var(--color-primary, #ff6d5a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
