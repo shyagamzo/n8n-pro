@@ -3,6 +3,7 @@ import type { ChatMessage } from '../lib/types/chat'
 import { orchestrator } from '../lib/orchestrator'
 import { createN8nClient } from '../lib/n8n'
 import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
+import { injectCredentials, getCredentialMatchStats } from '../lib/credentials/matcher'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
@@ -41,7 +42,33 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
     return
   }
 
-  const result = await n8n.createWorkflow(msg.plan.workflow)
+  // Fetch available credentials and inject them into workflow nodes
+  let workflow = msg.plan.workflow
+  try
+  {
+    const availableCredentials = await n8n.listCredentials()
+    if (availableCredentials && availableCredentials.length > 0)
+    {
+      workflow = injectCredentials(workflow, availableCredentials)
+      
+      // Log credential matching stats
+      const stats = getCredentialMatchStats(msg.plan.workflow, availableCredentials)
+      if (stats.nodesWithMatchedCredentials > 0)
+      {
+        post({
+          type: 'token',
+          token: `\n✓ Auto-linked ${stats.nodesWithMatchedCredentials} node(s) to existing credentials`
+        } satisfies BackgroundMessage)
+      }
+    }
+  }
+  catch (error)
+  {
+    // Credential injection is optional - continue without it if it fails
+    console.warn('Could not inject credentials:', error)
+  }
+
+  const result = await n8n.createWorkflow(workflow)
   post({ type: 'token', token: `\nCreated workflow with id: ${result.id}` } satisfies BackgroundMessage)
   post({ type: 'done' } satisfies BackgroundMessage)
 }
