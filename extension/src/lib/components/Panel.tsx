@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { STORAGE_KEYS, DEFAULTS } from '../constants'
 import { storageGetMany, storageSet } from '../utils/storage'
+import { colors, borders, shadows, spacing, typography } from '../styles/tokens'
 
 type PanelProps = {
   title: string
@@ -117,11 +118,11 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
         left: position.x,
         width: size.w,
         height: size.h,
-        background: 'var(--color-surface, #ffffff)',
-        color: 'var(--color-text, #111827)',
-        border: '1px solid var(--color-border, #e5e7eb)',
-        borderRadius: 12,
-        boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+        background: colors.background,
+        color: colors.text,
+        border: `${borders.widthBase} solid ${colors.border}`,
+        borderRadius: borders.radiusXLarge,
+        boxShadow: shadows.base,
         zIndex: 2147483647,
         display: 'flex',
         flexDirection: 'column',
@@ -138,15 +139,15 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '10px 12px',
-          background: 'var(--color-surface-2, #f9fafb)',
-          borderBottom: '1px solid var(--color-border, #e5e7eb)',
+          padding: `${spacing['2xs']} ${spacing['2xs']}`,
+          background: colors.backgroundSecondary,
+          borderBottom: `${borders.widthBase} solid ${colors.border}`,
           cursor: 'move',
           userSelect: 'none'
         }}
       >
-        <div style={{ fontWeight: 600 }}>{title}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ fontWeight: typography.fontWeightBold, color: colors.text }}>{title}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing['2xs'] }}>
           {onNewSession && (
             <button
               onClick={(e) =>
@@ -156,18 +157,18 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
               }}
               style={{
                 background: 'transparent',
-                border: '1px solid var(--color-border, #d1d5db)',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                fontSize: 12,
+                border: `${borders.widthBase} solid ${colors.border}`,
+                padding: `${spacing['4xs']} ${spacing['2xs']}`,
+                borderRadius: borders.radiusSmall,
+                fontSize: typography.fontSize2xs,
                 cursor: 'pointer',
-                color: 'var(--color-text, #111827)'
+                color: colors.text
               }}
             >
               New Session
             </button>
           )}
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', fontSize: 16, cursor: 'pointer' }}>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', fontSize: typography.fontSizeL, cursor: 'pointer', color: colors.text }}>
             ×
           </button>
         </div>
@@ -186,8 +187,8 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
           width: 20,
           height: 20,
           cursor: 'nwse-resize',
-          background: 'linear-gradient(135deg, transparent 50%, var(--color-border, #d1d5db) 50%)',
-          borderBottomRightRadius: 12
+          background: `linear-gradient(135deg, transparent 50%, ${colors.border} 50%)`,
+          borderBottomRightRadius: borders.radiusXLarge
         }}
       />
     </div>
