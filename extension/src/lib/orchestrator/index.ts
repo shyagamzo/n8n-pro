@@ -29,13 +29,13 @@ class Orchestrator
     tracer.setAgent('orchestrator')
     tracer.logDecision(
       'Starting chat handler',
-      'Using general assistant for now. TODO: Replace with LangGraph classifier → enrichment → planner → executor',
+      'Using enrichment agent for conversational responses',
       { messageCount: input.messages.length }
     )
 
-    // TODO: Replace with LangGraph graph: classifier → enrichment → planner → executor
-    // For now, use a general assistant prompt with n8n knowledge
-    const systemPrompt = buildPrompt('planner', {
+    // Use enrichment agent for conversational responses (not planner!)
+    // Planner should only be used in plan() method for generating Loom format
+    const systemPrompt = buildPrompt('enrichment', {
       includeNodesReference: true,
       includeConstraints: true,
     })
@@ -46,14 +46,14 @@ class Orchestrator
       ...input.messages,
     ]
 
-    // Log decision to use planner directly (bypassing classifier/enrichment for now)
+    // Log decision to use enrichment for chat
     debugAgentDecision(
       'orchestrator',
-      'Using planner agent directly',
-      'Classifier and enrichment not yet implemented in MVP',
+      'Using enrichment agent for chat',
+      'Enrichment provides conversational responses and gathers requirements',
       { promptLength: systemPrompt.length }
     )
-    debugAgentHandoff('orchestrator', 'planner', 'Direct handoff for chat completion')
+    debugAgentHandoff('orchestrator', 'enrichment', 'Conversational response and requirement gathering')
 
     // Stream the response token by token to the UI
     if (onToken)
@@ -88,13 +88,13 @@ class Orchestrator
     tracer.setAgent('orchestrator')
     tracer.logDecision('Checking if ready to plan', 'Assessing conversation completeness')
 
-    // Handoff to enrichment agent (simulated for now)
+    // Handoff to enrichment agent
     debugAgentHandoff('orchestrator', 'enrichment', 'Checking if more information is needed')
     tracer.logHandoff('enrichment', 'Assessing readiness to generate workflow plan')
     tracer.setAgent('enrichment')
 
     // Build enrichment prompt to assess readiness
-    const systemPrompt = buildPrompt('planner', {
+    const systemPrompt = buildPrompt('enrichment', {
       includeNodesReference: false,
       includeConstraints: true,
     })

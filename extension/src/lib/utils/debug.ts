@@ -339,7 +339,7 @@ export function debugAgentWorkflow(agents: AgentType[], totalDuration: number): 
   if (!isDevelopment) return
 
   const flow = agents.map(a => a.toUpperCase()).join(' → ')
-  console.group(`%c🔀 Agent Workflow`, 'color: #3b82f6; font-weight: bold')
+  console.group('%c🔀 Agent Workflow', 'color: #3b82f6; font-weight: bold')
   console.log(`%cFlow: ${flow}`, 'color: #6366f1')
   console.log(`%cDuration: ${totalDuration}ms`, 'color: #6b7280')
   console.groupEnd()
