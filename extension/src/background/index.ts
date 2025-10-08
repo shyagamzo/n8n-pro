@@ -3,10 +3,12 @@ import type { ChatMessage } from '../lib/types/chat'
 import { orchestrator } from '../lib/orchestrator'
 import { createN8nClient } from '../lib/n8n'
 import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
+import { logger } from '../lib/services/logger'
+import { getUserErrorMessage, ConfigurationError } from '../lib/errors'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
-  console.info('n8n Pro Extension installed')
+  logger.info('n8n Pro Extension installed')
 })
 
 function createSafePost(port: chrome.runtime.Port)
@@ -32,8 +34,20 @@ function createSafePost(port: chrome.runtime.Port)
 
 async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessage) => void): Promise<void>
 {
+  logger.info('Applying workflow plan')
+  
   const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
-  const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
+  
+  // Validate configuration
+  if (!n8nApiKey || !baseUrl)
+  {
+    const error = new ConfigurationError('n8n API key and Base URL must be configured')
+    logger.error('Configuration error', error)
+    post({ type: 'error', error: getUserErrorMessage(error) } satisfies BackgroundMessage)
+    return
+  }
+  
+  const n8n = createN8nClient({ apiKey: n8nApiKey, baseUrl })
   post({ type: 'token', token: '\nApplying plan…' } satisfies BackgroundMessage)
 
   // Quick auth check
@@ -41,10 +55,10 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
   {
     await n8n.getWorkflows()
   }
-  catch (e)
+  catch (error)
   {
-    const err = e as Error
-    post({ type: 'error', error: `n8n authorization failed. Check Base URL and API key. ${err.message}` } satisfies BackgroundMessage)
+    logger.error('n8n authorization failed', error as Error)
+    post({ type: 'error', error: getUserErrorMessage(error) } satisfies BackgroundMessage)
     return
   }
 
@@ -82,11 +96,15 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
 
 async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void): Promise<void>
 {
+  logger.debug('Handling chat request', { messageCount: msg.messages.length })
+  
   const apiKey = await getOpenAiKey()
 
   if (!apiKey)
   {
-    post({ type: 'error', error: 'OpenAI API key not set. Configure it in Options.' } satisfies BackgroundMessage)
+    const error = new ConfigurationError('OpenAI API key not set')
+    logger.error('Configuration error', error)
+    post({ type: 'error', error: `${getUserErrorMessage(error)}. Configure it in extension Options.` } satisfies BackgroundMessage)
     return
   }
 
@@ -131,9 +149,10 @@ chrome.runtime.onConnect.addListener((port) =>
         await handleChat(msg, post)
       }
     }
-    catch (err)
+    catch (error)
     {
-      post({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
+      logger.error('Message handler error', error as Error, { messageType: msg?.type })
+      post({ type: 'error', error: getUserErrorMessage(error) } satisfies BackgroundMessage)
     }
   })
 })
@@ -154,7 +173,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
     catch (error)
     {
       // One-off message handler - errors are shown through chat flow in primary use case
-      console.error('Failed to create workflow from one-off message:', error)
+      logger.error('Failed to create workflow from one-off message', error as Error)
     }
   })()
 
