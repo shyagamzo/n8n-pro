@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import type { Plan } from '../../lib/types/plan'
 import { chat } from '../../lib/services/chat'
+import DebugPanel from './DebugPanel'
 
 type PlanMessageProps = {
   plan: Plan
@@ -171,6 +172,8 @@ export default function PlanMessage({ plan }: PlanMessageProps): React.ReactElem
           After creation, you'll get a direct link to open the workflow and configure credentials.
         </div>
       )}
+
+      <DebugPanel plan={plan} />
     </div>
   )
 }
