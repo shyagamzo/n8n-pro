@@ -1,3 +1,5 @@
+import type { ChatMessage } from '../types/chat'
+
 export type OpenAiStreamOptions = {
   model?: string
   timeoutMs?: number
@@ -8,7 +10,7 @@ const DEFAULT_TIMEOUT_MS = 60000
 
 export async function streamChatCompletion(
   apiKey: string,
-  userText: string,
+  messages: ChatMessage[],
   onToken: (t: string) => void,
   opts: OpenAiStreamOptions = {}
 ): Promise<void>
@@ -16,7 +18,7 @@ export async function streamChatCompletion(
   const model = opts.model ?? DEFAULT_MODEL
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS
 
-  const body = buildChatBody(userText, model)
+  const body = buildChatBody(messages, model)
 
   const resp = await fetchWithTimeout(
     'https://api.openai.com/v1/chat/completions',
@@ -36,14 +38,14 @@ export async function streamChatCompletion(
   await readSseStream(resp, onToken)
 }
 
-function buildChatBody(userText: string, model: string): unknown
+function buildChatBody(messages: ChatMessage[], model: string): unknown
 {
   return {
     model,
-    messages: [
-      { role: 'system', content: 'You are an assistant that helps build and improve n8n workflows.' },
-      { role: 'user', content: userText }
-    ],
+    messages: messages.map(msg => ({
+      role: msg.role,
+      content: msg.text
+    })),
     stream: true
   }
 }

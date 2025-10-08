@@ -3,6 +3,7 @@ import type { Plan } from '../types/plan'
 import { createOpenAiChatModel } from '../ai/model'
 import { buildPrompt } from '../prompts'
 import { parse as parseLoom } from '../loom'
+import { streamChatCompletion } from '../services/openai'
 
 export type OrchestratorInput = {
   apiKey: string
@@ -16,11 +17,6 @@ class Orchestrator
 {
   public async handle(input: OrchestratorInput, onToken?: StreamTokenHandler): Promise<string>
   {
-    // MVP: simple pass-through using a single non-streaming call via model wrapper,
-    // while leaving the streaming path to future agent steps. We still stream
-    // a short typing indicator token to keep UI responsive.
-    if (onToken) onToken('')
-
     // TODO: Replace with LangGraph graph: classifier → enrichment → planner → executor
     // For now, use a general assistant prompt with n8n knowledge
     const systemPrompt = buildPrompt('planner', {
@@ -34,9 +30,23 @@ class Orchestrator
       ...input.messages,
     ]
 
-    const model = createOpenAiChatModel({ apiKey: input.apiKey })
-    const response = await model.generateText(messagesWithSystem)
-    return response
+    // Stream the response token by token to the UI
+    if (onToken)
+    {
+      await streamChatCompletion(
+        input.apiKey,
+        messagesWithSystem,
+        onToken
+      )
+    }
+    else
+    {
+      // Fallback to blocking call if no streaming callback provided
+      const model = createOpenAiChatModel({ apiKey: input.apiKey })
+      return await model.generateText(messagesWithSystem)
+    }
+
+    return ''
   }
 
   public async plan(input: OrchestratorInput): Promise<Plan>
