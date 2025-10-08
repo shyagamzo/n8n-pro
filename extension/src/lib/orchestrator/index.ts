@@ -8,6 +8,10 @@ import { streamChatCompletion } from '../services/openai'
 import { stripCodeFences } from '../utils/markdown'
 import { debugLLMResponse, debugLoomParsing, debugPlanGenerated, DebugSession, debugAgentDecision, debugAgentHandoff } from '../utils/debug'
 import { validateWorkflow, formatValidationResult } from '../validation/workflow'
+import { validatePlan } from './validator'
+import { fetchNodeTypes } from '../n8n/node-types'
+import { logValidation, formatValidationErrors } from '../utils/validation-logger'
+import { getN8nApiKey, getBaseUrl } from '../services/settings'
 
 export type OrchestratorInput = {
   apiKey: string
@@ -253,9 +257,99 @@ class Orchestrator
         session.log('Workflow validation passed')
       }
 
+      // Deep validation with Validator Agent
+      session.log('Running deep validation with Validator Agent')
+      debugAgentHandoff('planner', 'validator', 'Validate workflow against n8n API')
+      tracer.logHandoff('validator', 'Check node types and parameters against n8n')
+      tracer.setAgent('validator')
+
+      try
+      {
+        // Fetch n8n node types
+        const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
+        const nodeTypes = await fetchNodeTypes({
+          baseUrl: baseUrl || undefined,
+          apiKey: n8nApiKey || undefined
+        })
+
+        // Run validator
+        const validatorResult = await validatePlan({
+          apiKey: input.apiKey,
+          plan,
+          nodeTypes
+        })
+
+        // Log validation results
+        logValidation({
+          workflowName: plan.workflow.name,
+          valid: validatorResult.valid,
+          errors: validatorResult.errors || [],
+          warnings: validatorResult.warnings || [],
+          plannerOutput: plan,
+          validatorDecision: validatorResult.valid ? 'pass' : 'fail',
+          retryCount: 0,
+          sessionId: session.getSessionId()
+        })
+
+        if (!validatorResult.valid)
+        {
+          session.log('Validator rejected plan', {
+            errors: validatorResult.errors?.length || 0,
+            warnings: validatorResult.warnings?.length || 0
+          })
+
+          debugAgentDecision(
+            'validator',
+            'Validation failed',
+            'Workflow contains invalid node types or structure',
+            { errors: validatorResult.errors?.length, warnings: validatorResult.warnings?.length }
+          )
+
+          // Format validation errors for user
+          const errorMessage = formatValidationErrors(validatorResult)
+          console.error('❌ Validator rejected plan:', errorMessage)
+
+          // Throw error to prevent invalid workflow from being sent
+          throw new Error(
+            'Workflow validation failed:\n\n' + errorMessage + '\n\n' +
+            'The workflow was rejected because it contains node types or structures that don\'t exist in n8n. ' +
+            'Please try again with a different approach.'
+          )
+        }
+
+        debugAgentDecision(
+          'validator',
+          'Validation passed',
+          'Workflow is valid and ready for creation',
+          { warnings: validatorResult.warnings?.length || 0 }
+        )
+
+        if (validatorResult.warnings && validatorResult.warnings.length > 0)
+        {
+          session.log('Validator has warnings', { warningCount: validatorResult.warnings.length })
+          console.warn('⚠️ Validator warnings:', validatorResult.warnings)
+        }
+      }
+      catch (error)
+      {
+        // If validation fails, log and re-throw
+        console.error('❌ Validator error:', error)
+        session.log('Validator error', { error })
+
+        debugAgentDecision(
+          'validator',
+          'Validation error',
+          error instanceof Error ? error.message : 'Unknown error',
+          {}
+        )
+
+        // Re-throw to prevent invalid workflow
+        throw error
+      }
+
       // Handoff back to orchestrator
-      debugAgentHandoff('planner', 'orchestrator', 'Plan ready for user review')
-      tracer.logHandoff('orchestrator', 'Return plan to user')
+      debugAgentHandoff('validator', 'orchestrator', 'Plan validated and ready for user review')
+      tracer.logHandoff('orchestrator', 'Return validated plan to user')
       tracer.setAgent('orchestrator')
 
       session.end(true)

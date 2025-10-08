@@ -10,12 +10,14 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
 **Parameters:** None required
 
 ### Schedule Trigger
-**Type:** `n8n-nodes-base.scheduleTrigger` or `n8n-nodes-base.schedule`
+**Type:** `n8n-nodes-base.scheduleTrigger`
 **Use:** Run workflows on a schedule
 **Parameters:**
-- `rule.interval`: Interval configuration
-  - `cronExpression`: Cron format (e.g., "0 9 * * *" for 9 AM daily)
-  - Or interval fields: `minutes`, `hours`, `days`, `weeks`
+- `rule`: Schedule rule configuration
+  - `interval`: Array with interval configuration
+    - Use `intervalSize` and `intervalUnit` (e.g., `{ intervalSize: 1, intervalUnit: 'days' }`)
+  - Or use `cronExpression`: Cron format (e.g., "0 9 * * *" for 9 AM daily)
+**Note:** `n8n-nodes-base.schedule` is deprecated, always use `scheduleTrigger`
 
 ### Webhook
 **Type:** `n8n-nodes-base.webhook`
@@ -33,6 +35,39 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
 - `method`: HTTP method
 - `authentication`: Auth type
 - `options.polling.enabled`: true
+
+## AI Nodes (LangChain)
+
+**Note:** AI nodes are in the `@n8n/n8n-nodes-langchain` package, **not** `n8n-nodes-base`.
+
+### AI Agent
+**Type:** `@n8n/n8n-nodes-langchain.agent`
+**Use:** Create AI agents with LangChain integration
+**Parameters:**
+- `agent`: Agent type (conversationalAgent, openAiFunctionsAgent, etc.)
+- `promptType`: System prompt configuration
+- `text`: System message or instructions
+- `options`: Additional agent options
+**Credentials:** Requires OpenAI API or other LLM provider credentials
+**Note:** For simple AI text generation, consider using `@n8n/n8n-nodes-langchain.lmChatOpenAi` instead
+
+### OpenAI Chat Model
+**Type:** `@n8n/n8n-nodes-langchain.lmChatOpenAi`
+**Use:** Direct OpenAI chat completions (simpler than Agent)
+**Parameters:**
+- `model`: Model name (gpt-4, gpt-3.5-turbo, etc.)
+- `prompt`: Input prompt/message
+- `options`: Temperature, max tokens, etc.
+**Credentials:** Requires OpenAI API credentials
+**Note:** Use this for simple text generation; use Agent for complex workflows
+
+### Basic LLM Chain
+**Type:** `@n8n/n8n-nodes-langchain.chainLlm`
+**Use:** Simple LLM chain without agent complexity
+**Parameters:**
+- `model`: LLM model selection
+- `prompt`: Prompt template
+**Credentials:** Depends on selected model provider
 
 ## Core Nodes
 
