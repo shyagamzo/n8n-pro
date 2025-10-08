@@ -307,47 +307,55 @@ function parseValue(text: string, options: Required<ParseOptions>): LoomValue
     return text
   }
 
-  // null
-  if (text === 'null' || text === 'nil')
-  {
-    return null
-  }
-
-  // Boolean
-  if (text === 'true')
-  {
-    return true
-  }
-
-  if (text === 'false')
-  {
-    return false
-  }
-
-  // Empty array
-  if (text === '[]')
-  {
-    return []
-  }
-
-  // Number
-  if (/^-?\d+(\.\d+)?$/.test(text))
-  {
-    const num = Number(text)
-
-    if (!isNaN(num))
+  // Type parsers map
+  const typeParsers: Array<{
+    test: (text: string) => boolean
+    parse: (text: string) => LoomValue
+  }> = [
+    // null
     {
-      return num
+      test: (text) => text === 'null' || text === 'nil',
+      parse: () => null
+    },
+    // Boolean
+    {
+      test: (text) => text === 'true',
+      parse: () => true
+    },
+    {
+      test: (text) => text === 'false',
+      parse: () => false
+    },
+    // Empty array
+    {
+      test: (text) => text === '[]',
+      parse: () => []
+    },
+    // Number
+    {
+      test: (text) => /^-?\d+(\.\d+)?$/.test(text),
+      parse: (text) => {
+        const num = Number(text)
+        return !isNaN(num) ? num : text
+      }
+    },
+    // Inline array: comma-separated values
+    {
+      test: (text) => text.includes(','),
+      parse: (text) => text.split(',').map(item => parseValue(item.trim(), options))
+    }
+  ]
+
+  // Try each parser in order
+  for (const parser of typeParsers)
+  {
+    if (parser.test(text))
+    {
+      return parser.parse(text)
     }
   }
 
-  // Inline array: comma-separated values
-  if (text.includes(','))
-  {
-    return text.split(',').map(item => parseValue(item.trim(), options))
-  }
-
-  // String
+  // Default: return as string
   return text
 }
 
