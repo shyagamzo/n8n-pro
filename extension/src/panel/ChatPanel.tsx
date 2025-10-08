@@ -10,6 +10,7 @@ import { panelBodyColumn } from './styles'
 type ChatPanelProps = {
     open: boolean
     onClose: () => void
+    onNewSession?: () => void
     messages: ChatMessage[]
     draft: string
     sending: boolean
@@ -21,6 +22,7 @@ type ChatPanelProps = {
 export default function ChatPanel({
     open,
     onClose,
+    onNewSession,
     messages,
     draft,
     plan,
@@ -34,7 +36,7 @@ export default function ChatPanel({
 
     if (!open) return null
     return (
-        <Panel title="n8n Assistant" onClose={onClose}>
+        <Panel title="n8n Assistant" onClose={onClose} onNewSession={onNewSession}>
             <div style={panelBodyColumn}>
                 <MessagesList messages={messages} draft={draft} sending={sending} />
                 {plan ? <PlanPreview plan={plan} onCancel={() => { if (typeof onCancelPlan === 'function') onCancelPlan() }} /> : null}
