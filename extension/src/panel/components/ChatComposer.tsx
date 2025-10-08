@@ -1,6 +1,7 @@
 import React, { useCallback, useState, useRef } from 'react'
 import Textarea from '../../lib/components/Textarea'
 import Button from '../../lib/components/Button'
+import '../../lib/styles/utilities.css'
 import '../styles.css'
 
 type ChatComposerProps = {
@@ -37,8 +38,8 @@ export default function ChatComposer({ sending, onSend }: ChatComposerProps): Re
   }, [input, onSend])
 
   return (
-    <form onSubmit={handleSubmit} className="composer-row">
-      <div className="input-flex">
+    <form onSubmit={handleSubmit} className="composer-row flex gap-sm border-top">
+      <div className="input-flex flex-1">
         <Textarea
           ref={textareaRef}
           value={input}

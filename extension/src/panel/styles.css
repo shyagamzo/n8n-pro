@@ -1,28 +1,24 @@
 /* Panel component styles */
+/* Note: Uses utilities from utilities.css */
+
 .panel-body {
-  display: flex;
-  flex-direction: column;
+  /* Inherits .flex-column from utilities */
   height: 100%;
   background: var(--color-background-light, #1a1a24);
 }
 
 .messages-list {
-  flex: 1;
+  /* Inherits .flex-1, .flex-column, .overflow-y-auto, .gap-sm from utilities */
   padding: var(--spacing-s, 1rem);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2xs, 0.5rem);
   background: var(--color-background-light, #1a1a24);
 }
 
 .message-wrapper {
-  display: flex;
-  width: 100%;
+  /* Inherits .flex, .w-full from utilities */
 }
 
 .message-wrapper--user {
-  justify-content: flex-end;
+  /* Inherits .flex-justify-end from utilities */
 }
 
 .message-wrapper--assistant {
@@ -30,6 +26,7 @@
 }
 
 .draft-bubble {
+  /* Component-specific chat bubble styling */
   background: var(--color-chat-bot-background, #2d2e3a);
   color: var(--color-chat-bot-text, #ffffff);
   padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
@@ -39,13 +36,11 @@
 }
 
 .composer-row {
+  /* Inherits .flex, .gap-sm, .border-top from utilities */
   padding: var(--spacing-s, 1rem);
-  border-top: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
-  display: flex;
-  gap: var(--spacing-2xs, 0.5rem);
   background: var(--color-background-light, #1a1a24);
 }
 
 .input-flex {
-  flex: 1;
+  /* Inherits .flex-1 from utilities */
 }

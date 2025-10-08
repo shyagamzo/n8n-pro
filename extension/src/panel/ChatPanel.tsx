@@ -3,6 +3,7 @@ import Panel from '../lib/components/Panel'
 import type { ChatMessage } from '../lib/types/chat'
 import MessagesList from './components/MessagesList'
 import ChatComposer from './components/ChatComposer'
+import '../lib/styles/utilities.css'
 import './styles.css'
 
 type ChatPanelProps = {
@@ -31,7 +32,7 @@ export default function ChatPanel({
     if (!open) return null
     return (
         <Panel title="n8n Assistant" onClose={onClose} onNewSession={onNewSession}>
-            <div className="panel-body">
+            <div className="panel-body flex-column">
                 <MessagesList messages={messages} draft={draft} sending={sending} />
                 <ChatComposer sending={sending} onSend={(text) => onSend(text)} />
             </div>
