@@ -85,9 +85,9 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
         ? `${baseUrl}/workflow/${result.id}/${encodeURIComponent(cred.nodeId)}`
         : workflowUrl
       const credUrl = `${baseUrl}/credentials/new/${encodeURIComponent(cred.type)}`
-      
+
       const nodeName = cred.nodeName || cred.name || cred.type
-      
+
       post({
         type: 'token',
         token: `\n${idx + 1}. **${nodeName}** node: [Open node →](${nodeUrl}) or [Create credential →](${credUrl})`

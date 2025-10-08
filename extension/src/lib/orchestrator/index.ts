@@ -88,7 +88,10 @@ class Orchestrator
     // Parse Loom response into Plan object
     try
     {
-      const parsed = parseLoom(loomResponse)
+      // Strip markdown code fences if present (LLM sometimes wraps response in ```)
+      const cleanedResponse = loomResponse.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '').trim()
+      
+      const parsed = parseLoom(cleanedResponse)
 
       if (!parsed.success || !parsed.data)
       {
