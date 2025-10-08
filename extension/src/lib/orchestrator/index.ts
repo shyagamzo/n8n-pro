@@ -5,6 +5,8 @@ import { buildPrompt } from '../prompts'
 import { parse as parseLoom } from '../loom'
 import { streamChatCompletion } from '../services/openai'
 import { stripCodeFences } from '../utils/markdown'
+import { debugLLMResponse, debugLoomParsing, debugPlanGenerated, DebugSession } from '../utils/debug'
+import { validateWorkflow, formatValidationResult } from '../validation/workflow'
 
 export type OrchestratorInput = {
   apiKey: string
@@ -49,14 +51,55 @@ class Orchestrator
     return ''
   }
 
+  /**
+   * Check if the conversation has enough information to generate a workflow plan.
+   * This prevents generating useless plans when the assistant is still gathering requirements.
+   */
+  public async isReadyToPlan(input: OrchestratorInput): Promise<{ ready: boolean; reason?: string }>
+  {
+    // Build enrichment prompt to assess readiness
+    const systemPrompt = buildPrompt('planner', {
+      includeNodesReference: false,
+      includeConstraints: true,
+    })
+
+    const readinessCheck: ChatMessage = {
+      id: 'readiness-check',
+      role: 'user',
+      text: 'Based on our conversation, do we have enough information to create a complete workflow? ' +
+            'Answer with just "READY" if we have all necessary details (trigger type, actions, services, etc.), ' +
+            'or "NOT_READY: [what\'s missing]" if we need more information.',
+    }
+
+    const messagesWithSystem: ChatMessage[] = [
+      { id: 'system', role: 'system', text: systemPrompt },
+      ...input.messages,
+      readinessCheck,
+    ]
+
+    const model = createOpenAiChatModel({ apiKey: input.apiKey })
+    const response = await model.generateText(messagesWithSystem)
+
+    const isReady = response.trim().toUpperCase().startsWith('READY')
+
+    return {
+      ready: isReady,
+      reason: isReady ? undefined : response.replace(/^NOT_READY:\s*/i, '').trim()
+    }
+  }
+
   public async plan(input: OrchestratorInput): Promise<Plan>
   {
+    const session = new DebugSession('Orchestrator', 'plan')
+    session.log('Starting plan generation', { messageCount: input.messages.length })
+
     // Build planner prompt
     const systemPrompt = buildPrompt('planner', {
       includeNodesReference: true,
       includeWorkflowPatterns: true,
       includeConstraints: true,
     })
+    session.log('Built planner prompt', { promptLength: systemPrompt.length })
 
     // Create request asking for workflow plan
     const planRequest: ChatMessage = {
@@ -74,32 +117,81 @@ class Orchestrator
 
     // Call LLM to generate plan
     const model = createOpenAiChatModel({ apiKey: input.apiKey })
+    session.log('Calling LLM for plan generation')
     const loomResponse = await model.generateText(messagesWithSystem)
+
+    // Log LLM response
+    debugLLMResponse(loomResponse, systemPrompt)
+    session.log('LLM response received', { responseLength: loomResponse.length })
 
     // Parse Loom response into Plan object
     try
     {
       // Strip markdown code fences if present (LLM sometimes wraps response in ```)
       const cleanedResponse = stripCodeFences(loomResponse)
+      session.log('Stripped code fences', { cleanedLength: cleanedResponse.length })
 
+      session.log('Parsing Loom response')
       const parsed = parseLoom(cleanedResponse)
 
       if (!parsed.success || !parsed.data)
       {
-        throw new Error('Failed to parse Loom response: ' + parsed.errors.map(e => e.message).join(', '))
+        const errorMsg = 'Failed to parse Loom response: ' + parsed.errors.map(e => e.message).join(', ')
+        debugLoomParsing(cleanedResponse, parsed, false)
+        session.log('Loom parsing failed', { errors: parsed.errors })
+        throw new Error(errorMsg)
       }
+
+      debugLoomParsing(cleanedResponse, parsed.data, true)
+      session.log('Loom parsing succeeded')
 
       // Convert parsed Loom to Plan type
       const plan = this.loomToPlan(parsed.data)
+
+      // Validate workflow structure
+      session.log('Validating workflow structure')
+      const validation = validateWorkflow(plan.workflow)
+      debugPlanGenerated({
+        plan,
+        validation,
+        sessionId: session.getSessionId()
+      })
+
+      if (!validation.valid)
+      {
+        session.log('Workflow validation failed', {
+          errorCount: validation.errors.length,
+          warningCount: validation.warnings.length
+        })
+        console.warn('⚠️ Workflow validation issues detected:', formatValidationResult(validation))
+      }
+      else if (validation.warnings.length > 0)
+      {
+        session.log('Workflow has warnings', { warningCount: validation.warnings.length })
+        console.warn('⚠️ Workflow validation warnings:', formatValidationResult(validation))
+      }
+      else
+      {
+        session.log('Workflow validation passed')
+      }
+
+      session.end(true)
       return plan
     }
     catch (error)
     {
-      console.error('Plan parsing error:', error)
-      console.error('LLM response:', loomResponse)
+      console.error('❌ Plan parsing error:', error)
+      console.error('📄 Raw LLM response:', loomResponse)
+      session.log('Error occurred', { error })
+      session.end(false)
 
-      // Fallback to a basic plan
-      return this.fallbackPlan(input.messages)
+      // Don't create a useless fallback workflow - throw error instead
+      throw new Error(
+        'Failed to generate a valid workflow plan. ' +
+        'The AI response could not be parsed. ' +
+        'Please try rephrasing your request or providing more details. ' +
+        'Check console for full error details.'
+      )
     }
   }
 
@@ -145,45 +237,6 @@ class Orchestrator
     }
   }
 
-  private fallbackPlan(messages: ChatMessage[]): Plan
-  {
-    // Extract intent from last user message
-    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
-    const userIntent = lastUserMessage?.text || 'workflow'
-
-    return {
-      title: 'Simple Workflow',
-      summary: `Basic workflow for: ${userIntent.slice(0, 100)}`,
-      credentialsNeeded: [],
-      workflow: {
-        name: 'Fallback Workflow',
-        nodes: [
-          {
-            id: 'manual-trigger',
-            type: 'n8n-nodes-base.manualTrigger',
-            name: 'When clicking "Execute Workflow"',
-            parameters: {},
-            position: [250, 300],
-          },
-          {
-            id: 'code',
-            type: 'n8n-nodes-base.code',
-            name: 'Process Data',
-            parameters: {
-              language: 'javascript',
-              jsCode: 'return [{ message: "Please refine your request for a more specific workflow" }];',
-            },
-            position: [450, 300],
-          },
-        ],
-        connections: {
-          'manual-trigger': {
-            main: [[{ node: 'code', type: 'main', index: 0 }]],
-          },
-        },
-      },
-    }
-  }
 }
 
 export const orchestrator = new Orchestrator()
