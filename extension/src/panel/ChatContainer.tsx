@@ -4,17 +4,34 @@ import { useChatStore } from '../lib/state/chatStore'
 import { chat } from '../lib/services/chat'
 import ConfirmModal from '../lib/components/ConfirmModal'
 import ErrorBoundary from '../lib/components/ErrorBoundary'
+import Panel from '../lib/components/Panel'
+import PanelSkeleton from './components/PanelSkeleton'
 
 export default function ChatContainer(): React.ReactElement | null
 {
   const { isOpen, setOpen, messages, assistantDraft, sending, clearSession, loadMessages } = useChatStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Load persisted messages on mount
   useEffect(() =>
   {
-    loadMessages()
+    void loadMessages().then(() =>
+    {
+      // Show skeleton for at least 300ms for smooth transition
+      setTimeout(() => setIsLoading(false), 300)
+    })
   }, [loadMessages])
+
+  // Show skeleton during initial load
+  if (isOpen && isLoading)
+  {
+    return (
+      <Panel title="n8n Assistant" onClose={() => setOpen(false)} showConnectionStatus>
+        <PanelSkeleton />
+      </Panel>
+    )
+  }
 
   return (
     <ErrorBoundary>

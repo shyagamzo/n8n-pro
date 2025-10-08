@@ -48,20 +48,20 @@ export class ChatService
         setAssistantDraft('')
         setPendingPlan(null)
         finishSending()
-        
+
         // Create error message with retry capability
         const errorDetails: ErrorDetails = {
           title: this.getErrorTitle(message.error),
           details: this.getErrorDetails(message.error),
           retryable: this.isRetryable(message.error),
-          retryPayload: this.isRetryable(message.error) 
+          retryPayload: this.isRetryable(message.error)
             ? { messages: this.lastSentMessages }
             : undefined
         }
 
-        addMessage({ 
-          id: generateId(), 
-          role: 'error', 
+        addMessage({
+          id: generateId(),
+          role: 'error',
           text: this.getErrorMessage(message.error),
           error: errorDetails
         })

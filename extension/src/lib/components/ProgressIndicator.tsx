@@ -21,8 +21,8 @@ export default function ProgressIndicator({ status, step, total }: ProgressIndic
         </div>
       </div>
       <div className="progress-indicator__bar">
-        <div 
-          className="progress-indicator__fill" 
+        <div
+          className="progress-indicator__fill"
           style={{ width: `${percentage}%` }}
         />
       </div>
