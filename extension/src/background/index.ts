@@ -32,6 +32,52 @@ function createSafePost(port: chrome.runtime.Port)
   }
 }
 
+/**
+ * Transform connections to n8n's expected format (double-nested arrays)
+ * n8n expects: { "NodeName": { "main": [[{ node, type, index }]] } }
+ * LLM might generate: { "NodeName": { "main": [{ node, type, index }] } }
+ */
+function normalizeConnections(connections: unknown): Record<string, unknown>
+{
+  if (!connections || typeof connections !== 'object') return {}
+
+  const normalized: Record<string, unknown> = {}
+  const conns = connections as Record<string, unknown>
+
+  for (const [sourceNode, outputs] of Object.entries(conns))
+  {
+    if (!outputs || typeof outputs !== 'object') continue
+
+    const normalizedOutputs: Record<string, unknown> = {}
+    const outputsObj = outputs as Record<string, unknown>
+
+    for (const [outputType, connections] of Object.entries(outputsObj))
+    {
+      if (!Array.isArray(connections))
+      {
+        normalizedOutputs[outputType] = []
+        continue
+      }
+
+      // Check if it's already double-nested
+      if (connections.length > 0 && Array.isArray(connections[0]))
+      {
+        // Already double-nested, keep as is
+        normalizedOutputs[outputType] = connections
+      }
+      else
+      {
+        // Single-nested, wrap in outer array
+        normalizedOutputs[outputType] = [connections]
+      }
+    }
+
+    normalized[sourceNode] = normalizedOutputs
+  }
+
+  return normalized
+}
+
 async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessage) => void): Promise<void>
 {
   const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
@@ -82,9 +128,15 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
 
   debugWorkflowCreation(msg.plan.workflow)
 
+  // Normalize connections format for n8n API
+  const normalizedWorkflow = {
+    ...msg.plan.workflow,
+    connections: normalizeConnections(msg.plan.workflow.connections)
+  }
+
   try
   {
-    const result = await n8n.createWorkflow(msg.plan.workflow)
+    const result = await n8n.createWorkflow(normalizedWorkflow)
 
     debugWorkflowCreated(result.id, `${baseUrl}/workflow/${result.id}`)
     console.log('✅ Workflow created successfully:', {
@@ -303,7 +355,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
         nodeCount: msg.plan.workflow.nodes?.length || 0
       })
 
-      await n8n.createWorkflow(msg.plan.workflow)
+      // Normalize connections format for n8n API
+      const normalizedWorkflow = {
+        ...msg.plan.workflow,
+        connections: normalizeConnections(msg.plan.workflow.connections)
+      }
+
+      await n8n.createWorkflow(normalizedWorkflow)
       console.log('✅ Workflow created successfully from one-off message')
     }
     catch (error)
