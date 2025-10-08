@@ -56,7 +56,9 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
     return
   }
 
-  // Fetch available credentials from n8n (optional, best-effort)
+  // Note: n8n API does not support listing credentials for security reasons
+  // The planner will generate workflows without pre-checking credential availability
+  // Users will need to configure credentials in n8n after workflow creation
   let availableCredentials: Array<{ id: string; name: string; type: string }> | undefined
   try
   {
@@ -69,8 +71,8 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
   }
   catch (error)
   {
-    // Credentials fetch is optional - continue without them
-    console.warn('Could not fetch n8n credentials:', error)
+    // Expected: n8n API doesn't support listing credentials
+    // This is not an error - continue with empty credentials list
   }
 
   // Generate dynamic workflow plan based on conversation

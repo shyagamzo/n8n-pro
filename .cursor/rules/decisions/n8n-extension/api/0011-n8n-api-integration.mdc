@@ -12,7 +12,7 @@ Use n8n's REST API v1 for MVP integration. (n8n currently only provides v1 API)
 - **Workflows**: List, create, read, update, delete workflows
 - **Nodes**: Create, update, delete nodes within workflows
 - **Connections**: Create and manage node connections
-- **Credentials**: List existing credentials (presence check only)
+- **Credentials**: Create, delete, get schema (Note: n8n API does not support listing credentials)
 - **Executions**: Read execution status and results
 
 ## Authentication
@@ -64,7 +64,13 @@ Use n8n's REST API v1 for MVP integration. (n8n currently only provides v1 API)
 - Self-hosting guide: https://docs.n8n.io/hosting/
 - Authentication: https://docs.n8n.io/api/authentication/
 
+## Credentials Limitation
+n8n API does not provide an endpoint to list existing credentials for security reasons.
+The planner cannot pre-check credential availability. Users must configure credentials
+manually in n8n after workflow creation.
+
+Reference: https://docs.n8n.io/api/api-reference/#tag/credential
+
 ## Open Items
-- Specific API endpoints for each operation
 - Rate limiting and retry strategies
 - API version compatibility matrix
