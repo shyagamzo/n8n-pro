@@ -1,352 +1,449 @@
-# Design Tokens Documentation
+# Design Tokens - CSS Variables Reference
 
-This extension uses a comprehensive design token system that synchronizes with n8n's design language.
+This extension uses **n8n's CSS variables directly** for seamless visual integration and automatic theme synchronization.
 
-## Philosophy
+## Architecture
 
-**Design tokens** are named variables that store visual design attributes. They create a single source of truth for:
-- Colors
-- Spacing
-- Typography
-- Borders
-- Shadows
-- Layout values
+### CSS-First Design System
+All styling is done via **CSS files** using n8n's CSS variables with fallback values:
 
-## Benefits
+```css
+.component {
+    /* Use n8n's CSS variables directly */
+    padding: var(--spacing-xs, 0.75rem);
+    color: var(--color-text-dark, #ffffff);
+    background: var(--color-background-light, #1a1a24);
+}
+```
 
-1. **Consistency**: All components use the same visual language
-2. **Theme Sync**: Automatically inherits n8n's design when available
-3. **Maintainability**: Change tokens in one place, update everywhere
-4. **Semantic Naming**: `colors.textBase` is clearer than `#555770`
-5. **Graceful Fallbacks**: Works even when n8n tokens aren't available
+**Key Points:**
+- ✅ No TypeScript/JavaScript imports needed for styling
+- ✅ CSS variables resolved by browser at runtime
+- ✅ Automatic theme sync (light/dark mode)
+- ✅ Zero JavaScript overhead
 
-## Token Categories
+## Available CSS Variables
 
-### Colors
+### Color Tokens
 
 #### Primary Colors
-```typescript
-colors.primary              // Main brand color (#ff6d5a)
-colors.primaryShade         // Darker shade for hover states
-colors.primaryTint          // Lighter tint for backgrounds
+```css
+--color-primary                 /* Main brand color #ff6d5a */
+--color-primary-shade-1         /* Darker shade #e55a47 */
+--color-primary-tint-1          /* Lighter tint #ff9b8f */
+--color-secondary               /* Secondary color #7c4dff */
+```
+
+**Example:**
+```css
+.button--primary {
+    background: var(--color-primary, #ff6d5a);
+}
+.button--primary:hover {
+    background: var(--color-primary-shade-1, #e55a47);
+}
 ```
 
 #### Text Colors
-```typescript
-colors.textDark             // Headings, emphasis (#2d2e3a)
-colors.textBase             // Body text (#555770)
-colors.textLight            // Secondary text (#7f8195)
-colors.textXLight           // White text for dark backgrounds
+```css
+--color-text-dark               /* White in dark mode #ffffff */
+--color-text-base               /* Light gray in dark mode #c5c7d0 */
+--color-text-light              /* Muted gray #7f8195 */
+```
+
+**Example:**
+```css
+.title {
+    color: var(--color-text-dark, #ffffff);
+}
+.subtitle {
+    color: var(--color-text-base, #c5c7d0);
+}
 ```
 
 #### Background Colors
-```typescript
-colors.backgroundDark       // Dark surfaces
-colors.backgroundBase       // Default surface (#f5f6f8)
-colors.backgroundLight      // Light surface
-colors.backgroundXLight     // Pure white
+```css
+--color-background-light        /* Dark background in dark mode #1a1a24 */
+--color-background-base         /* Secondary dark #2d2e3a */
+--color-background-xlight       /* Elevated surfaces #3a3b4a */
 ```
 
-#### Chat-Specific Colors
-```typescript
-colors.chatUserBackground   // User message bubble (#31c4ab)
-colors.chatUserColor        // User message text (#ffffff)
-colors.chatBotBackground    // Assistant message bubble (#ffffff)
+**Example:**
+```css
+.panel {
+    background: var(--color-background-light, #1a1a24);
+}
+.card {
+    background: var(--color-background-base, #2d2e3a);
+}
+```
+
+#### Border Colors
+```css
+--color-foreground-light        /* Border color #4f5166 */
+--color-foreground-base         /* Secondary border #3a3b4a */
+```
+
+**Example:**
+```css
+.container {
+    border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+}
 ```
 
 #### Status Colors
-```typescript
-colors.success              // Success states (#4caf50)
-colors.warning              // Warning states (#f59e0b)
-colors.danger               // Error/danger states (#f44336)
+```css
+--color-success                 /* Success green #10b981 */
+--color-warning                 /* Warning orange #f59e0b */
+--color-danger                  /* Danger red #f44336 */
 ```
 
-### Spacing
-
-Consistent spacing scale from 2px to 256px:
-
-```typescript
-spacing['5xs']  // 0.125rem (2px)  - Tiny gaps
-spacing['4xs']  // 0.25rem (4px)   - Small gaps
-spacing['3xs']  // 0.375rem (6px)
-spacing['2xs']  // 0.5rem (8px)    - Compact spacing
-spacing.xs      // 0.75rem (12px)  - Default small
-spacing.s       // 1rem (16px)     - Default medium
-spacing.m       // 1.25rem (20px)  - Default large
-spacing.l       // 1.5rem (24px)
-spacing.xl      // 2rem (32px)     - Large spacing
-spacing['2xl']  // 3rem (48px)
-spacing['3xl']  // 4rem (64px)     - Section spacing
+**Example:**
+```css
+.alert-success {
+    border-color: var(--color-success, #10b981);
+}
 ```
 
-### Typography
+### Spacing Tokens
+
+```css
+--spacing-5xs                   /* 0.125rem (2px) */
+--spacing-4xs                   /* 0.25rem (4px) */
+--spacing-3xs                   /* 0.375rem (6px) */
+--spacing-2xs                   /* 0.5rem (8px) */
+--spacing-xs                    /* 0.75rem (12px) */
+--spacing-s                     /* 1rem (16px) */
+--spacing-m                     /* 1.25rem (20px) */
+--spacing-l                     /* 1.5rem (24px) */
+--spacing-xl                    /* 2rem (32px) */
+--spacing-2xl                   /* 3rem (48px) */
+--spacing-3xl                   /* 4rem (64px) */
+```
+
+**Example:**
+```css
+.component {
+    padding: var(--spacing-xs, 0.75rem);
+    margin: var(--spacing-s, 1rem);
+    gap: var(--spacing-2xs, 0.5rem);
+}
+```
+
+### Typography Tokens
 
 #### Font Families
-```typescript
-typography.fontFamily       // InterVariable, sans-serif
-typography.fontFamilyMono   // CommitMono, monospace
+```css
+--font-family                   /* InterVariable, sans-serif */
+--font-family-monospace         /* CommitMono, Menlo, monospace */
 ```
 
 #### Font Sizes
-```typescript
-typography.fontSize2xs      // 0.75rem (12px)  - Small labels
-typography.fontSizeXs       // 0.8125rem (13px)
-typography.fontSizeS        // 0.875rem (14px) - Body text
-typography.fontSizeM        // 1rem (16px)     - Default
-typography.fontSizeL        // 1.125rem (18px) - Large text
-typography.fontSizeXl       // 1.25rem (20px)  - Headings
-typography.fontSize2xl      // 1.75rem (28px)  - Large headings
+```css
+--font-size-4xs                 /* 0.5rem (8px) */
+--font-size-3xs                 /* 0.625rem (10px) */
+--font-size-2xs                 /* 0.75rem (12px) */
+--font-size-xs                  /* 0.8125rem (13px) */
+--font-size-s                   /* 0.875rem (14px) */
+--font-size-m                   /* 1rem (16px) */
+--font-size-l                   /* 1.125rem (18px) */
+--font-size-xl                  /* 1.25rem (20px) */
+--font-size-2xl                 /* 1.75rem (28px) */
 ```
 
 #### Font Weights
-```typescript
-typography.fontWeightRegular  // 400 - Body text
-typography.fontWeightMedium   // 500 - Emphasis
-typography.fontWeightBold     // 600 - Headings
+```css
+--font-weight-regular           /* 400 */
+--font-weight-medium            /* 500 */
+--font-weight-bold              /* 600 */
 ```
 
 #### Line Heights
-```typescript
-typography.lineHeightCompact   // 1.25 - Tight spacing
-typography.lineHeightRegular   // 1.3  - Default
-typography.lineHeightLoose     // 1.35 - Comfortable
-typography.lineHeightXLoose    // 1.5  - Very readable
+```css
+--font-line-height-xsmall       /* 1 */
+--font-line-height-compact      /* 1.25 */
+--font-line-height-regular      /* 1.3 */
+--font-line-height-loose        /* 1.35 */
+--font-line-height-xloose       /* 1.5 */
 ```
 
-### Borders
-
-```typescript
-borders.radiusXLarge        // 12px - Large panels
-borders.radiusLarge         // 8px  - Buttons, inputs
-borders.radiusBase          // 4px  - Default
-borders.radiusSmall         // 2px  - Subtle rounding
-
-borders.colorBase           // Default border color
-borders.colorLight          // Light border color
-borders.widthBase           // 1px
-
-borders.base                // Complete border definition
-```
-
-### Shadows
-
-```typescript
-shadows.base    // Default shadow for cards
-shadows.light   // Subtle shadow for floating elements
-shadows.dark    // Prominent shadow for modals
-```
-
-### Z-Index
-
-Proper layering system:
-
-```typescript
-zIndex.contextMenu          // 10
-zIndex.appHeader            // 99
-zIndex.askAssistantChat     // 300    - Our chat panel
-zIndex.modals               // 2000
-zIndex.toasts               // 2100
-zIndex.askAssistantButton   // 3000   - Our trigger button
-```
-
-## Component Tokens
-
-Pre-configured token combinations for common components:
-
-### Message Bubbles
-
-```typescript
-// User messages
-componentTokens.messageBubble.user = {
-  background: colors.chatUserBackground,
-  color: colors.chatUserColor,
-  padding: `${spacing['2xs']} ${spacing.xs}`,
-  borderRadius: borders.radiusLarge,
-}
-
-// Assistant messages
-componentTokens.messageBubble.assistant = {
-  background: colors.chatBotBackground,
-  color: colors.textBase,
-  padding: `${spacing['2xs']} ${spacing.xs}`,
-  borderRadius: borders.radiusLarge,
+**Example:**
+```css
+.text {
+    font-family: var(--font-family, InterVariable, sans-serif);
+    font-size: var(--font-size-s, 0.875rem);
+    font-weight: var(--font-weight-medium, 500);
+    line-height: var(--font-line-height-loose, 1.35);
 }
 ```
 
-### Inputs/Textareas
+### Border Tokens
 
-```typescript
-componentTokens.input = {
-  padding: `${spacing['2xs']} ${spacing.xs}`,
-  borderRadius: borders.radiusLarge,
-  border: `${borders.widthBase} solid ${borders.colorBase}`,
-  fontSize: typography.fontSizeS,
-  fontFamily: typography.fontFamily,
+```css
+--border-radius-xlarge          /* 12px */
+--border-radius-large           /* 8px */
+--border-radius-base            /* 4px */
+--border-radius-small           /* 2px */
+--border-width-base             /* 1px */
+```
+
+**Example:**
+```css
+.panel {
+    border-radius: var(--border-radius-xlarge, 1rem);
+    border-width: var(--border-width-base, 1px);
 }
 ```
 
-### Buttons
+### Shadow Tokens
 
-```typescript
-// Primary button
-componentTokens.button.primary = {
-  background: colors.primary,
-  color: colors.textXLight,
-  padding: `${spacing['2xs']} ${spacing.s}`,
-  borderRadius: borders.radiusBase,
-  fontWeight: typography.fontWeightMedium,
-}
+```css
+--box-shadow-base               /* Standard elevation */
+--box-shadow-dark               /* Darker shadow */
+--box-shadow-light              /* Light shadow */
+```
 
-// Secondary button
-componentTokens.button.secondary = {
-  background: colors.backgroundXLight,
-  color: colors.textBase,
-  border: `${borders.widthBase} solid ${borders.colorBase}`,
-  padding: `${spacing['2xs']} ${spacing.s}`,
-  borderRadius: borders.radiusBase,
-  fontWeight: typography.fontWeightMedium,
+**Example:**
+```css
+.card {
+    box-shadow: var(--shadow-base, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
 }
 ```
 
-## Usage Examples
+### Z-Index Tokens
 
-### Basic Component
+```css
+--z-index-context-menu          /* 10 */
+--z-index-app-header            /* 99 */
+--z-index-modals                /* 2000 */
+--z-index-toasts                /* 2100 */
+--z-index-draggable             /* 9999999 */
+```
 
-```typescript
-import { colors, spacing, borders } from '../lib/styles/tokens'
-
-function MyComponent() {
-  return (
-    <div style={{
-      background: colors.backgroundXLight,
-      padding: spacing.s,
-      borderRadius: borders.radiusLarge,
-      border: `${borders.widthBase} solid ${borders.colorBase}`,
-      color: colors.textBase,
-    }}>
-      Hello World
-    </div>
-  )
+**Example:**
+```css
+.modal {
+    z-index: var(--z-index-modals, 2000);
 }
 ```
 
-### Using Component Tokens
+## Usage Guidelines
 
-```typescript
-import { componentTokens } from '../lib/styles/tokens'
+### ✅ DO: Use CSS Variables Directly
 
-function MessageBubble({ role, text }) {
-  const style = role === 'user'
-    ? componentTokens.messageBubble.user
-    : componentTokens.messageBubble.assistant
-
-  return <div style={style}>{text}</div>
+```css
+/* ✅ GOOD - Direct CSS variable usage */
+.component {
+    padding: var(--spacing-xs, 0.75rem);
+    color: var(--color-text-dark, #ffffff);
+    background: var(--color-background-light, #1a1a24);
 }
 ```
 
-### Combining Tokens
+### ❌ DON'T: Hardcode Values
 
-```typescript
-import { spacing, colors, typography } from '../lib/styles/tokens'
-
-const customStyle = {
-  padding: `${spacing.s} ${spacing.m}`,
-  background: colors.primary,
-  color: colors.textXLight,
-  fontSize: typography.fontSizeL,
-  fontWeight: typography.fontWeightBold,
+```css
+/* ❌ BAD - Hardcoded values, won't sync with theme */
+.component {
+    padding: 12px;
+    color: #ffffff;
+    background: #1a1a24;
 }
 ```
 
-## Token Mapping to n8n
+### ✅ DO: Always Provide Fallbacks
 
-Our tokens map to n8n's CSS variables:
+```css
+/* ✅ GOOD - Fallback ensures it works even without n8n */
+color: var(--color-text-dark, #ffffff);
 
-| Our Token | n8n Variable | Fallback |
-|-----------|--------------|----------|
-| `colors.primary` | `--color-primary` | `#ff6d5a` |
-| `colors.textBase` | `--color-text-base` | `#555770` |
-| `spacing.s` | `--spacing-s` | `1rem` |
-| `borders.radiusLarge` | `--border-radius-large` | `8px` |
-
-When running inside n8n, our extension automatically picks up their theme values. When running standalone, fallback values are used.
-
-## Best Practices
-
-### ✅ DO
-
-- Use semantic token names: `colors.textBase` not `colors.gray540`
-- Use component tokens when available
-- Combine tokens for custom styles
-- Use spacing tokens for consistent gaps
-- Reference tokens in component styles
-
-### ❌ DON'T
-
-- Hardcode colors: `#555770` ❌ → `colors.textBase` ✅
-- Hardcode spacing: `16px` ❌ → `spacing.s` ✅
-- Mix units: Use rem for consistency
-- Override n8n tokens directly
-- Create component-specific tokens (use component tokens)
-
-## Adding New Tokens
-
-When adding new tokens:
-
-1. **Add to `tokens.ts`** in the appropriate category
-2. **Map to n8n token** if available: `var(--n8n-token, fallback)`
-3. **Provide fallback** that matches n8n's default
-4. **Document** in this file with usage examples
-5. **Update component tokens** if it's a common pattern
-
-Example:
-
-```typescript
-// In tokens.ts
-export const colors = {
-  // ... existing tokens
-  highlight: 'var(--color-highlight, #ffc107)', // NEW
-} as const
-
-// In this doc
-#### Highlight Colors
-```typescript
-colors.highlight    // Highlight background (#ffc107)
-```
+/* ❌ BAD - No fallback, might break */
+color: var(--color-text-dark);
 ```
 
-## Token Reference
+### ✅ DO: Use Semantic Token Names
 
-For complete token reference, see `/workspaces/n8n-pro/extension/src/lib/styles/tokens.ts`
+```css
+/* ✅ GOOD - Semantic naming */
+--color-text-dark           /* Adapts to theme */
+--color-background-light    /* Adapts to theme */
 
-## Migration Guide
-
-To migrate existing hardcoded styles:
-
-1. **Find hardcoded values**: Colors, spacing, sizes
-2. **Match to tokens**: Find semantic equivalent
-3. **Replace values**: Use token references
-4. **Test**: Ensure visual consistency
-5. **Verify theme**: Check with n8n's light theme
-
-Example migration:
-
-```typescript
-// BEFORE
-<div style={{
-  background: '#f3f4f6',
-  padding: '8px 12px',
-  borderRadius: '8px',
-  color: '#111827',
-}}>
-  Content
-</div>
-
-// AFTER
-import { componentTokens } from '../lib/styles/tokens'
-
-<div style={componentTokens.messageBubble.assistant}>
-  Content
-</div>
+/* ❌ BAD - Literal naming (from old system) */
+--color-white              /* Doesn't adapt */
+--color-black              /* Doesn't adapt */
 ```
 
+## Common Patterns
+
+### Card Container
+```css
+.card {
+    padding: var(--spacing-xs, 0.75rem);
+    border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+    border-radius: var(--border-radius-base, 0.5rem);
+    background: var(--color-background-base, #2d2e3a);
+}
+```
+
+Or use the **utility class**:
+```tsx
+<div className="container-card">
+```
+
+### Button Styling
+```css
+.button {
+    padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
+    border-radius: var(--border-radius-base, 0.5rem);
+    font-size: var(--font-size-s, 0.875rem);
+    font-weight: var(--font-weight-medium, 500);
+    cursor: pointer;
+}
+```
+
+### Alert/Message Box
+```css
+.alert-warning {
+    background: var(--color-background-xlight, #3a3b4a);
+    border: var(--border-width-base, 1px) solid var(--color-warning, #f59e0b);
+    border-radius: var(--border-radius-small, 0.25rem);
+    padding: var(--spacing-2xs, 0.5rem);
+    color: var(--color-text-base, #c5c7d0);
+}
+```
+
+Or use the **utility class**:
+```tsx
+<div className="alert-warning">
+```
+
+## Utility Classes
+
+For common patterns, use utility classes from `lib/styles/utilities.css`:
+
+### Layout
+- `.flex`, `.flex-column`, `.flex-center`, `.flex-align-center`
+- `.flex-justify-between`, `.flex-1`
+
+### Containers
+- `.container-card` - Standard card pattern
+- `.container-elevated` - Elevated surface
+- `.section-header` - Section header pattern
+
+### Alerts
+- `.alert-warning`, `.alert-success`, `.alert-danger`, `.alert-info`
+
+### Spacing
+- `.gap-xs`, `.gap-sm`, `.gap-md`, `.gap-lg`
+- `.mt-xs`, `.mt-sm`, `.mt-md`
+- `.mb-xs`, `.mb-sm`, `.mb-md`
+
+### Text
+- `.text-bold`, `.text-medium`
+- `.text-xs`, `.text-sm`, `.text-base`
+- `.text-primary`, `.text-secondary`, `.text-muted`
+
+### Interactive
+- `.hoverable`, `.clickable`, `.draggable-handle`
+
+See [`UTILITY-CSS-GUIDE.md`](./UTILITY-CSS-GUIDE.md) for complete utility documentation.
+
+## File Structure
+
+### CSS Files (Primary)
+```
+src/
+├── lib/
+│   ├── styles/
+│   │   └── utilities.css          ← Reusable utility classes
+│   └── components/
+│       ├── Button.css             ← Component-specific styles
+│       ├── Panel.css
+│       └── ...
+└── panel/
+    └── components/
+        ├── DebugPanel.css
+        └── ...
+```
+
+### No tokens.ts File
+**Previously:** `tokens.ts` exported TypeScript objects for inline styles
+**Now:** Deleted - all styling done directly in CSS files
+
+## Migration from Old System
+
+### Before (TypeScript Tokens - REMOVED)
+```typescript
+// ❌ OLD - tokens.ts (DELETED)
+import { componentTokens } from '../styles/tokens'
+
+<div style={componentTokens.messageBubble.user}>
+```
+
+### After (CSS Variables - CURRENT)
+```typescript
+// ✅ NEW - CSS classes
+import './MessageBubble.css'
+
+<div className="message-bubble--user">
+```
+
+```css
+/* MessageBubble.css */
+.message-bubble--user {
+    background: var(--color-chat-user-background, #31c4ab);
+    color: var(--color-chat-user-color, #ffffff);
+    padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
+    border-radius: var(--border-radius-large, 0.75rem);
+}
+```
+
+## Theme Synchronization
+
+### How It Works
+
+n8n changes CSS variables when switching themes:
+
+```css
+/* Light mode */
+--color-text-dark: #2d2e3a;        /* Dark text */
+--color-background-light: #ffffff; /* White background */
+
+/* Dark mode */
+--color-text-dark: #ffffff;        /* White text */
+--color-background-light: #1a1a24; /* Dark background */
+```
+
+Our CSS automatically adapts:
+```css
+.component {
+    color: var(--color-text-dark, #ffffff);           /* Updates automatically */
+    background: var(--color-background-light, #1a1a24); /* Updates automatically */
+}
+```
+
+**No JavaScript needed!** The browser resolves variables based on n8n's current theme.
+
+## Complete Token Reference
+
+For a complete list of all available CSS variables, see the actual CSS files:
+- **Utilities**: [`extension/src/lib/styles/utilities.css`](./extension/src/lib/styles/utilities.css)
+- **Component examples**: Any `.css` file in `extension/src/lib/components/`
+
+For usage guidelines, see:
+- **CSS Styling Patterns**: [`.cursor/rules/decisions/n8n-extension/ux/0034-css-styling-patterns.mdc`](./.cursor/rules/decisions/n8n-extension/ux/0034-css-styling-patterns.mdc)
+- **Utility CSS Guide**: [`UTILITY-CSS-GUIDE.md`](./UTILITY-CSS-GUIDE.md)
+- **CSS Deduplication**: [`CSS-DEDUPLICATION-EXPLAINED.md`](./CSS-DEDUPLICATION-EXPLAINED.md)
+
+## Summary
+
+| Aspect | Implementation |
+|--------|----------------|
+| **Token Format** | CSS variables: `var(--token, fallback)` |
+| **Usage Location** | Directly in `.css` files |
+| **TypeScript Tokens** | ❌ Not needed (deleted `tokens.ts`) |
+| **Theme Sync** | ✅ Automatic (browser-native) |
+| **Performance** | ✅ Zero JavaScript overhead |
+| **Utilities** | ✅ Available in `utilities.css` |
+
+**The design system IS the CSS.** No intermediary layer needed! 🎯✨

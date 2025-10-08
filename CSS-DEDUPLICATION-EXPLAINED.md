@@ -14,7 +14,7 @@
 import '../../lib/styles/utilities.css'
 import './PlanMessage.css'
 
-// DebugPanel.tsx  
+// DebugPanel.tsx
 import '../../lib/styles/utilities.css'
 import './DebugPanel.css'
 
@@ -62,7 +62,7 @@ Even though multiple components import `utilities.css`, **it's only included onc
 5. **Code Splitting** - CSS is split based on entry points (if configured)
 
 ### React's Role
-**React doesn't handle CSS imports.** React only cares about the `className` prop and DOM rendering. 
+**React doesn't handle CSS imports.** React only cares about the `className` prop and DOM rendering.
 
 The CSS import (`import './Component.css'`) is a **module bundler feature**, handled entirely by:
 - **Development**: Vite dev server
@@ -194,7 +194,7 @@ You can verify deduplication by:
 # Build twice - size should be same
 yarn build
 # Note the CSS file size
-yarn build  
+yarn build
 # Size should be identical (same CSS included)
 ```
 
