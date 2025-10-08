@@ -3,6 +3,8 @@ import type { ChatMessage } from '../lib/types/chat'
 import { orchestrator } from '../lib/orchestrator'
 import { createN8nClient } from '../lib/n8n'
 import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
+import { validateWorkflow, formatValidationResult } from '../lib/validation/workflow'
+import { debugWorkflowCreation, debugWorkflowCreated, debugWorkflowError } from '../lib/utils/debug'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
@@ -61,9 +63,6 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
   })
 
   // Validate workflow before sending
-  const { validateWorkflow, formatValidationResult } = await import('../lib/validation/workflow')
-  const { debugWorkflowCreation, debugWorkflowCreated, debugWorkflowError } = await import('../lib/utils/debug')
-
   const validation = validateWorkflow(msg.plan.workflow)
   if (!validation.valid)
   {
