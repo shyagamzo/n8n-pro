@@ -4,7 +4,7 @@ const manifest: ManifestV3Export = {
   manifest_version: 3,
   name: 'n8n Pro Extension',
   version: '0.0.1',
-  description: 'Dev scaffold for n8n assistant extension',
+  description: 'AI-powered assistant for creating and managing n8n workflows',
   action: {
     default_popup: 'src/options/index.html'
   },
@@ -26,7 +26,10 @@ const manifest: ManifestV3Export = {
     'http://127.0.0.1:5678/*',
     'https://127.0.0.1:5678/*'
   ],
-  permissions: ['storage', 'scripting']
+  permissions: ['storage', 'scripting'],
+  content_security_policy: {
+    extension_pages: "script-src 'self'; object-src 'self'; connect-src 'self' https://api.openai.com http://localhost:5678 https://localhost:5678 http://127.0.0.1:5678 https://127.0.0.1:5678"
+  }
 }
 
 export default manifest
