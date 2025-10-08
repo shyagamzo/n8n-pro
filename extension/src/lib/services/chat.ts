@@ -14,7 +14,7 @@ export class ChatService
   {
     this.port.onMessage((message: ChatStreamMessage | BackgroundMessage) =>
     {
-      const { addMessage, finishSending, setAssistantDraft, setPendingPlan, setProgress } = useChatStore.getState()
+      const { addMessage, finishSending, setAssistantDraft, setPendingPlan, setProgress, addToast } = useChatStore.getState()
 
       if (message.type === 'token')
       {
@@ -24,6 +24,20 @@ export class ChatService
       else if (message.type === 'progress')
       {
         setProgress({ status: message.status, step: message.step, total: message.total })
+      }
+      else if (message.type === 'workflow_created')
+      {
+        // Show success toast with link to workflow
+        addToast({
+          id: `workflow-${message.workflowId}`,
+          type: 'success',
+          message: 'Workflow created successfully!',
+          action: {
+            label: 'Open in n8n',
+            onClick: () => window.open(message.workflowUrl, '_blank')
+          },
+          duration: 7000
+        })
       }
       else if (message.type === 'done')
       {
@@ -48,20 +62,20 @@ export class ChatService
         setAssistantDraft('')
         setPendingPlan(null)
         finishSending()
-
+        
         // Create error message with retry capability
         const errorDetails: ErrorDetails = {
           title: this.getErrorTitle(message.error),
           details: this.getErrorDetails(message.error),
           retryable: this.isRetryable(message.error),
-          retryPayload: this.isRetryable(message.error)
+          retryPayload: this.isRetryable(message.error) 
             ? { messages: this.lastSentMessages }
             : undefined
         }
 
-        addMessage({
-          id: generateId(),
-          role: 'error',
+        addMessage({ 
+          id: generateId(), 
+          role: 'error', 
           text: this.getErrorMessage(message.error),
           error: errorDetails
         })

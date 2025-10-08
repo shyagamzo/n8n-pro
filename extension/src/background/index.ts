@@ -97,6 +97,9 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
     const workflowUrl = `${baseUrl}/workflow/${result.id}`
     post({ type: 'token', token: `\n✅ Created workflow: [Open in n8n →](${workflowUrl})` } satisfies BackgroundMessage)
 
+    // Send workflow created notification for toast
+    post({ type: 'workflow_created', workflowId: result.id, workflowUrl } satisfies BackgroundMessage)
+
     // If there are credentials needed, provide node-specific deep links
     if (msg.plan.credentialsNeeded && msg.plan.credentialsNeeded.length > 0)
     {

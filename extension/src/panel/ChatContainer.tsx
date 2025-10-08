@@ -6,10 +6,11 @@ import ConfirmModal from '../lib/components/ConfirmModal'
 import ErrorBoundary from '../lib/components/ErrorBoundary'
 import Panel from '../lib/components/Panel'
 import PanelSkeleton from './components/PanelSkeleton'
+import ToastContainer from '../lib/components/ToastContainer'
 
 export default function ChatContainer(): React.ReactElement | null
 {
-  const { isOpen, setOpen, messages, assistantDraft, sending, clearSession, loadMessages } = useChatStore()
+  const { isOpen, setOpen, messages, assistantDraft, sending, clearSession, loadMessages, toasts, removeToast } = useChatStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -59,6 +60,7 @@ export default function ChatContainer(): React.ReactElement | null
           onCancel={() => setShowConfirmModal(false)}
         />
       )}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </ErrorBoundary>
   )
 }
