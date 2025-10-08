@@ -1,0 +1,70 @@
+/* Markdown styles with high specificity to override n8n's CSS reset */
+.markdown-body {
+  line-height: var(--font-line-height-xloose, 1.5);
+  font-size: var(--font-size-s, 0.875rem);
+  color: inherit;
+  font-family: inherit;
+}
+
+.markdown-body ol,
+.markdown-body ul {
+  margin: var(--spacing-2xs, 0.5rem) 0 !important;
+  padding-left: var(--spacing-m, 1.25rem) !important;
+}
+
+.markdown-body li {
+  margin: var(--spacing-s, 1rem) var(--spacing-l, 1.5rem) !important;
+  line-height: var(--font-line-height-xsmall, 1.2) !important;
+}
+
+.markdown-body p {
+  margin: var(--spacing-3xs, 0.375rem) 0 !important;
+}
+
+.markdown-body strong {
+  font-weight: var(--font-weight-bold, 700) !important;
+}
+
+.markdown-body em {
+  font-style: italic !important;
+}
+
+.markdown-body code {
+  background: var(--color-background-base, #2d2e3a) !important;
+  color: var(--color-text-dark, #ffffff) !important;
+  padding: var(--spacing-5xs, 0.125rem) var(--spacing-4xs, 0.25rem) !important;
+  border-radius: var(--border-radius-small, 0.25rem) !important;
+  font-size: var(--font-size-2xs, 0.75rem) !important;
+  font-family: var(--font-family-mono, 'Monaco', 'Menlo', monospace) !important;
+}
+
+.markdown-body pre {
+  background: var(--color-background-base, #2d2e3a) !important;
+  color: var(--color-text-dark, #ffffff) !important;
+  padding: var(--spacing-2xs, 0.5rem) !important;
+  border-radius: var(--border-radius-base, 0.375rem) !important;
+  overflow: auto !important;
+  margin: var(--spacing-2xs, 0.5rem) 0 !important;
+}
+
+.markdown-body pre code {
+  background: none !important;
+  padding: 0 !important;
+}
+
+.markdown-body blockquote {
+  border-left: 3px solid var(--color-foreground-light, #4f5166) !important;
+  padding-left: var(--spacing-xs, 0.75rem) !important;
+  margin: var(--spacing-2xs, 0.5rem) 0 !important;
+  opacity: 0.8 !important;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin: var(--spacing-xs, 1rem) 0 var(--spacing-2xs, 0.5rem) 0 !important;
+  font-weight: var(--font-weight-bold, 700) !important;
+}
