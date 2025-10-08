@@ -1,0 +1,39 @@
+/* Thinking animation styles */
+.thinking-animation {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4xs, 0.25rem);
+  padding: var(--spacing-4xs, 0.25rem) 0;
+}
+
+.thinking-dot {
+  width: var(--spacing-2xs, 0.5rem);
+  height: var(--spacing-2xs, 0.5rem);
+  border-radius: 50%;
+  background-color: var(--color-text-base, #c5c7d0);
+  opacity: 0.6;
+  animation: thinking-bounce 1.4s infinite ease-in-out;
+}
+
+.thinking-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.thinking-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinking-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes thinking-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}

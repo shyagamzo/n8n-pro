@@ -1,0 +1,29 @@
+/* Form element styles */
+.form-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4xs, 0.25rem);
+  font-size: var(--font-size-s, 0.875rem);
+}
+
+.form-label-text {
+  color: var(--color-text-dark, #ffffff);
+}
+
+.form-input,
+.form-textarea {
+  padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
+  border-radius: var(--border-radius-large, 0.75rem);
+  border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  font-size: var(--font-size-s, 0.875rem);
+  font-family: var(--font-family-base, inherit);
+  background: var(--color-background-light, #1a1a24);
+  color: var(--color-text-dark, #ffffff);
+  outline: none;
+}
+
+.form-textarea {
+  resize: none;
+  overflow: hidden;
+  min-height: 1.5rem;
+}

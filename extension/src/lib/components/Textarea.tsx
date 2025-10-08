@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, forwardRef } from 'react'
-import { componentTokens, colors, spacing, typography } from '../styles/tokens'
+import './FormElements.css'
 
 type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label?: string
@@ -48,22 +48,14 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   }
 
   return (
-    <label style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: spacing['4xs'],
-      fontSize: typography.fontSizeS
-    }}>
-      {label && <span style={{ color: colors.text }}>{label}</span>}
+    <label className="form-label">
+      {label && <span className="form-label-text">{label}</span>}
       <textarea
         ref={textareaRef}
         {...props}
         onChange={handleChange}
+        className="form-textarea"
         style={{
-          ...componentTokens.input,
-          resize: 'none',
-          overflow: 'hidden',
-          outline: 'none',
           minHeight: `${(parseInt(getComputedStyle(document.body).lineHeight) || 20) * minRows}px`,
           ...props.style
         }}
