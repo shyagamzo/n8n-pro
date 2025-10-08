@@ -25,11 +25,11 @@ export class ChatService
       {
         const text = useChatStore.getState().assistantDraft
         const plan = useChatStore.getState().pendingPlan
-        if (text) 
+        if (text)
         {
-          addMessage({ 
-            id: generateId(), 
-            role: 'assistant', 
+          addMessage({
+            id: generateId(),
+            role: 'assistant',
             text,
             plan: plan || undefined
           })

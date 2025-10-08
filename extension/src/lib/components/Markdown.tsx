@@ -93,10 +93,10 @@ export default function Markdown({ content }: MarkdownProps): React.ReactElement
   }, [html])
 
   return (
-    <div 
-      className="markdown-body" 
+    <div
+      className="markdown-body"
       style={markdownStyles}
-      dangerouslySetInnerHTML={{ __html: html }} 
+      dangerouslySetInnerHTML={{ __html: html }}
     />
   )
 }
