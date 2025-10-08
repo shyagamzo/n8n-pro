@@ -26,10 +26,10 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-xs, 0.75rem) var(--spacing-s, 1rem);
-  background: linear-gradient(135deg,
-    var(--color-primary, #ff6d5a) 0%,
-    var(--color-primary-shade, #e55a47) 50%,
-    var(--color-primary, #ff6d5a) 100%
+  background: linear-gradient(135deg, 
+    #e55a47 0%, 
+    #d64d3a 50%,
+    #e55a47 100%
   );
   background-size: 200% 200%;
   animation: gradient-shift 8s ease infinite;
