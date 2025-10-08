@@ -45,7 +45,8 @@ class Orchestrator
     const context: Record<string, unknown> = {}
     if (input.availableCredentials && input.availableCredentials.length > 0)
     {
-      context.availableCredentials = input.availableCredentials.map(c => c.type)
+      // Pass full credential objects so planner can see names, types, and IDs
+      context.availableCredentials = input.availableCredentials
     }
 
     // Build planner prompt with context
@@ -108,6 +109,16 @@ class Orchestrator
       return {
         type: String(c.type || ''),
         name: c.name ? String(c.name) : undefined,
+        requiredFor: c.requiredFor ? String(c.requiredFor) : undefined,
+      }
+    })
+
+    const credentialsAvailable = (loomData.credentialsAvailable as Array<unknown> || []).map(cred => {
+      const c = cred as Record<string, unknown>
+      return {
+        type: String(c.type || ''),
+        name: c.name ? String(c.name) : undefined,
+        requiredFor: c.status ? String(c.status) : undefined,
       }
     })
 
@@ -117,6 +128,7 @@ class Orchestrator
       title,
       summary,
       credentialsNeeded,
+      credentialsAvailable: credentialsAvailable.length > 0 ? credentialsAvailable : undefined,
       workflow: {
         name: String(workflow.name || title),
         nodes: (workflow.nodes as unknown[]) || [],

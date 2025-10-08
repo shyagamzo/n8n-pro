@@ -19,6 +19,7 @@ Transform user requirements into executable n8n workflow plans with nodes, conne
 - Identify all services and APIs involved
 - Map out logical steps and transformations
 - Note any conditional logic or error handling
+- **Check available credentials** - determine which credentials the user already has configured
 
 ### 2. Select Nodes
 Choose from n8n's node library (see `shared/n8n-nodes-reference.md`):
@@ -40,6 +41,21 @@ Choose from n8n's node library (see `shared/n8n-nodes-reference.md`):
 - Configure credentials by type (don't include actual values)
 - Set sensible defaults for optional parameters
 
+## Available Credentials
+
+You will be provided with a list of available credentials the user has already configured:
+```
+availableCredentials: [
+  { id: "abc123", name: "My Slack Workspace", type: "slackApi" },
+  { id: "def456", name: "Gmail Account", type: "gmailOAuth2" }
+]
+```
+
+**When planning:**
+- If a required credential type already exists in `availableCredentials`, **DO NOT** add it to `credentialsNeeded`
+- Only list credentials in `credentialsNeeded` that are missing
+- If all required credentials are available, `credentialsNeeded` can be an empty array
+
 ## Output Format
 
 Return workflow plan using **Loom format** (indentation-based, not JSON):
@@ -51,6 +67,10 @@ credentialsNeeded:
   - type: slackApi
     name: Slack Account
     requiredFor: Send message to Slack
+credentialsAvailable:
+  - type: gmailOAuth2
+    name: Gmail Account
+    status: Found existing credential
 workflow:
   name: Workflow Name
   nodes:
@@ -74,15 +94,19 @@ workflow:
 - No quotes needed
 - Arrays with `-` prefix for items
 - Types auto-detected
+- `credentialsNeeded`: Only list credentials that user needs to create
+- `credentialsAvailable`: List credentials that are already configured (optional)
 
 ## Examples
 
-### Example 1: Scheduled Slack Message
+### Example 1: Scheduled Slack Message (No Existing Credentials)
 
 **Requirements:**
 - Trigger: Schedule (daily at 9 AM)
 - Action: Send message to Slack #general
 - Message: "Good morning team!"
+
+**Available Credentials:** None
 
 **Plan:**
 ```
@@ -121,20 +145,24 @@ workflow:
           index: 0
 ```
 
-### Example 2: Webhook with Data Processing
+### Example 2: Webhook with Data Processing (Credential Available)
 
 **Requirements:**
 - Trigger: Webhook
 - Action: Receive JSON, transform data, store in Airtable
 
+**Available Credentials:**
+- `{ id: "xyz789", name: "My Airtable", type: "airtableApi" }`
+
 **Plan:**
 ```
 title: Webhook to Airtable
 summary: Receives data via webhook, transforms it, and saves to Airtable
-credentialsNeeded:
+credentialsNeeded: []
+credentialsAvailable:
   - type: airtableApi
-    name: Airtable Account
-    requiredFor: Storing records in Airtable
+    name: My Airtable
+    status: Using existing credential
 workflow:
   name: Webhook to Airtable
   nodes:
@@ -186,10 +214,12 @@ workflow:
 - Use n8n expressions for dynamic values: `={{ $json.field }}`
 
 ### Credentials
-- List all required credential types
+- **Check available credentials first** - if a credential type already exists, mark it as available
+- List only credentials that are NOT already configured
 - Use standard n8n credential type names
 - Never include actual credential values
 - Explain what each credential is used for
+- Prefer using existing credentials over requesting new ones
 
 ### Workflow Design
 - Keep workflows simple and linear when possible
