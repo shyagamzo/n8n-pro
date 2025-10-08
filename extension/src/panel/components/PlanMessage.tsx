@@ -18,14 +18,14 @@ export default function PlanMessage({ plan }: PlanMessageProps): React.ReactElem
   const hasAnyCredentials = hasNeededCredentials || hasAvailableCredentials
 
   return (
-    <div className="plan-message-container container-card">
-      <div className="plan-message-title">{plan.title}</div>
-      <div className="plan-message-summary">{plan.summary}</div>
+    <div className="plan-message-container container-card mt-xs">
+      <div className="plan-message-title text-bold text-sm text-primary">{plan.title}</div>
+      <div className="plan-message-summary text-secondary text-xs mb-sm">{plan.summary}</div>
 
       {hasAnyCredentials && (
-        <div className="plan-message-credentials">
+        <div className="plan-message-credentials mb-sm">
           {hasNeededCredentials && (
-            <div className="plan-message-warning alert-warning">
+            <div className="plan-message-warning alert-warning mb-xs">
               <span className="plan-message-warning-icon">⚠️</span>
               <strong>Setup Required</strong><br />
               {plan.credentialsNeeded?.length} credential{plan.credentialsNeeded?.length !== 1 ? 's' : ''} will need setup after creation.
@@ -33,7 +33,7 @@ export default function PlanMessage({ plan }: PlanMessageProps): React.ReactElem
           )}
 
           {showCredDetails && (
-            <div className="plan-message-cred-details">
+            <div className="plan-message-cred-details container-elevated mt-xs">
               {hasAvailableCredentials && plan.credentialsAvailable && (
                 <div>
                   <strong>Available Credentials:</strong>
@@ -64,21 +64,21 @@ export default function PlanMessage({ plan }: PlanMessageProps): React.ReactElem
 
           <button
             onClick={() => setShowCredDetails(!showCredDetails)}
-            className="plan-message-toggle"
+            className="plan-message-toggle btn-icon"
           >
             {showCredDetails ? '▼ Hide credential details' : '▶ Show credential details'}
           </button>
         </div>
       )}
 
-      <div className="plan-message-actions">
-        <button onClick={() => chat.applyPlan(plan)} className="plan-message-apply-button">
+      <div className="plan-message-actions flex gap-sm mt-sm">
+        <button onClick={() => chat.applyPlan(plan)} className="plan-message-apply-button btn btn-small">
           {hasNeededCredentials ? 'Create & Open in n8n' : 'Create Workflow'}
         </button>
       </div>
 
       {hasNeededCredentials && (
-        <div className="plan-message-info">
+        <div className="plan-message-info text-xs text-secondary mt-xs">
           After creation, you'll get a direct link to open the workflow and configure credentials.
         </div>
       )}
