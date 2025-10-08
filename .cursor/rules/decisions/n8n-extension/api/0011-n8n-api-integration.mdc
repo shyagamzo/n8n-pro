@@ -70,14 +70,19 @@ Use n8n's REST API v1 for MVP integration. (n8n currently only provides v1 API)
 The public API (`/api/v1/credentials`) does not support listing credentials.
 Reference: https://docs.n8n.io/api/api-reference/#tag/credential
 
-### Internal REST API
-n8n's UI uses an internal REST endpoint `/rest/credentials` that supports:
-- **List credentials**: `GET /rest/credentials?includeScopes=true&includeData=false`
-- **Filter by project**: `GET /rest/credentials?filter={"projectId":"..."}`
-- **Authentication**: Uses same API key as public API
+### Internal REST API Limitations
+n8n's UI uses an internal REST endpoint `/rest/credentials`, but it is **NOT accessible via API key**:
+- **Authentication**: Requires session cookies (browser login), NOT API key
+- **API Key Auth**: Returns 401 Unauthorized
+- **Public API**: Does not support listing (405 Method Not Allowed)
 
-**Security Note**: We set `includeData=false` to avoid retrieving sensitive credential values.
-Only credential metadata (id, name, type) is fetched.
+**Impact**: The extension cannot pre-check available credentials. Credential matching must
+happen optimistically during workflow creation without knowing which credentials exist.
+
+**Future Solutions**:
+- Wait for n8n to add credential listing to public API
+- Use content script to access credentials via page context with session cookies
+- Accept limitation and provide manual credential configuration guidance only
 
 ## Open Items
 - Rate limiting and retry strategies

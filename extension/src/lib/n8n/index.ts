@@ -66,33 +66,27 @@ export function createN8nClient(options: N8nClientOptions = {})
   }
 
   /**
-   * List credentials using n8n's internal REST API.
-   *
-   * Note: This uses the internal /rest/credentials endpoint (not the public API).
-   * The public API (/api/v1/credentials) doesn't support listing for security reasons,
-   * but the internal endpoint is used by n8n's UI and is accessible with API keys.
-   *
+   * List credentials - Currently not supported
+   * 
+   * IMPORTANT: n8n's credential listing is not accessible via API key authentication:
+   * - Public API (/api/v1/credentials): Does not support GET/listing (405 Method Not Allowed)
+   * - Internal API (/rest/credentials): Requires session cookie auth, not API key (401 Unauthorized)
+   * 
+   * The internal /rest/ endpoints are used by n8n's UI and require active browser
+   * session cookies. API keys only work with the public /api/v1/ endpoints.
+   * 
+   * For now, we return empty array. Future solutions:
+   * - Wait for n8n to add credential listing to public API
+   * - Use content script with page context to access cookies
+   * - Accept limitation and work without pre-checking credentials
+   * 
    * @param projectId - Optional project ID to filter credentials by project
    */
-  async function listCredentials(projectId?: string): Promise<Array<{ id: string; name: string; type: string }>>
+  async function listCredentials(_projectId?: string): Promise<Array<{ id: string; name: string; type: string }>>
   {
-    const params = new URLSearchParams({
-      includeScopes: 'true',
-      includeData: 'false', // Don't include sensitive credential data
-    })
-
-    if (projectId)
-    {
-      params.append('filter', JSON.stringify({ projectId }))
-    }
-
-    const url = `${baseUrl}/rest/credentials?${params.toString()}`
-
-    return apiFetch<Array<{ id: string; name: string; type: string }>>(url, {
-      method: 'GET',
-      headers: authHeaders,
-      timeoutMs: 10_000,
-    })
+    // Credential listing not supported via API key authentication
+    // See comment above for technical details
+    return []
   }
 
   return {
