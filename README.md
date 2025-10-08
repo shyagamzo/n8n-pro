@@ -323,6 +323,6 @@ Built with:
 
 ---
 
-**Current Version**: 0.0.1 (MVP)  
-**Status**: In active development  
+**Current Version**: 0.0.1 (MVP)
+**Status**: In active development
 **Last Updated**: October 2025
