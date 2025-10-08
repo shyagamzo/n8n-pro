@@ -9,15 +9,16 @@ description: Design system evolution after CSS refactoring—token strategy and 
 
 After completing the comprehensive CSS refactoring (19 components, 14 CSS files), we discovered that our design system architecture needs to evolve to match our new CSS-first approach.
 
-## Current Situation
+## Current Situation (After Refactoring)
 
 ### What We Have
-1. **`tokens.ts`** (260 lines) - TypeScript/JavaScript token exports
+1. **~~`tokens.ts`~~** - ❌ DELETED (was 260 lines, completely unused)
 2. **14 CSS files** - Using n8n's CSS variables directly
-3. **No inline styles** - Everything moved to CSS
+3. **1 utilities.css** - Centralized reusable patterns
+4. **No inline styles** - Everything moved to CSS
 
 ### The Discovery
-The `componentTokens` section in `tokens.ts` is **no longer used** by any component:
+After CSS refactoring, `tokens.ts` became completely unused:
 
 ```typescript
 // ❌ NOT USED ANYMORE
@@ -58,11 +59,11 @@ import './MessageBubble.css'
 ## Design System Strategy
 
 ### Core Principle
-**CSS is the source of truth for styling. TypeScript tokens are for documentation and rare JavaScript usage.**
+**CSS is the source of truth for styling. No TypeScript/JavaScript intermediary layer.**
 
-### Two-Layer Token Architecture
+### Single-Layer Token Architecture
 
-#### Layer 1: Direct CSS Variables (Primary)
+#### Pure CSS Variables
 Components use n8n's CSS variables directly in CSS files:
 
 ```css
@@ -89,78 +90,42 @@ Components use n8n's CSS variables directly in CSS files:
 - ✅ Better performance (no runtime calculations)
 - ✅ DevTools CSS inspection works perfectly
 
-#### Layer 2: TypeScript Token Exports (Documentation & Edge Cases)
-Keep `tokens.ts` **simplified** for:
-
-1. **Documentation** - Single source of truth for available tokens
-2. **Type safety** - TypeScript autocompletion in rare JS usage
-3. **Dynamic styling** - When JavaScript needs to calculate styles
+**No TypeScript layer!** All styling is pure CSS. For rare JavaScript cases (dynamic calculations), use hardcoded values:
 
 ```typescript
-// ✅ KEEP - Essential token exports
-export const colors = { /* ... */ }
-export const spacing = { /* ... */ }
-export const typography = { /* ... */ }
-export const borders = { /* ... */ }
-
-// ❌ REMOVE - No longer used
-export const componentTokens = { /* ... */ }
-export function createStyles() { /* ... */ }
-```
-
-### When to Use Each Layer
-
-#### Use CSS Variables (99% of cases)
-```css
-/* Static styling - always use CSS */
-.button {
-    padding: var(--spacing-2xs, 0.5rem);
-    background: var(--color-primary, #ff6d5a);
-}
-```
-
-#### Use TypeScript Tokens (Rare cases)
-```typescript
-// Dynamic calculations in JavaScript
+// ✅ Acceptable - Rare edge case
 const calculateHeight = (rows: number) => {
-    const lineHeight = 20 // Could import from tokens.ts if needed
+    const lineHeight = 20 // Hardcoded (only place that needs it)
     return `${lineHeight * rows}px`
 }
-
-// Accessing token values for logic
-import { spacing } from '../styles/tokens'
-if (needsPadding) {
-    element.style.padding = spacing.xs // Falls back to '0.75rem'
-}
 ```
 
-## Refactoring `tokens.ts`
+### Design System = CSS Files
 
-### Keep (Core Token Exports)
-```typescript
-export const colors = { /* All color tokens */ }
-export const spacing = { /* Spacing scale */ }
-export const typography = { /* Font tokens */ }
-export const borders = { /* Border tokens */ }
-export const shadows = { /* Shadow tokens */ }
-export const zIndex = { /* Z-index scale */ }
-export const chat = { /* Chat-specific tokens */ }
-```
+The design system **IS** the CSS files:
+- `utilities.css` - Reusable patterns
+- Component `.css` files - Component-specific styles
+- Direct n8n CSS variable usage - Theme integration
 
-### Remove (Unused After CSS Refactoring)
-```typescript
-// ❌ Remove - Components no longer use these
-export const componentTokens = { /* messageBubble, input, button, panel */ }
+**No intermediary TypeScript/JavaScript layer needed!**
 
-// ❌ Remove - No inline styles anymore
-export function createStyles<T>(styles: T): T { return styles }
-```
+## Result of tokens.ts Deletion
 
-### Result
-- **Before:** 260 lines
-- **After:** ~180 lines
-- **Removed:** Component-specific mappings, inline style utilities
-- **Kept:** Core token exports for CSS and rare JS usage
+### Before
+- **tokens.ts:** 260 lines
+- **Usage:** Component inline styles
+- **Overhead:** JavaScript object creation at runtime
+
+### After
+- **tokens.ts:** ❌ DELETED
+- **Usage:** Pure CSS files
+- **Overhead:** ✅ Zero
+
+**Impact:**
+- Build still works perfectly ✅
+- No component changes needed ✅  
+- Simpler architecture ✅
+- Better performance ✅
 
 ## Documentation Strategy
 
@@ -177,25 +142,15 @@ CSS files **are** the design system for components:
 }
 ```
 
-### Secondary Documentation: `tokens.ts`
-TypeScript file documents **available tokens** with JSDoc:
+### Secondary Documentation: Markdown Guides
 
-```typescript
-/**
- * Spacing Tokens
- *
- * Consistent spacing scale from n8n's design system.
- * Use in CSS: var(--spacing-xs, 0.75rem)
- */
-export const spacing = {
-    '5xs': 'var(--spacing-5xs, 0.125rem)',    // 2px
-    'xs': 'var(--spacing-xs, 0.75rem)',        // 12px
-    // ...
-} as const
-```
+**Token Reference:**
+- [`DESIGN-TOKENS.md`](mdc:DESIGN-TOKENS.md) - Complete CSS variable reference
 
-### Tertiary Documentation: CSS Styling Patterns Guide
-The [0034-css-styling-patterns.mdc](mdc:0034-css-styling-patterns.mdc) document serves as the comprehensive styling guide.
+**Usage Guides:**
+- [`0034-css-styling-patterns.mdc`](mdc:0034-css-styling-patterns.mdc) - CSS patterns and best practices
+- [`UTILITY-CSS-GUIDE.md`](mdc:UTILITY-CSS-GUIDE.md) - Utility class usage
+- [`CSS-DEDUPLICATION-EXPLAINED.md`](mdc:CSS-DEDUPLICATION-EXPLAINED.md) - How Vite bundles CSS
 
 ## Migration Impact
 
@@ -209,15 +164,17 @@ export default function Button() {
 }
 ```
 
-### Only `tokens.ts` Changes
+### tokens.ts Completely Removed
 ```typescript
 // BEFORE: 260 lines with componentTokens
 export const componentTokens = { /* 50+ lines */ }
-export function createStyles() { /* utility */ }
+export const colors = { /* ... */ }
+export const spacing = { /* ... */ }
+// ... etc
 
-// AFTER: 180 lines, core tokens only
-// Remove componentTokens and createStyles
-// Keep: colors, spacing, typography, borders, shadows, zIndex, chat
+// AFTER: ❌ FILE DELETED
+// All styling now done directly in CSS files
+// No TypeScript/JavaScript intermediary layer
 ```
 
 ## Design System Architecture
@@ -232,31 +189,24 @@ export function createStyles() { /* utility */ }
                   │ Inherits at runtime
                   ▼
 ┌─────────────────────────────────────────────┐
-│      Extension Design System (Layer 1)      │
+│      Extension Design System (Pure CSS)     │
 │                                             │
-│  Component CSS Files (14 files)             │
-│  - Direct CSS variable usage                │
-│  - var(--color-primary, fallback)           │
-│  - Browser-native resolution                │
-└─────────────────┬───────────────────────────┘
-                  │ Uses (99% of styling)
-                  ▼
-┌─────────────────────────────────────────────┐
-│      Extension Design System (Layer 2)      │
+│  ├── utilities.css (reusable patterns)      │
+│  └── Component CSS files (14 files)         │
 │                                             │
-│  tokens.ts (Documentation & JS edge cases)  │
-│  - TypeScript exports of token names        │
-│  - JSDoc documentation                      │
-│  - Used for: rare JS calculations           │
+│  Direct CSS variable usage with fallbacks:  │
+│  var(--color-primary, #ff6d5a)              │
+│                                             │
+│  Browser-native resolution (zero JS!)       │
 └─────────────────────────────────────────────┘
 ```
 
 ### Data Flow
 1. **n8n** defines CSS variables on `document.documentElement`
 2. **Extension CSS** uses those variables with fallbacks
-3. **Extension components** apply CSS classes
+3. **Extension components** apply CSS classes via `className`
 4. **Browser** resolves CSS variables at runtime
-5. **TypeScript** (optional) provides token constants for JS logic
+5. **No JavaScript** involved in styling!
 
 ## Benefits of This Architecture
 
@@ -288,9 +238,9 @@ export function createStyles() { /* utility */ }
 
 ### Immediate Actions
 - [x] Document design system architecture (this document)
-- [ ] Simplify `tokens.ts` - remove `componentTokens` and `createStyles`
-- [ ] Update JSDoc in `tokens.ts` to clarify usage
-- [ ] Add comment explaining Layer 1 (CSS) vs Layer 2 (TS) approach
+- [x] Delete `tokens.ts` - completely unused after CSS refactoring
+- [x] Update DESIGN-TOKENS.md to reflect CSS-first approach
+- [x] Create utilities.css for reusable patterns
 
 ### Documentation Updates
 - [x] Create CSS styling patterns guide ([0034](mdc:0034-css-styling-patterns.mdc))
