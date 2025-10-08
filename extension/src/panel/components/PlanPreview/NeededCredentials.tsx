@@ -111,17 +111,17 @@ export default function NeededCredentials({
               <div style={styles.credentialName}>
                 {cred.name || cred.type}
               </div>
-              
+
               <div style={styles.credentialType}>
                 Type: <code style={styles.typeCode}>{cred.type}</code>
               </div>
-              
+
               {cred.requiredFor && (
                 <div style={styles.requiredFor}>
                   Required for: {cred.requiredFor}
                 </div>
               )}
-              
+
               <a
                 href={`http://localhost:5678/credentials/new/${encodeURIComponent(cred.type)}`}
                 target="_blank"
@@ -132,7 +132,7 @@ export default function NeededCredentials({
               </a>
             </div>
           ))}
-          
+
           <div style={styles.tip}>
             💡 <strong>Tip:</strong> After applying this workflow, configure these credentials in n8n before running.
           </div>

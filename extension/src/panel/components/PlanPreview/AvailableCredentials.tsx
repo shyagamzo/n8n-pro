@@ -60,11 +60,11 @@ export default function AvailableCredentials({
         <span style={styles.icon}>✓</span>
         <span style={styles.title}>Credentials Ready</span>
       </div>
-      
+
       <div style={styles.message}>
         {credentials.length} credential{credentials.length > 1 ? 's are' : ' is'} already configured.
       </div>
-      
+
       {showDetails && (
         <div style={styles.details}>
           {credentials.map((cred, idx) => (
