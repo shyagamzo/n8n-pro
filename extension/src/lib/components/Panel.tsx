@@ -26,6 +26,7 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
   const [position, setPosition] = useState(getDefaultPosition())
   const [size, setSize] = useState<PanelSize>({ w: DEFAULTS.PANEL_WIDTH, h: DEFAULTS.PANEL_HEIGHT })
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
   const dragging = useRef<null | { offsetX: number; offsetY: number }>(null)
   const resizing = useRef<null | { startX: number; startY: number; startW: number; startH: number }>(null)
 
@@ -112,12 +113,12 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
 
   return (
     <div
-      className="panel"
+      className={`panel ${isMinimized ? 'panel--minimized' : ''}`}
       style={{
         top: position.y,
         left: position.x,
         width: size.w,
-        height: size.h,
+        height: isMinimized ? 'auto' : size.h,
       }}
     >
       <div
@@ -128,7 +129,10 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
           dragging.current = { offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top }
         }}
       >
-        <div className="panel-title">{title}</div>
+        <div className="panel-title">
+          <span className="panel-icon">🤖</span>
+          <span className="panel-title-text">{title}</span>
+        </div>
         <div className="panel-controls">
           {onNewSession && (
             <button
@@ -138,24 +142,40 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
                 e.stopPropagation()
                 onNewSession()
               }}
+              title="Start a new conversation"
             >
-              New Session
+              <span className="panel-button-icon">✨</span>
+              <span className="panel-button-text">New Session</span>
             </button>
           )}
-          <button className="panel-close" onClick={onClose}>
+          <button 
+            className="panel-control-btn" 
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsMinimized(!isMinimized)
+            }}
+            title={isMinimized ? 'Maximize' : 'Minimize'}
+          >
+            {isMinimized ? '▲' : '▼'}
+          </button>
+          <button className="panel-control-btn panel-close" onClick={onClose} title="Close">
             ×
           </button>
         </div>
       </div>
-      <div className="panel-content">{children}</div>
-      <div
-        className="panel-resize-handle"
-        onMouseDown={(e) =>
-        {
-          const rect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect()
-          resizing.current = { startX: e.clientX, startY: e.clientY, startW: rect.width, startH: rect.height }
-        }}
-      />
+      {!isMinimized && (
+        <>
+          <div className="panel-content">{children}</div>
+          <div
+            className="panel-resize-handle"
+            onMouseDown={(e) =>
+            {
+              const rect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect()
+              resizing.current = { startX: e.clientX, startY: e.clientY, startW: rect.width, startH: rect.height }
+            }}
+          />
+        </>
+      )}
     </div>
   )
 }

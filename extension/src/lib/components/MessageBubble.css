@@ -5,16 +5,16 @@
 }
 
 .message-bubble--user {
-  background: var(--color-chat-user-background, #ff6d5a);
-  color: var(--color-chat-user-text, #ffffff);
+  background: var(--color-lm-chat-user-background, #049b31);
+  color: var(--color-text-dark, #ffffff);
   padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
   border-radius: var(--border-radius-large, 0.75rem);
   align-self: flex-end;
 }
 
 .message-bubble--assistant {
-  background: var(--color-chat-bot-background, #2d2e3a);
-  color: var(--color-chat-bot-text, #ffffff);
+  background: var(--color-lm-chat-bot-background, #2d2e3a);
+  color: var(--color-text-dark, #ffffff);
   padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
   border-radius: var(--border-radius-large, 0.75rem);
   align-self: flex-start;
