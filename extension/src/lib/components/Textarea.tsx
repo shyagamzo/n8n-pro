@@ -8,12 +8,12 @@ type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   maxRows?: number
 }
 
-const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({ 
-  label, 
-  autoResize = true, 
-  minRows = 1, 
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
+  label,
+  autoResize = true,
+  minRows = 1,
   maxRows = 10,
-  ...props 
+  ...props
 }, ref): React.ReactElement =>
 {
   const internalRef = useRef<HTMLTextAreaElement>(null)
@@ -48,11 +48,11 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   }
 
   return (
-    <label style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: spacing['4xs'], 
-      fontSize: typography.fontSizeS 
+    <label style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: spacing['4xs'],
+      fontSize: typography.fontSizeS
     }}>
       {label && <span style={{ color: colors.textDark }}>{label}</span>}
       <textarea

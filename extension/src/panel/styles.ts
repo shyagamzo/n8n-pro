@@ -1,9 +1,10 @@
-import { spacing, borders, componentTokens } from '../lib/styles/tokens'
+import { spacing, borders, componentTokens, colors } from '../lib/styles/tokens'
 
 export const panelBodyColumn: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  height: '100%'
+  height: '100%',
+  background: colors.backgroundDark,
 }
 
 export const messagesList: React.CSSProperties = {
@@ -12,7 +13,8 @@ export const messagesList: React.CSSProperties = {
   overflowY: 'auto',
   display: 'flex',
   flexDirection: 'column',
-  gap: spacing['2xs']
+  gap: spacing['2xs'],
+  background: colors.backgroundDark,
 }
 
 export const draftBubble: React.CSSProperties = {
@@ -23,9 +25,10 @@ export const draftBubble: React.CSSProperties = {
 
 export const composerRow: React.CSSProperties = {
   padding: spacing.s,
-  borderTop: `${borders.widthBase} solid ${borders.colorBase}`,
+  borderTop: `${borders.widthBase} solid ${colors.foregroundXDark}`,
   display: 'flex',
-  gap: spacing['2xs']
+  gap: spacing['2xs'],
+  background: colors.backgroundDark,
 }
 
 export const inputFlex: React.CSSProperties = { flex: 1 }

@@ -68,14 +68,14 @@ Consistent spacing scale from 2px to 256px:
 ```typescript
 spacing['5xs']  // 0.125rem (2px)  - Tiny gaps
 spacing['4xs']  // 0.25rem (4px)   - Small gaps
-spacing['3xs']  // 0.375rem (6px)  
+spacing['3xs']  // 0.375rem (6px)
 spacing['2xs']  // 0.5rem (8px)    - Compact spacing
 spacing.xs      // 0.75rem (12px)  - Default small
 spacing.s       // 1rem (16px)     - Default medium
 spacing.m       // 1.25rem (20px)  - Default large
-spacing.l       // 1.5rem (24px)   
+spacing.l       // 1.5rem (24px)
 spacing.xl      // 2rem (32px)     - Large spacing
-spacing['2xl']  // 3rem (48px)     
+spacing['2xl']  // 3rem (48px)
 spacing['3xl']  // 4rem (64px)     - Section spacing
 ```
 
@@ -236,10 +236,10 @@ function MyComponent() {
 import { componentTokens } from '../lib/styles/tokens'
 
 function MessageBubble({ role, text }) {
-  const style = role === 'user' 
+  const style = role === 'user'
     ? componentTokens.messageBubble.user
     : componentTokens.messageBubble.assistant
-  
+
   return <div style={style}>{text}</div>
 }
 ```

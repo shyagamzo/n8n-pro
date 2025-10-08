@@ -1,63 +1,64 @@
 import React, { useMemo } from 'react'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { typography, spacing, borders } from '../styles/tokens'
 
 type MarkdownProps = {
   content: string
 }
 
 const markdownStyles: React.CSSProperties = {
-  lineHeight: '1.5',
-  fontSize: '14px',
+  lineHeight: typography.lineHeightXLoose,
+  fontSize: typography.fontSizeS,
   color: 'inherit',
   fontFamily: 'inherit',
 }
 
 const markdownElementStyles: Record<string, React.CSSProperties> = {
   'ol, ul': {
-    margin: '8px 0',
-    paddingLeft: '20px',
+    margin: `${spacing['2xs']} 0`,
+    paddingLeft: spacing.m,
   },
   'li': {
-    margin: '4px 0',
-    lineHeight: '1.4',
+    margin: `${spacing['4xs']} 0`,
+    lineHeight: typography.lineHeightLoose,
   },
   'p': {
-    margin: '6px 0',
+    margin: `${spacing['3xs']} 0`,
   },
   'strong': {
-    fontWeight: '600',
+    fontWeight: typography.fontWeightBold,
   },
   'em': {
     fontStyle: 'italic',
   },
   'code': {
-    background: 'rgba(0, 0, 0, 0.1)',
-    padding: '2px 4px',
-    borderRadius: '3px',
-    fontSize: '13px',
-    fontFamily: 'monospace',
+    background: 'rgba(255, 255, 255, 0.1)',
+    padding: `${spacing['5xs']} ${spacing['4xs']}`,
+    borderRadius: borders.radiusSmall,
+    fontSize: typography.fontSize2xs,
+    fontFamily: typography.fontFamilyMono,
   },
   'pre': {
-    background: 'rgba(0, 0, 0, 0.05)',
-    padding: '8px',
-    borderRadius: '6px',
+    background: 'rgba(0, 0, 0, 0.3)',
+    padding: spacing['2xs'],
+    borderRadius: borders.radiusBase,
     overflow: 'auto',
-    margin: '8px 0',
+    margin: `${spacing['2xs']} 0`,
   },
   'pre code': {
     background: 'none',
     padding: '0',
   },
   'blockquote': {
-    borderLeft: '3px solid #e5e7eb',
-    paddingLeft: '12px',
-    margin: '8px 0',
-    color: '#6b7280',
+    borderLeft: `3px solid rgba(255, 255, 255, 0.2)`,
+    paddingLeft: spacing.xs,
+    margin: `${spacing['2xs']} 0`,
+    opacity: 0.8,
   },
   'h1, h2, h3, h4, h5, h6': {
-    margin: '12px 0 8px 0',
-    fontWeight: '600',
+    margin: `${spacing.xs} 0 ${spacing['2xs']} 0`,
+    fontWeight: typography.fontWeightBold,
   },
 }
 

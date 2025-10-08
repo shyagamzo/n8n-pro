@@ -1,13 +1,13 @@
 /**
  * Design Tokens - n8n Extension
- * 
+ *
  * Aligned with n8n's design system for visual consistency.
  * Reference n8n tokens but maintain our own naming for flexibility.
  */
 
 /**
  * Color Tokens
- * 
+ *
  * Semantic naming that maps to n8n's color system.
  * Use these in components instead of hardcoded values.
  */
@@ -49,10 +49,10 @@ export const colors = {
   success: 'var(--color-success, #4caf50)',
   successLight: 'var(--color-success-light, #81c784)',
   successTint: 'var(--color-success-tint-1, #c8e6c9)',
-  
+
   warning: 'var(--color-warning, #f59e0b)',
   warningTint: 'var(--color-warning-tint-1, #ffc107)',
-  
+
   danger: 'var(--color-danger, #f44336)',
   dangerLight: 'var(--color-danger-light, #e57373)',
   dangerTint: 'var(--color-danger-tint-1, #ffcdd2)',
@@ -81,7 +81,7 @@ export const colors = {
 
 /**
  * Spacing Tokens
- * 
+ *
  * Consistent spacing scale from n8n.
  */
 export const spacing = {
@@ -164,7 +164,7 @@ export const shadows = {
 
 /**
  * Z-Index Tokens
- * 
+ *
  * Layering system for proper stacking.
  */
 export const zIndex = {
@@ -180,7 +180,7 @@ export const zIndex = {
 
 /**
  * Chat-Specific Tokens
- * 
+ *
  * Tokens for chat UI components.
  */
 export const chat = {
@@ -211,34 +211,37 @@ export const chat = {
  * Component-Specific Mappings
  * 
  * Recommended token usage for specific components.
+ * Dark theme aligned with n8n's dark UI.
  */
 export const componentTokens = {
-  // Message bubbles
+  // Message bubbles - Dark theme
   messageBubble: {
     user: {
       background: colors.chatUserBackground,
-      color: colors.chatUserColor,
+      color: colors.textXLight,
       padding: `${spacing['2xs']} ${spacing.xs}`,
       borderRadius: borders.radiusLarge,
     },
     assistant: {
-      background: colors.chatBotBackground,
-      color: colors.textBase,
+      background: colors.foregroundXDark,
+      color: colors.textXLight,
       padding: `${spacing['2xs']} ${spacing.xs}`,
       borderRadius: borders.radiusLarge,
     },
   },
 
-  // Input/Textarea
+  // Input/Textarea - Dark theme
   input: {
     padding: `${spacing['2xs']} ${spacing.xs}`,
     borderRadius: borders.radiusLarge,
-    border: `${borders.widthBase} solid ${borders.colorBase}`,
+    border: `${borders.widthBase} solid ${colors.foregroundXDark}`,
     fontSize: typography.fontSizeS,
     fontFamily: typography.fontFamily,
+    background: colors.backgroundDark,
+    color: colors.textXLight,
   },
 
-  // Buttons
+  // Buttons - Dark theme
   button: {
     primary: {
       background: colors.primary,
@@ -248,27 +251,27 @@ export const componentTokens = {
       fontWeight: typography.fontWeightMedium,
     },
     secondary: {
-      background: colors.backgroundXLight,
-      color: colors.textBase,
-      border: `${borders.widthBase} solid ${borders.colorBase}`,
+      background: colors.foregroundXDark,
+      color: colors.textXLight,
+      border: `${borders.widthBase} solid ${colors.foregroundDark}`,
       padding: `${spacing['2xs']} ${spacing.s}`,
       borderRadius: borders.radiusBase,
       fontWeight: typography.fontWeightMedium,
     },
   },
 
-  // Panel/Container
+  // Panel/Container - Dark theme
   panel: {
-    background: colors.backgroundXLight,
+    background: colors.backgroundDark,
     borderRadius: borders.radiusXLarge,
-    shadow: shadows.base,
+    shadow: shadows.dark,
     padding: spacing.s,
   },
 
-  // Thinking animation
+  // Thinking animation - Light color for dark theme
   thinkingAnimation: {
     dotSize: spacing['2xs'],
-    dotColor: colors.textLight,
+    dotColor: colors.textLighter,
     gap: spacing['4xs'],
   },
 } as const
