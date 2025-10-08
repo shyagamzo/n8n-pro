@@ -90,7 +90,7 @@ class Orchestrator
     {
       // Strip markdown code fences if present (LLM sometimes wraps response in ```)
       let cleanedResponse = loomResponse.trim()
-      
+
       // Remove opening code fence (``` or ```loom or ```yaml etc)
       if (cleanedResponse.startsWith('```'))
       {
@@ -100,16 +100,16 @@ class Orchestrator
           cleanedResponse = cleanedResponse.substring(firstNewline + 1)
         }
       }
-      
+
       // Remove closing code fence
       if (cleanedResponse.endsWith('```'))
       {
         const lastCodeFence = cleanedResponse.lastIndexOf('```')
         cleanedResponse = cleanedResponse.substring(0, lastCodeFence)
       }
-      
+
       cleanedResponse = cleanedResponse.trim()
-      
+
       const parsed = parseLoom(cleanedResponse)
 
       if (!parsed.success || !parsed.data)
