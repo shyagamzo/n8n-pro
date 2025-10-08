@@ -6,7 +6,7 @@ description: n8n API client design—authentication, workflow CRUD, pagination, 
 # Decision Record: n8n Extension API Integration Strategy
 
 ## API Version
-Use n8n's latest REST API (v2) for MVP integration.
+Use n8n's REST API v1 for MVP integration. (n8n currently only provides v1 API)
 
 ## Core Operations (MVP)
 - **Workflows**: List, create, read, update, delete workflows
