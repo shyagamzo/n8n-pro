@@ -324,6 +324,12 @@ function parseValue(text: string, options: Required<ParseOptions>): LoomValue
     return false
   }
 
+  // Empty array
+  if (text === '[]')
+  {
+    return []
+  }
+
   // Number
   if (/^-?\d+(\.\d+)?$/.test(text))
   {

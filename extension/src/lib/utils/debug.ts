@@ -1,11 +1,11 @@
 /**
  * Debug logging utilities
- * 
+ *
  * Structured logging for development with colored console output
  * and automatic sanitization of sensitive data.
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+// type LogLevel = 'debug' | 'info' | 'warn' | 'error' // Unused for now
 
 type LogContext = {
   component: string

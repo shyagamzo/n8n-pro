@@ -200,7 +200,13 @@ class Orchestrator
     // Extract fields from Loom data
     const title = String(loomData.title || 'Workflow')
     const summary = String(loomData.summary || 'Generated workflow')
-    const credentialsNeeded = (loomData.credentialsNeeded as Array<unknown> || []).map(cred =>
+    // Handle case where credentialsNeeded might be parsed as string '[]' instead of array
+    const credentialsNeededRaw = loomData.credentialsNeeded
+    const credentialsNeeded = Array.isArray(credentialsNeededRaw) 
+      ? credentialsNeededRaw 
+      : []
+    
+    const credentialsNeededArray = credentialsNeeded.map(cred =>
     {
       const c = cred as Record<string, unknown>
       return {
@@ -212,7 +218,13 @@ class Orchestrator
       }
     })
 
-    const credentialsAvailable = (loomData.credentialsAvailable as Array<unknown> || []).map(cred =>
+    // Handle case where credentialsAvailable might be parsed as string '[]' instead of array
+    const credentialsAvailableRaw = loomData.credentialsAvailable
+    const credentialsAvailable = Array.isArray(credentialsAvailableRaw) 
+      ? credentialsAvailableRaw 
+      : []
+    
+    const credentialsAvailableArray = credentialsAvailable.map(cred =>
     {
       const c = cred as Record<string, unknown>
       return {
@@ -227,8 +239,8 @@ class Orchestrator
     return {
       title,
       summary,
-      credentialsNeeded,
-      credentialsAvailable: credentialsAvailable.length > 0 ? credentialsAvailable : undefined,
+      credentialsNeeded: credentialsNeededArray,
+      credentialsAvailable: credentialsAvailableArray.length > 0 ? credentialsAvailableArray : undefined,
       workflow: {
         name: String(workflow.name || title),
         nodes: (workflow.nodes as unknown[]) || [],
