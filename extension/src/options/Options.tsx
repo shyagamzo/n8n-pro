@@ -1,10 +1,11 @@
 import React from 'react'
 import ApiKeySection from './components/ApiKeySection'
+import './Options.css'
 
 export default function Options(): React.ReactElement
 {
   return (
-    <div style={{ fontFamily: 'Inter, system-ui, Arial', padding: 12, maxWidth: 560 }}>
+    <div className="options-container">
       <h1>n8n Pro Options</h1>
       <ApiKeySection />
     </div>

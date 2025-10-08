@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Input from '../../lib/components/Input'
 import Button from '../../lib/components/Button'
 import { getOpenAiKey, setOpenAiKey, clearOpenAiKey, getN8nApiKey, setN8nApiKey, clearN8nApiKey, getBaseUrl, setBaseUrl, clearBaseUrl } from '../../lib/services/settings'
+import '../Options.css'
 
 function maskKey(key: string): string
 {
@@ -109,42 +110,42 @@ export default function ApiKeySection(): React.ReactElement
   }
 
   return (
-    <section style={{ marginTop: 16 }}>
+    <section className="api-key-section">
       <h3>OpenAI API Key</h3>
-      <p style={{ color: '#4b5563' }}>Stored securely in chrome.storage.local and used only by the background worker.</p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-        <div style={{ flex: 1 }}>
+      <p className="api-key-description">Stored securely in chrome.storage.local and used only by the background worker.</p>
+      <div className="api-key-row">
+        <div className="api-key-input-wrapper">
           <Input label="Current (masked)" value={keyMasked} readOnly />
         </div>
         <Button variant="secondary" onClick={() => void clear()} disabled={saving || !keyMasked}>Clear</Button>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
-        <div style={{ flex: 1 }}>
+      <div className="api-key-row">
+        <div className="api-key-input-wrapper">
           <Input label="New key" placeholder="sk-..." value={keyInput} onChange={(e) => setKeyInput(e.currentTarget.value)} />
         </div>
         <Button onClick={() => void save()} disabled={saving || !keyInput.trim()}>Save</Button>
       </div>
-      {message && <div style={{ marginTop: 8, color: '#065f46' }}>{message}</div>}
+      {message && <div className="api-key-message">{message}</div>}
 
-      <h3 style={{ marginTop: 24 }}>n8n API Key</h3>
-      <p style={{ color: '#4b5563' }}>Stored securely and used only by the background worker for n8n REST API.</p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-        <div style={{ flex: 1 }}>
+      <h3 className="api-key-subsection">n8n API Key</h3>
+      <p className="api-key-description">Stored securely and used only by the background worker for n8n REST API.</p>
+      <div className="api-key-row">
+        <div className="api-key-input-wrapper">
           <Input label="Current (masked)" value={n8nKeyMasked} readOnly />
         </div>
         <Button variant="secondary" onClick={() => void clearN8n()} disabled={saving || !n8nKeyMasked}>Clear</Button>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
-        <div style={{ flex: 1 }}>
+      <div className="api-key-row">
+        <div className="api-key-input-wrapper">
           <Input label="New key" placeholder="n8n API Key" value={n8nKeyInput} onChange={(e) => setN8nKeyInput(e.currentTarget.value)} />
         </div>
         <Button onClick={() => void saveN8n()} disabled={saving || !n8nKeyInput.trim()}>Save</Button>
       </div>
 
-      <h3 style={{ marginTop: 24 }}>n8n Base URL</h3>
-      <p style={{ color: '#4b5563' }}>Default is http://localhost:5678. Change if your instance differs.</p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-        <div style={{ flex: 1 }}>
+      <h3 className="api-key-subsection">n8n Base URL</h3>
+      <p className="api-key-description">Default is http://localhost:5678. Change if your instance differs.</p>
+      <div className="api-key-row">
+        <div className="api-key-input-wrapper">
           <Input label="Base URL" placeholder="http://localhost:5678" value={baseUrl} onChange={(e) => setBaseUrlInput(e.currentTarget.value)} />
         </div>
         <Button variant="secondary" onClick={() => void clearBase()} disabled={saving || !baseUrl}>Clear</Button>
