@@ -20,19 +20,24 @@ function injectTriggerAndPanel(): void
   const trigger = document.createElement('button')
   trigger.id = 'n8n-pro-trigger'
   trigger.innerHTML = '<span style="font-size: 1.2em; margin-right: 6px;">🤖</span><span>n8n Assistant</span>'
+  
+  // Get CSS variable values
+  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#ff6d5a'
+  const primaryShade = getComputedStyle(document.documentElement).getPropertyValue('--color-primary-shade').trim() || '#e55a47'
+  
   trigger.style.position = 'fixed'
   trigger.style.bottom = '20px'
   trigger.style.right = '20px'
   trigger.style.zIndex = '2147483647'
   trigger.style.padding = '12px 20px'
   trigger.style.borderRadius = '12px'
-  trigger.style.background = 'linear-gradient(135deg, #e55a47 0%, #d64d3a 100%)'
+  trigger.style.background = `linear-gradient(135deg, color-mix(in srgb, ${primaryColor} 90%, black) 0%, color-mix(in srgb, ${primaryShade} 85%, black) 100%)`
   trigger.style.color = '#fff'
   trigger.style.border = '1px solid rgba(255, 255, 255, 0.2)'
   trigger.style.cursor = 'pointer'
   trigger.style.fontWeight = '500'
   trigger.style.fontSize = '14px'
-  trigger.style.boxShadow = '0 8px 24px rgba(229, 90, 71, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)'
+  trigger.style.boxShadow = `0 8px 24px color-mix(in srgb, ${primaryColor} 40%, transparent), 0 4px 12px rgba(0, 0, 0, 0.3)`
   trigger.style.transition = 'all 0.3s ease'
   trigger.style.display = 'flex'
   trigger.style.alignItems = 'center'
@@ -41,12 +46,12 @@ function injectTriggerAndPanel(): void
 
   trigger.addEventListener('mouseenter', () => {
     trigger.style.transform = 'translateY(-4px) scale(1.05)'
-    trigger.style.boxShadow = '0 12px 32px rgba(229, 90, 71, 0.5), 0 6px 16px rgba(0, 0, 0, 0.4)'
+    trigger.style.boxShadow = `0 12px 32px color-mix(in srgb, ${primaryColor} 50%, transparent), 0 6px 16px rgba(0, 0, 0, 0.4)`
   })
 
   trigger.addEventListener('mouseleave', () => {
     trigger.style.transform = 'translateY(0) scale(1)'
-    trigger.style.boxShadow = '0 8px 24px rgba(229, 90, 71, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)'
+    trigger.style.boxShadow = `0 8px 24px color-mix(in srgb, ${primaryColor} 40%, transparent), 0 4px 12px rgba(0, 0, 0, 0.3)`
   })
 
   trigger.addEventListener('mousedown', () => {
