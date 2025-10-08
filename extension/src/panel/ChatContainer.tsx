@@ -5,7 +5,7 @@ import { chat } from '../lib/services/chat'
 
 export default function ChatContainer(): React.ReactElement | null
 {
-  const { isOpen, setOpen, messages, assistantDraft, sending, pendingPlan, setPendingPlan, clearSession, loadMessages } = useChatStore()
+  const { isOpen, setOpen, messages, assistantDraft, sending, clearSession, loadMessages } = useChatStore()
 
   // Load persisted messages on mount
   useEffect(() =>
@@ -27,9 +27,7 @@ export default function ChatContainer(): React.ReactElement | null
       messages={messages}
       draft={assistantDraft}
       sending={sending}
-      plan={pendingPlan ?? null}
       onSend={(text) => chat.send(text)}
-      onCancelPlan={(): void => setPendingPlan(null)}
     />
   )
 }

@@ -4,6 +4,7 @@ export type ChatMessage = {
   id: string
   role: ChatRole
   text: string
+  plan?: import('./plan').Plan
 }
 
 export type ChatStreamMessage =
