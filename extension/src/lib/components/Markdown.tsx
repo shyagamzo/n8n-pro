@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import { typography, spacing, borders } from '../styles/tokens'
+import { typography, spacing, borders, colors } from '../styles/tokens'
 
 type MarkdownProps = {
   content: string
@@ -33,14 +33,16 @@ const markdownElementStyles: Record<string, React.CSSProperties> = {
     fontStyle: 'italic',
   },
   'code': {
-    background: 'rgba(255, 255, 255, 0.1)',
+    background: colors.backgroundSecondary,
+    color: colors.text,
     padding: `${spacing['5xs']} ${spacing['4xs']}`,
     borderRadius: borders.radiusSmall,
     fontSize: typography.fontSize2xs,
     fontFamily: typography.fontFamilyMono,
   },
   'pre': {
-    background: 'rgba(0, 0, 0, 0.3)',
+    background: colors.backgroundSecondary,
+    color: colors.text,
     padding: spacing['2xs'],
     borderRadius: borders.radiusBase,
     overflow: 'auto',
@@ -51,7 +53,7 @@ const markdownElementStyles: Record<string, React.CSSProperties> = {
     padding: '0',
   },
   'blockquote': {
-    borderLeft: `3px solid rgba(255, 255, 255, 0.2)`,
+    borderLeft: `3px solid ${colors.border}`,
     paddingLeft: spacing.xs,
     margin: `${spacing['2xs']} 0`,
     opacity: 0.8,

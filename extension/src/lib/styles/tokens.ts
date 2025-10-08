@@ -8,75 +8,49 @@
 /**
  * Color Tokens
  *
- * Semantic naming that maps to n8n's color system.
- * Use these in components instead of hardcoded values.
+ * Simplified naming that maps to n8n's color system.
+ * n8n flips color values in dark mode, so we use their "light" terminology
+ * to get the actual dark values when n8n is in dark mode.
  */
 export const colors = {
   // Primary - Used for main actions and highlights
   primary: 'var(--color-primary, #ff6d5a)',
   primaryShade: 'var(--color-primary-shade-1, #ff5a45)',
   primaryTint: 'var(--color-primary-tint-1, #ff9b8f)',
-  primaryLight: 'var(--color-primary-tint-2, #ffc7bf)',
-  primaryXLight: 'var(--color-primary-tint-3, #ffebe8)',
 
   // Secondary - Used for secondary actions
   secondary: 'var(--color-secondary, #7c4dff)',
   secondaryShade: 'var(--color-secondary-shade-1, #6a3fe8)',
   secondaryTint: 'var(--color-secondary-tint-1, #b39dff)',
 
-  // Text colors
-  textDark: 'var(--color-text-dark, #2d2e3a)',
-  textBase: 'var(--color-text-base, #555770)',
-  textLight: 'var(--color-text-light, #7f8195)',
-  textLighter: 'var(--color-text-lighter, #c5c7d0)',
-  textXLight: 'var(--color-text-xlight, #ffffff)',
+  // Text colors - Use n8n's light terminology to get dark mode values
+  text: 'var(--color-text-xlight, #ffffff)',           // White text in dark mode
+  textSecondary: 'var(--color-text-lighter, #c5c7d0)', // Light gray text
+  textMuted: 'var(--color-text-light, #7f8195)',       // Muted text
 
-  // Background colors
-  backgroundDark: 'var(--color-background-dark, #1a1a24)',
-  backgroundMedium: 'var(--color-background-medium, #c5c7d0)',
-  backgroundBase: 'var(--color-background-base, #f5f6f8)',
-  backgroundLight: 'var(--color-background-light, #fafbfc)',
-  backgroundXLight: 'var(--color-background-xlight, #ffffff)',
+  // Background colors - Use n8n's light terminology to get dark mode values
+  background: 'var(--color-background-light, #1a1a24)',     // Dark background in dark mode
+  backgroundSecondary: 'var(--color-background-base, #2d2e3a)', // Secondary dark background
+  backgroundElevated: 'var(--color-background-xlight, #3a3b4a)', // Elevated surfaces
 
-  // Foreground (borders, dividers, subtle UI)
-  foregroundXDark: 'var(--color-foreground-xdark, #4f5166)',
-  foregroundDark: 'var(--color-foreground-dark, #c5c7d0)',
-  foregroundBase: 'var(--color-foreground-base, #dfe0e6)',
-  foregroundLight: 'var(--color-foreground-light, #edf0f2)',
-  foregroundXLight: 'var(--color-foreground-xlight, #ffffff)',
+  // Border colors - Use n8n's light terminology to get dark mode values
+  border: 'var(--color-foreground-light, #4f5166)',         // Dark borders in dark mode
+  borderSecondary: 'var(--color-foreground-base, #3a3b4a)', // Secondary borders
 
   // Status colors
   success: 'var(--color-success, #4caf50)',
-  successLight: 'var(--color-success-light, #81c784)',
-  successTint: 'var(--color-success-tint-1, #c8e6c9)',
-
   warning: 'var(--color-warning, #f59e0b)',
-  warningTint: 'var(--color-warning-tint-1, #ffc107)',
-
   danger: 'var(--color-danger, #f44336)',
-  dangerLight: 'var(--color-danger-light, #e57373)',
-  dangerTint: 'var(--color-danger-tint-1, #ffcdd2)',
 
-  // Chat-specific colors (n8n's chat widget colors)
-  chatPrimary: 'var(--chat--color-primary, #e74266)',
-  chatSecondary: 'var(--chat--color-secondary, #20b69e)',
-  chatLight: 'var(--chat--color-light, #f2f4f8)',
-  chatDark: 'var(--chat--color-dark, #101330)',
+  // Chat-specific colors
   chatUserBackground: 'var(--color-lm-chat-user-background, #31c4ab)',
-  chatUserColor: 'var(--color-lm-chat-user-color, #ffffff)',
-  chatBotBackground: 'var(--color-lm-chat-bot-background, #ffffff)',
-  chatMessagesBackground: 'var(--color-lm-chat-messages-background, #f5f6f8)',
-
-  // Assistant highlight (AI/gradient colors)
-  assistantHighlight1: 'var(--color-assistant-highlight-1, #5b60e8)',
-  assistantHighlight2: 'var(--color-assistant-highlight-2, #aa7bec)',
-  assistantHighlight3: 'var(--color-assistant-highlight-3, #ec7b8e)',
-  assistantGradient: 'var(--color-assistant-highlight-gradient, linear-gradient(105deg, #5b60e8 0%, #aa7bec 50%, #ec7b8e 100%))',
+  chatUserText: 'var(--color-lm-chat-user-color, #ffffff)',
+  chatBotBackground: 'var(--color-lm-chat-bot-background, #4f5166)', // Dark gray for assistant
+  chatBotText: 'var(--color-lm-chat-user-color, #ffffff)',           // White text for assistant
 
   // Code colors
-  codeBackground: 'var(--color-code-background, #ffffff)',
-  codeBackgroundReadonly: 'var(--color-code-background-readonly, #f5f6f8)',
-  codeForeground: 'var(--color-code-foreground, #424242)',
+  codeBackground: 'var(--color-code-background, #2d2e3a)',
+  codeText: 'var(--color-code-foreground, #ffffff)',
 } as const
 
 /**
@@ -209,69 +183,69 @@ export const chat = {
 
 /**
  * Component-Specific Mappings
- * 
- * Recommended token usage for specific components.
- * Dark theme aligned with n8n's dark UI.
+ *
+ * Simplified component tokens using unified color naming.
+ * Automatically adapts to n8n's theme (light/dark).
  */
 export const componentTokens = {
-  // Message bubbles - Dark theme
+  // Message bubbles
   messageBubble: {
     user: {
       background: colors.chatUserBackground,
-      color: colors.textXLight,
+      color: colors.chatUserText,
       padding: `${spacing['2xs']} ${spacing.xs}`,
       borderRadius: borders.radiusLarge,
     },
     assistant: {
-      background: colors.foregroundXDark,
-      color: colors.textXLight,
+      background: colors.chatBotBackground,
+      color: colors.chatBotText,
       padding: `${spacing['2xs']} ${spacing.xs}`,
       borderRadius: borders.radiusLarge,
     },
   },
 
-  // Input/Textarea - Dark theme
+  // Input/Textarea
   input: {
     padding: `${spacing['2xs']} ${spacing.xs}`,
     borderRadius: borders.radiusLarge,
-    border: `${borders.widthBase} solid ${colors.foregroundXDark}`,
+    border: `${borders.widthBase} solid ${colors.border}`,
     fontSize: typography.fontSizeS,
     fontFamily: typography.fontFamily,
-    background: colors.backgroundDark,
-    color: colors.textXLight,
+    background: colors.background,
+    color: colors.text,
   },
 
-  // Buttons - Dark theme
+  // Buttons
   button: {
     primary: {
       background: colors.primary,
-      color: colors.textXLight,
+      color: colors.text,
       padding: `${spacing['2xs']} ${spacing.s}`,
       borderRadius: borders.radiusBase,
       fontWeight: typography.fontWeightMedium,
     },
     secondary: {
-      background: colors.foregroundXDark,
-      color: colors.textXLight,
-      border: `${borders.widthBase} solid ${colors.foregroundDark}`,
+      background: colors.backgroundSecondary,
+      color: colors.text,
+      border: `${borders.widthBase} solid ${colors.border}`,
       padding: `${spacing['2xs']} ${spacing.s}`,
       borderRadius: borders.radiusBase,
       fontWeight: typography.fontWeightMedium,
     },
   },
 
-  // Panel/Container - Dark theme
+  // Panel/Container
   panel: {
-    background: colors.backgroundDark,
+    background: colors.background,
     borderRadius: borders.radiusXLarge,
-    shadow: shadows.dark,
+    shadow: shadows.base,
     padding: spacing.s,
   },
 
-  // Thinking animation - Light color for dark theme
+  // Thinking animation
   thinkingAnimation: {
     dotSize: spacing['2xs'],
-    dotColor: colors.textLighter,
+    dotColor: colors.textSecondary,
     gap: spacing['4xs'],
   },
 } as const

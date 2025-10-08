@@ -14,7 +14,7 @@ export default function Input({ label, ...props }: InputProps): React.ReactEleme
       gap: spacing['4xs'],
       fontSize: typography.fontSizeS
     }}>
-      {label && <span style={{ color: colors.textDark }}>{label}</span>}
+      {label && <span style={{ color: colors.text }}>{label}</span>}
       <input
         {...props}
         style={{

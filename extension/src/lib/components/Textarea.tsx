@@ -54,7 +54,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
       gap: spacing['4xs'],
       fontSize: typography.fontSizeS
     }}>
-      {label && <span style={{ color: colors.textDark }}>{label}</span>}
+      {label && <span style={{ color: colors.text }}>{label}</span>}
       <textarea
         ref={textareaRef}
         {...props}
