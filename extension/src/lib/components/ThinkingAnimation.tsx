@@ -1,4 +1,5 @@
 import React from 'react'
+import { componentTokens } from '../styles/tokens'
 
 /**
  * Animated thinking indicator with bouncing dots
@@ -8,15 +9,15 @@ export default function ThinkingAnimation(): React.ReactElement
   const containerStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '4px',
-    padding: '4px 0',
+    gap: componentTokens.thinkingAnimation.gap,
+    padding: `${componentTokens.thinkingAnimation.gap} 0`,
   }
 
   const dotStyle: React.CSSProperties = {
-    width: '8px',
-    height: '8px',
+    width: componentTokens.thinkingAnimation.dotSize,
+    height: componentTokens.thinkingAnimation.dotSize,
     borderRadius: '50%',
-    backgroundColor: 'currentColor',
+    backgroundColor: componentTokens.thinkingAnimation.dotColor,
     opacity: 0.6,
   }
 

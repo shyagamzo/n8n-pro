@@ -2,6 +2,7 @@ import React from 'react'
 import type { ChatMessage } from '../types/chat'
 import Markdown from './Markdown'
 import PlanMessage from '../../panel/components/PlanMessage'
+import { componentTokens } from '../styles/tokens'
 
 type MessageBubbleProps = {
   message: ChatMessage
@@ -9,27 +10,24 @@ type MessageBubbleProps = {
 
 function getBubbleStyle(role: ChatMessage['role']): React.CSSProperties
 {
-  const base: React.CSSProperties = {
-    padding: '8px 10px',
-    borderRadius: 8,
-    maxWidth: '80%'
+  const baseStyle: React.CSSProperties = {
+    maxWidth: '80%',
+    wordWrap: 'break-word',
   }
 
   if (role === 'user')
   {
     return {
-      ...base,
+      ...baseStyle,
+      ...componentTokens.messageBubble.user,
       alignSelf: 'flex-end',
-      background: 'var(--color-primary, #4f46e5)',
-      color: 'var(--color-on-primary, #fff)'
     }
   }
 
   return {
-    ...base,
+    ...baseStyle,
+    ...componentTokens.messageBubble.assistant,
     alignSelf: 'flex-start',
-    background: 'var(--color-surface-2, #f3f4f6)',
-    color: 'var(--color-text, #111827)'
   }
 }
 

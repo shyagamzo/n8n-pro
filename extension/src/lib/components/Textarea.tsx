@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, forwardRef } from 'react'
+import { componentTokens, colors, spacing, typography } from '../styles/tokens'
 
 type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label?: string
@@ -7,12 +8,12 @@ type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   maxRows?: number
 }
 
-const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
-  label,
-  autoResize = true,
-  minRows = 1,
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({ 
+  label, 
+  autoResize = true, 
+  minRows = 1, 
   maxRows = 10,
-  ...props
+  ...props 
 }, ref): React.ReactElement =>
 {
   const internalRef = useRef<HTMLTextAreaElement>(null)
@@ -47,21 +48,22 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   }
 
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-      {label && <span style={{ color: 'var(--color-text, #111827)' }}>{label}</span>}
+    <label style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: spacing['4xs'], 
+      fontSize: typography.fontSizeS 
+    }}>
+      {label && <span style={{ color: colors.textDark }}>{label}</span>}
       <textarea
         ref={textareaRef}
         {...props}
         onChange={handleChange}
         style={{
-          padding: '8px 10px',
-          borderRadius: 8,
-          border: '1px solid var(--color-border, #e5e7eb)',
-          outline: 'none',
-          fontSize: 14,
-          fontFamily: 'inherit',
+          ...componentTokens.input,
           resize: 'none',
           overflow: 'hidden',
+          outline: 'none',
           minHeight: `${(parseInt(getComputedStyle(document.body).lineHeight) || 20) * minRows}px`,
           ...props.style
         }}
