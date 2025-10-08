@@ -80,12 +80,16 @@ workflow:
   name: Workflow Name
   nodes:
     - id: unique-node-id
-      type: n8n-nodes-base.schedule
+      type: n8n-nodes-base.scheduleTrigger
       name: Schedule Trigger
       parameters:
         rule:
-          interval: daily
-      position: 250, 300
+          interval:
+            - intervalSize: 1
+              intervalUnit: days
+      position:
+        - 250
+        - 300
   connections:
     Schedule Trigger:
       main:
@@ -132,14 +136,18 @@ workflow:
   name: Daily Morning Greeting
   nodes:
     - id: Schedule
-      type: n8n-nodes-base.schedule
+      type: n8n-nodes-base.scheduleTrigger
       name: Every Day at 9 AM
       parameters:
         rule:
           interval:
-            - field: cronExpression
-              expression: 0 9 * * *
-      position: 250, 300
+            - intervalSize: 1
+              intervalUnit: days
+            - field: hour
+              value: 9
+      position:
+        - 250
+        - 300
     - id: Slack
       type: n8n-nodes-base.slack
       name: Send Message
@@ -148,7 +156,9 @@ workflow:
         operation: post
         channel: #general
         text: Good morning team!
-      position: 450, 300
+      position:
+        - 450
+        - 300
   connections:
     Every Day at 9 AM:
       main:
@@ -183,14 +193,18 @@ workflow:
       parameters:
         path: data-intake
         httpMethod: POST
-      position: 250, 300
+      position:
+        - 250
+        - 300
     - id: Code
       type: n8n-nodes-base.code
       name: Transform Data
       parameters:
         language: javascript
         jsCode: return items.map(item => ({ json: { name: item.json.fullName, email: item.json.emailAddress, timestamp: new Date().toISOString() } }));
-      position: 450, 300
+      position:
+        - 450
+        - 300
     - id: Airtable
       type: n8n-nodes-base.airtable
       name: Save to Airtable
@@ -202,7 +216,9 @@ workflow:
           Name: ={{ $json.name }}
           Email: ={{ $json.email }}
           Created: ={{ $json.timestamp }}
-      position: 650, 300
+      position:
+        - 650
+        - 300
   connections:
     Webhook Trigger:
       main:

@@ -14,10 +14,23 @@ Quick reference for commonly used n8n nodes. For complete documentation, see [n8
 **Use:** Run workflows on a schedule
 **Parameters:**
 - `rule`: Schedule rule configuration
-  - `interval`: Array with interval configuration
-    - Use `intervalSize` and `intervalUnit` (e.g., `{ intervalSize: 1, intervalUnit: 'days' }`)
-  - Or use `cronExpression`: Cron format (e.g., "0 9 * * *" for 9 AM daily)
+  - `interval`: Array of interval settings
+    - For daily: `[{ intervalSize: 1, intervalUnit: 'days' }]`
+    - For hourly: `[{ intervalSize: 1, intervalUnit: 'hours' }]`
+    - Can add time fields: `[{ intervalSize: 1, intervalUnit: 'days' }, { field: 'hour', value: 9 }]`
+  - Or use simple `cronExpression`: "0 9 * * *" (9 AM daily)
 **Note:** `n8n-nodes-base.schedule` is deprecated, always use `scheduleTrigger`
+
+**Example (Daily at 9 AM):**
+```yaml
+parameters:
+  rule:
+    interval:
+      - intervalSize: 1
+        intervalUnit: days
+      - field: hour
+        value: 9
+```
 
 ### Webhook
 **Type:** `n8n-nodes-base.webhook`
