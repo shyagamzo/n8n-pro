@@ -67,19 +67,19 @@ export function createN8nClient(options: N8nClientOptions = {})
 
   /**
    * List credentials - Currently not supported
-   * 
+   *
    * IMPORTANT: n8n's credential listing is not accessible via API key authentication:
    * - Public API (/api/v1/credentials): Does not support GET/listing (405 Method Not Allowed)
    * - Internal API (/rest/credentials): Requires session cookie auth, not API key (401 Unauthorized)
-   * 
+   *
    * The internal /rest/ endpoints are used by n8n's UI and require active browser
    * session cookies. API keys only work with the public /api/v1/ endpoints.
-   * 
+   *
    * For now, we return empty array. Future solutions:
    * - Wait for n8n to add credential listing to public API
    * - Use content script with page context to access cookies
    * - Accept limitation and work without pre-checking credentials
-   * 
+   *
    * @param projectId - Optional project ID to filter credentials by project
    */
   async function listCredentials(_projectId?: string): Promise<Array<{ id: string; name: string; type: string }>>
