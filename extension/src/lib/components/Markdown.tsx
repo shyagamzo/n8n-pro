@@ -20,8 +20,8 @@ const markdownElementStyles: Record<string, React.CSSProperties> = {
     paddingLeft: spacing.m,
   },
   'li': {
-    margin: `${spacing['4xs']} 0`,
-    lineHeight: typography.lineHeightLoose,
+    margin: `${spacing['s']} ${spacing['l']}`,
+    lineHeight: typography.lineHeightXSmall,
   },
   'p': {
     margin: `${spacing['3xs']} 0`,
@@ -82,15 +82,19 @@ export default function Markdown({ content }: MarkdownProps): React.ReactElement
   // Apply styles to markdown elements after rendering
   React.useEffect(() =>
   {
-    const element = document.querySelector('.markdown-body')
-    if (!element) return
+    const elements = document.querySelectorAll('.markdown-body')
 
-    Object.entries(markdownElementStyles).forEach(([selector, styles]) =>
-    {
-      const elements = element.querySelectorAll(selector)
-      elements.forEach((el) =>
+    elements.forEach((element) => {
+      Object.entries(markdownElementStyles).forEach(([selector, styles]) =>
       {
-        Object.assign((el as HTMLElement).style, styles)
+        const childElements = element.querySelectorAll(selector)
+        childElements.forEach((el) =>
+        {
+          const htmlEl = el as HTMLElement
+          Object.entries(styles).forEach(([property, value]) => {
+            htmlEl.style.setProperty(property, value as string, 'important')
+          })
+        })
       })
     })
   }, [html])
