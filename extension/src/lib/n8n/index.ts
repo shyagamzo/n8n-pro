@@ -66,19 +66,33 @@ export function createN8nClient(options: N8nClientOptions = {})
   }
 
   /**
-   * Note: n8n API does not support listing credentials for security reasons.
-   * The credentials API only supports:
-   * - POST: Create credential
-   * - DELETE: Delete credential
-   * - GET: Get credential schema (not credential data)
+   * List credentials using n8n's internal REST API.
    * 
-   * Reference: https://docs.n8n.io/api/api-reference/#tag/credential
+   * Note: This uses the internal /rest/credentials endpoint (not the public API).
+   * The public API (/api/v1/credentials) doesn't support listing for security reasons,
+   * but the internal endpoint is used by n8n's UI and is accessible with API keys.
+   * 
+   * @param projectId - Optional project ID to filter credentials by project
    */
-  async function listCredentials(): Promise<Array<{ id: string; name: string; type: string }>>
+  async function listCredentials(projectId?: string): Promise<Array<{ id: string; name: string; type: string }>>
   {
-    // n8n API doesn't provide an endpoint to list credentials
-    // Return empty array to indicate no credentials can be fetched
-    return []
+    const params = new URLSearchParams({
+      includeScopes: 'true',
+      includeData: 'false', // Don't include sensitive credential data
+    })
+    
+    if (projectId)
+    {
+      params.append('filter', JSON.stringify({ projectId }))
+    }
+    
+    const url = `${baseUrl}/rest/credentials?${params.toString()}`
+    
+    return apiFetch<Array<{ id: string; name: string; type: string }>>(url, {
+      method: 'GET',
+      headers: authHeaders,
+      timeoutMs: 10_000,
+    })
   }
 
   return {

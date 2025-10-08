@@ -12,7 +12,7 @@ Use n8n's REST API v1 for MVP integration. (n8n currently only provides v1 API)
 - **Workflows**: List, create, read, update, delete workflows
 - **Nodes**: Create, update, delete nodes within workflows
 - **Connections**: Create and manage node connections
-- **Credentials**: Create, delete, get schema (Note: n8n API does not support listing credentials)
+- **Credentials**: List (via internal REST API), create, delete, get schema
 - **Executions**: Read execution status and results
 
 ## Authentication
@@ -64,12 +64,20 @@ Use n8n's REST API v1 for MVP integration. (n8n currently only provides v1 API)
 - Self-hosting guide: https://docs.n8n.io/hosting/
 - Authentication: https://docs.n8n.io/api/authentication/
 
-## Credentials Limitation
-n8n API does not provide an endpoint to list existing credentials for security reasons.
-The planner cannot pre-check credential availability. Users must configure credentials
-manually in n8n after workflow creation.
+## Credentials API
 
+### Public API Limitations
+The public API (`/api/v1/credentials`) does not support listing credentials.
 Reference: https://docs.n8n.io/api/api-reference/#tag/credential
+
+### Internal REST API
+n8n's UI uses an internal REST endpoint `/rest/credentials` that supports:
+- **List credentials**: `GET /rest/credentials?includeScopes=true&includeData=false`
+- **Filter by project**: `GET /rest/credentials?filter={"projectId":"..."}`
+- **Authentication**: Uses same API key as public API
+
+**Security Note**: We set `includeData=false` to avoid retrieving sensitive credential values.
+Only credential metadata (id, name, type) is fetched.
 
 ## Open Items
 - Rate limiting and retry strategies
