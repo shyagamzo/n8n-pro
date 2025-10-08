@@ -20,11 +20,11 @@ function injectTriggerAndPanel(): void
   const trigger = document.createElement('button')
   trigger.id = 'n8n-pro-trigger'
   trigger.innerHTML = '<span style="font-size: 1.2em; margin-right: 6px;">🤖</span><span>n8n Assistant</span>'
-  
+
   // Get CSS variable values
   const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#ff6d5a'
   const primaryShade = getComputedStyle(document.documentElement).getPropertyValue('--color-primary-shade').trim() || '#e55a47'
-  
+
   trigger.style.position = 'fixed'
   trigger.style.bottom = '20px'
   trigger.style.right = '20px'

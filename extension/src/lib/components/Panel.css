@@ -26,8 +26,8 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-xs, 0.75rem) var(--spacing-s, 1rem);
-  background: linear-gradient(135deg, 
-    color-mix(in srgb, var(--color-primary, #ff6d5a) 90%, black) 0%, 
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-primary, #ff6d5a) 90%, black) 0%,
     color-mix(in srgb, var(--color-primary-shade, #e55a47) 85%, black) 50%,
     color-mix(in srgb, var(--color-primary, #ff6d5a) 90%, black) 100%
   );
