@@ -23,19 +23,19 @@ export const colors = {
   secondaryShade: 'var(--color-secondary-shade-1, #6a3fe8)',
   secondaryTint: 'var(--color-secondary-tint-1, #b39dff)',
 
-  // Text colors - Use n8n's light terminology to get dark mode values
-  text: 'var(--color-text-xlight, #ffffff)',           // White text in dark mode
-  textSecondary: 'var(--color-text-lighter, #c5c7d0)', // Light gray text
-  textMuted: 'var(--color-text-light, #7f8195)',       // Muted text
+  // Text colors - Use n8n's actual variable names
+  text: 'var(--color-text-dark, #ffffff)',           // Dark text becomes white in dark mode
+  textSecondary: 'var(--color-text-base, #c5c7d0)', // Base text becomes light gray in dark mode
+  textMuted: 'var(--color-text-light, #7f8195)',    // Light text becomes muted in dark mode
 
-  // Background colors - Use n8n's light terminology to get dark mode values
-  background: 'var(--color-background-light, #1a1a24)',     // Dark background in dark mode
-  backgroundSecondary: 'var(--color-background-base, #2d2e3a)', // Secondary dark background
-  backgroundElevated: 'var(--color-background-xlight, #3a3b4a)', // Elevated surfaces
+  // Background colors - Use n8n's actual variable names
+  background: 'var(--color-background-light, #1a1a24)',     // Light background becomes dark in dark mode
+  backgroundSecondary: 'var(--color-background-base, #2d2e3a)', // Base background becomes secondary dark
+  backgroundElevated: 'var(--color-background-xlight, #3a3b4a)', // XLight background becomes elevated dark
 
-  // Border colors - Use n8n's light terminology to get dark mode values
-  border: 'var(--color-foreground-light, #4f5166)',         // Dark borders in dark mode
-  borderSecondary: 'var(--color-foreground-base, #3a3b4a)', // Secondary borders
+  // Border colors - Use n8n's actual variable names
+  border: 'var(--color-foreground-light, #4f5166)',         // Light foreground becomes dark border in dark mode
+  borderSecondary: 'var(--color-foreground-base, #3a3b4a)', // Base foreground becomes secondary border
 
   // Status colors
   success: 'var(--color-success, #4caf50)',
