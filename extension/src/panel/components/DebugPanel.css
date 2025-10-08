@@ -1,0 +1,170 @@
+/* Debug Panel styles */
+.debug-panel-collapsed {
+  padding: var(--spacing-2xs, 0.5rem);
+  border-top: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+}
+
+.debug-panel-toggle {
+  width: 100%;
+  padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
+  font-size: var(--font-size-2xs, 0.75rem);
+  background: var(--color-background-base, #2d2e3a);
+  border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  border-radius: var(--border-radius-base, 0.5rem);
+  cursor: pointer;
+  color: var(--color-text-base, #c5c7d0);
+}
+
+.debug-panel {
+  border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  border-radius: var(--border-radius-base, 0.5rem);
+  margin-top: var(--spacing-xs, 0.75rem);
+  background: var(--color-background-base, #2d2e3a);
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.debug-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs, 0.75rem);
+  border-bottom: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  background: var(--color-background-light, #1a1a24);
+  border-top-left-radius: var(--border-radius-base, 0.5rem);
+  border-top-right-radius: var(--border-radius-base, 0.5rem);
+}
+
+.debug-panel-title {
+  font-weight: var(--font-weight-bold, 700);
+  font-size: var(--font-size-s, 0.875rem);
+  color: var(--color-text-dark, #ffffff);
+}
+
+.debug-panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-l, 1.25rem);
+  color: var(--color-text-base, #c5c7d0);
+  padding: 0 var(--spacing-4xs, 0.25rem);
+}
+
+.debug-panel-tabs {
+  display: flex;
+  border-bottom: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  background: var(--color-background-light, #1a1a24);
+}
+
+.debug-panel-tab {
+  flex: 1;
+  padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-2xs, 0.75rem);
+  color: var(--color-text-base, #c5c7d0);
+}
+
+.debug-panel-tab--active {
+  color: var(--color-primary, #ff6d5a);
+  border-bottom: 2px solid var(--color-primary, #ff6d5a);
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.debug-panel-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--spacing-xs, 0.75rem);
+}
+
+.debug-panel-code-block {
+  background: var(--color-background-light, #1a1a24);
+  border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  border-radius: var(--border-radius-small, 0.25rem);
+  padding: var(--spacing-xs, 0.75rem);
+}
+
+.debug-panel-label {
+  font-weight: var(--font-weight-bold, 700);
+  font-size: var(--font-size-2xs, 0.75rem);
+  margin-bottom: var(--spacing-2xs, 0.5rem);
+  color: var(--color-text-dark, #ffffff);
+}
+
+.debug-panel-pre {
+  margin: 0;
+  padding: var(--spacing-xs, 0.75rem);
+  background: var(--color-background-xlight, #3a3b4a);
+  color: var(--color-success, #10b981);
+  border-radius: var(--border-radius-small, 0.25rem);
+  font-size: var(--font-size-3xs, 0.625rem);
+  overflow: auto;
+  max-height: 400px;
+  font-family: var(--font-family-mono, 'Monaco', 'Menlo', monospace);
+}
+
+.debug-panel-validation-info {
+  padding: var(--spacing-xs, 0.75rem);
+  background: var(--color-background-base, #2d2e3a);
+  border-radius: var(--border-radius-small, 0.25rem);
+  font-size: var(--font-size-2xs, 0.75rem);
+  line-height: 1.8;
+  margin-bottom: var(--spacing-xs, 0.75rem);
+}
+
+.debug-panel-list {
+  margin: var(--spacing-2xs, 0.5rem) 0;
+  padding: 0 0 0 var(--spacing-s, 1rem);
+}
+
+.debug-panel-list-item {
+  margin-bottom: var(--spacing-2xs, 0.5rem);
+  font-size: var(--font-size-2xs, 0.75rem);
+}
+
+.debug-panel-node-type {
+  color: var(--color-text-base, #c5c7d0);
+  font-size: var(--font-size-3xs, 0.625rem);
+  margin-right: var(--spacing-xs, 0.75rem);
+}
+
+.debug-panel-node-id {
+  color: var(--color-text-light, #7f8195);
+  font-size: var(--font-size-3xs, 0.625rem);
+}
+
+.debug-panel-help {
+  margin-top: var(--spacing-xs, 0.75rem);
+  padding: var(--spacing-2xs, 0.5rem);
+  background: var(--color-background-xlight, #3a3b4a);
+  border-left: 3px solid var(--color-primary, #ff6d5a);
+  font-size: var(--font-size-3xs, 0.625rem);
+  color: var(--color-text-base, #c5c7d0);
+}
+
+.debug-panel-footer {
+  display: flex;
+  gap: var(--spacing-2xs, 0.5rem);
+  padding: var(--spacing-xs, 0.75rem);
+  border-top: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  background: var(--color-background-light, #1a1a24);
+  border-bottom-left-radius: var(--border-radius-base, 0.5rem);
+  border-bottom-right-radius: var(--border-radius-base, 0.5rem);
+}
+
+.debug-panel-copy-button {
+  flex: 1;
+  padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
+  font-size: var(--font-size-2xs, 0.75rem);
+  background: var(--color-background-base, #2d2e3a);
+  border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  border-radius: var(--border-radius-small, 0.25rem);
+  cursor: pointer;
+  color: var(--color-text-dark, #ffffff);
+}
+
+.debug-panel-copy-button:hover {
+  background: var(--color-background-xlight, #3a3b4a);
+}

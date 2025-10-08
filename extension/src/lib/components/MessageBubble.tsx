@@ -11,7 +11,7 @@ type MessageBubbleProps = {
 export default function MessageBubble({ message }: MessageBubbleProps): React.ReactElement
 {
   const bubbleClass = `message-bubble message-bubble--${message.role}`
-  
+
   return (
     <div className={bubbleClass}>
       <Markdown content={message.text} />

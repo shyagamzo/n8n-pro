@@ -3,7 +3,7 @@ import type { ChatMessage } from '../../lib/types/chat'
 import MessageBubble from '../../lib/components/MessageBubble'
 import Markdown from '../../lib/components/Markdown'
 import ThinkingAnimation from '../../lib/components/ThinkingAnimation'
-import { messagesList, draftBubble } from '../styles'
+import '../styles.css'
 
 type MessagesListProps = {
   messages: ChatMessage[]
@@ -14,13 +14,17 @@ type MessagesListProps = {
 export default function MessagesList({ messages, draft, sending }: MessagesListProps): React.ReactElement
 {
   return (
-    <div style={messagesList}>
+    <div className="messages-list">
       {messages.map((m) => (
-        <MessageBubble key={m.id} message={m} />
+        <div key={m.id} className={`message-wrapper message-wrapper--${m.role}`}>
+          <MessageBubble message={m} />
+        </div>
       ))}
       {sending || draft ? (
-        <div style={draftBubble}>
-          {draft ? <Markdown content={draft} /> : <ThinkingAnimation />}
+        <div className="message-wrapper message-wrapper--assistant">
+          <div className="draft-bubble">
+            {draft ? <Markdown content={draft} /> : <ThinkingAnimation />}
+          </div>
         </div>
       ) : null}
     </div>

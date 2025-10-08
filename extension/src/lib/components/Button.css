@@ -1,0 +1,34 @@
+/* Button styles */
+.button {
+  padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
+  border-radius: var(--border-radius-base, 0.5rem);
+  border: var(--border-width-base, 1px) solid transparent;
+  cursor: pointer;
+  font-size: var(--font-size-s, 0.875rem);
+  line-height: 1.2;
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.button--primary {
+  background: var(--color-primary, #ff6d5a);
+  color: var(--color-text-dark, #ffffff);
+}
+
+.button--primary:hover {
+  background: var(--color-primary-shade, #e55a47);
+}
+
+.button--secondary {
+  background: var(--color-background-base, #2d2e3a);
+  color: var(--color-text-dark, #ffffff);
+  border-color: var(--color-foreground-light, #4f5166);
+}
+
+.button--secondary:hover {
+  background: var(--color-background-xlight, #3a3b4a);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

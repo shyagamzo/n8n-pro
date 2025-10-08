@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useRef } from 'react'
 import Textarea from '../../lib/components/Textarea'
 import Button from '../../lib/components/Button'
-import { composerRow, inputFlex } from '../styles'
+import '../styles.css'
 
 type ChatComposerProps = {
   sending: boolean
@@ -37,8 +37,8 @@ export default function ChatComposer({ sending, onSend }: ChatComposerProps): Re
   }, [input, onSend])
 
   return (
-    <form onSubmit={handleSubmit} style={composerRow}>
-      <div style={inputFlex}>
+    <form onSubmit={handleSubmit} className="composer-row">
+      <div className="input-flex">
         <Textarea
           ref={textareaRef}
           value={input}

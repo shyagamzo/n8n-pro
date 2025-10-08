@@ -3,7 +3,7 @@ import type { Plan } from '../../../lib/types/plan'
 import { chat } from '../../../lib/services/chat'
 import AvailableCredentials from './AvailableCredentials'
 import NeededCredentials from './NeededCredentials'
-import { styles } from './styles'
+import './styles.css'
 
 type PlanPreviewProps = {
   plan: Plan
@@ -19,12 +19,12 @@ export default function PlanPreview({ plan, onCancel }: PlanPreviewProps): React
   const hasAnyCredentials = hasNeededCredentials || hasAvailableCredentials
 
   return (
-    <div style={styles.container}>
-      <div style={styles.title}>{plan.title}</div>
-      <div style={styles.summary}>{plan.summary}</div>
+    <div className="plan-preview-container">
+      <div className="plan-preview-title">{plan.title}</div>
+      <div className="plan-preview-summary">{plan.summary}</div>
 
       {hasAnyCredentials && (
-        <div style={styles.credentialsContainer}>
+        <div className="plan-preview-credentials">
           {hasAvailableCredentials && plan.credentialsAvailable && (
             <AvailableCredentials
               credentials={plan.credentialsAvailable}
@@ -42,18 +42,18 @@ export default function PlanPreview({ plan, onCancel }: PlanPreviewProps): React
 
           <button
             onClick={() => setShowCredDetails(!showCredDetails)}
-            style={styles.toggleButton}
+            className="plan-preview-toggle"
           >
             {showCredDetails ? '▼ Hide credential details' : '▶ Show credential details'}
           </button>
         </div>
       )}
 
-      <div style={styles.actions}>
-        <button onClick={() => chat.applyPlan(plan)} style={styles.applyButton}>
+      <div className="plan-preview-actions">
+        <button onClick={() => chat.applyPlan(plan)} className="plan-preview-apply">
           {hasNeededCredentials ? 'Create & Open in n8n' : 'Create Workflow'}
         </button>
-        <button onClick={onCancel} style={styles.cancelButton}>
+        <button onClick={onCancel} className="plan-preview-cancel">
           Cancel
         </button>
       </div>
