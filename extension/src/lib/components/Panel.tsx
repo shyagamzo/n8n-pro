@@ -156,13 +156,21 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
                 onNewSession()
               }}
               style={{
-                background: 'transparent',
-                border: `${borders.widthBase} solid ${colors.border}`,
+                background: colors.primary,
+                border: 'none',
                 padding: `${spacing['4xs']} ${spacing['2xs']}`,
                 borderRadius: borders.radiusSmall,
                 fontSize: typography.fontSize2xs,
                 cursor: 'pointer',
-                color: colors.text
+                color: colors.text,
+                fontWeight: typography.fontWeightMedium,
+                transition: 'background-color 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = colors.primaryShade
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = colors.primary
               }}
             >
               New Session
