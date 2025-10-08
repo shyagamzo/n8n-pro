@@ -121,7 +121,7 @@ Remaining 10 components have minimal utility potential:
 - ✅ **Migration effort:** 9 components migrated
 
 ### Benefits
-- ✅ **Bundle reduction:** -2.15 KB (net savings after utilities) 
+- ✅ **Bundle reduction:** -2.15 KB (net savings after utilities)
 - ✅ **Separate caching:** utilities.css (6.54 KB) cached independently
 - ✅ **Faster development:** Use `.container-card` vs writing 5 properties
 - ✅ **Consistency:** Patterns look identical across components
@@ -248,7 +248,7 @@ To maximize savings:
 - ✅ **Optimal balance** - utility reuse vs component specificity
 
 ### The Real Win: Caching Strategy
-**Before:** Single 17.13 KB CSS bundle (changes invalidate entire cache)  
+**Before:** Single 17.13 KB CSS bundle (changes invalidate entire cache)
 **After:** Split bundles with smart caching:
 - **utilities.css** (6.54 KB) - Cached long-term, changes rarely
 - **component CSS** (8.44 KB) - Can change without busting utility cache
@@ -257,7 +257,7 @@ To maximize savings:
 **Result:** Faster subsequent page loads, better cache invalidation!
 
 ### Proof of Concept
-The data proves: **Utility CSS is the right architectural choice.** 
+The data proves: **Utility CSS is the right architectural choice.**
 
 This implementation serves as a **reference for React + CSS best practices**:
 - Pure CSS-first approach (zero inline styles except dynamic)

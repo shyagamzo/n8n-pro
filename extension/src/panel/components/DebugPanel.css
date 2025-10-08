@@ -1,12 +1,9 @@
 /* Debug Panel styles */
-/* Note: Uses utilities from utilities.css - .border-top, .w-full, .btn, etc. */
-
 .debug-panel-collapsed {
   padding: var(--spacing-2xs, 0.5rem);
 }
 
 .debug-panel-toggle {
-  /* Inherits .w-full, .btn, .border, .rounded from utilities */
   padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
   font-size: var(--font-size-2xs, 0.75rem);
   background: var(--color-background-base, #2d2e3a);
@@ -14,35 +11,26 @@
 }
 
 .debug-panel {
-  /* Inherits .container-card pattern with overrides */
   margin-top: var(--spacing-xs, 0.75rem);
   max-height: 600px;
 }
 
 .debug-panel-header {
-  /* Inherits .section-header pattern */
   border-top-left-radius: var(--border-radius-base, 0.5rem);
   border-top-right-radius: var(--border-radius-base, 0.5rem);
 }
 
-.debug-panel-title {
-  /* Inherits .section-header-title */
-}
-
 .debug-panel-close {
-  /* Inherits .btn-icon from utilities */
   font-size: var(--font-size-l, 1.25rem);
 }
 
 .debug-panel-tabs {
-  /* Component-specific tab bar */
   display: flex;
   border-bottom: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
   background: var(--color-background-light, #1a1a24);
 }
 
 .debug-panel-tab {
-  /* Inherits .btn */
   flex: 1;
   padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
   font-size: var(--font-size-2xs, 0.75rem);
@@ -56,22 +44,15 @@
 }
 
 .debug-panel-content {
-  /* Inherits .flex-1, .overflow-auto from utilities */
   padding: var(--spacing-xs, 0.75rem);
 }
 
-.debug-panel-code-block {
-  /* Inherits .container-elevated pattern */
-}
-
 .debug-panel-label {
-  /* Inherits .text-bold, .text-xs from utilities */
   margin-bottom: var(--spacing-2xs, 0.5rem);
   color: var(--color-text-dark, #ffffff);
 }
 
 .debug-panel-pre {
-  /* Inherits .code-block from utilities */
   margin: 0;
   color: var(--color-success, #10b981);
   max-height: 400px;
@@ -117,7 +98,6 @@
 }
 
 .debug-panel-footer {
-  /* Inherits .flex, .gap-sm, .border-top from utilities */
   padding: var(--spacing-xs, 0.75rem);
   background: var(--color-background-light, #1a1a24);
   border-bottom-left-radius: var(--border-radius-base, 0.5rem);
@@ -125,7 +105,6 @@
 }
 
 .debug-panel-copy-button {
-  /* Inherits .btn, .btn-small, .flex-1, .hoverable from utilities */
   background: var(--color-background-base, #2d2e3a);
   border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
   color: var(--color-text-dark, #ffffff);

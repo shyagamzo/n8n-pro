@@ -1,24 +1,12 @@
 /* Panel component styles */
-/* Note: Uses utilities from utilities.css */
-
 .panel-body {
-  /* Inherits .flex-column from utilities */
   height: 100%;
   background: var(--color-background-light, #1a1a24);
 }
 
 .messages-list {
-  /* Inherits .flex-1, .flex-column, .overflow-y-auto, .gap-sm from utilities */
   padding: var(--spacing-s, 1rem);
   background: var(--color-background-light, #1a1a24);
-}
-
-.message-wrapper {
-  /* Inherits .flex, .w-full from utilities */
-}
-
-.message-wrapper--user {
-  /* Inherits .flex-justify-end from utilities */
 }
 
 .message-wrapper--assistant {
@@ -26,7 +14,6 @@
 }
 
 .draft-bubble {
-  /* Component-specific chat bubble styling */
   background: var(--color-chat-bot-background, #2d2e3a);
   color: var(--color-chat-bot-text, #ffffff);
   padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
@@ -36,11 +23,6 @@
 }
 
 .composer-row {
-  /* Inherits .flex, .gap-sm, .border-top from utilities */
   padding: var(--spacing-s, 1rem);
   background: var(--color-background-light, #1a1a24);
-}
-
-.input-flex {
-  /* Inherits .flex-1 from utilities */
 }

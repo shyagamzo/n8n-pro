@@ -1,35 +1,14 @@
 /* Options page styles */
-/* Note: Uses utilities from utilities.css for common patterns */
-
 .options-container {
-  /* Component-specific: font-family and max-width */
   font-family: 'Inter', system-ui, Arial, sans-serif;
   padding: var(--spacing-xs, 0.75rem);
   max-width: 560px;
 }
 
-.api-key-section {
-  /* Inherits .mt-md from utilities */
-}
-
-.api-key-description {
-  /* Inherits .text-secondary from utilities */
-}
-
-.api-key-row {
-  /* Inherits .flex, .flex-align-center, .gap-sm, .mt-xs from utilities */
-}
-
-.api-key-input-wrapper {
-  /* Inherits .flex-1 from utilities */
-}
-
 .api-key-message {
-  /* Inherits .mt-xs from utilities */
   color: var(--color-success, #10b981);
 }
 
 .api-key-subsection {
-  /* Component-specific larger top margin */
   margin-top: var(--spacing-l, 1.5rem);
 }
