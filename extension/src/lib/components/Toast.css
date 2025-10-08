@@ -1,0 +1,110 @@
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm, 0.5rem);
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  background: var(--color-background-base, #fff);
+  border-radius: var(--border-radius-base, 8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid;
+  min-width: 300px;
+  max-width: 500px;
+  animation: slideIn 0.3s ease, fadeIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.toast--success {
+  border-color: var(--color-success, #4caf50);
+  background: color-mix(in srgb, var(--color-success, #4caf50) 10%, var(--color-background-base, #fff));
+}
+
+.toast--error {
+  border-color: var(--color-error, #f44336);
+  background: color-mix(in srgb, var(--color-error, #f44336) 10%, var(--color-background-base, #fff));
+}
+
+.toast--warning {
+  border-color: var(--color-warning, #ff9800);
+  background: color-mix(in srgb, var(--color-warning, #ff9800) 10%, var(--color-background-base, #fff));
+}
+
+.toast--info {
+  border-color: var(--color-info, #2196f3);
+  background: color-mix(in srgb, var(--color-info, #2196f3) 10%, var(--color-background-base, #fff));
+}
+
+.toast__content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.75rem);
+  flex: 1;
+}
+
+.toast__icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.toast__message {
+  font-size: var(--font-size-s, 0.875rem);
+  color: var(--color-text-dark, #333);
+  line-height: 1.4;
+}
+
+.toast__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.75rem);
+  flex-shrink: 0;
+}
+
+.toast__action-button {
+  padding: var(--spacing-2xs, 0.25rem) var(--spacing-sm, 0.5rem);
+  background: var(--color-primary, #007bff);
+  color: var(--color-text-light, #fff);
+  border: none;
+  border-radius: var(--border-radius-small, 4px);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-bold, 600);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.toast__action-button:hover {
+  background: var(--color-primary-shade-1, #0056b3);
+}
+
+.toast__close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-text-base, #666);
+  transition: color 0.2s ease;
+}
+
+.toast__close:hover {
+  color: var(--color-text-dark, #333);
+}
+

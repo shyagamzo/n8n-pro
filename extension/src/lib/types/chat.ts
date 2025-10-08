@@ -1,10 +1,20 @@
-export type ChatRole = 'user' | 'assistant' | 'system'
+export type ChatRole = 'user' | 'assistant' | 'system' | 'error'
+
+export type ErrorDetails = {
+  title?: string
+  details?: string
+  retryable: boolean
+  retryPayload?: {
+    messages: ChatMessage[]
+  }
+}
 
 export type ChatMessage = {
   id: string
   role: ChatRole
   text: string
   plan?: import('./plan').Plan
+  error?: ErrorDetails
 }
 
 export type ChatStreamMessage =

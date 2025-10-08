@@ -1,0 +1,15 @@
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2147483646; /* Just below panel */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 0.5rem);
+  pointer-events: none;
+}
+
+.toast-container > * {
+  pointer-events: all;
+}
+
