@@ -24,24 +24,33 @@ export function createChatPort(): ChatPort
       disconnected = false
       port.onDisconnect.addListener(() => { disconnected = true })
     }
-    catch
+    catch (error)
     {
-      // ignore
+      // Extension context invalidated or background not available
+      console.warn('Failed to reconnect chat port:', error)
     }
   }
 
   const safePost = (data: Record<string, unknown>): void =>
   {
-    try { port.postMessage(data) }
-    catch
+    try
     {
-      // reconnect once and retry
+      port.postMessage(data)
+    }
+    catch (error)
+    {
+      // Reconnect once and retry
+      console.warn('Port disconnected, attempting reconnect:', error)
       ensurePort()
 
-      try { port.postMessage(data) }
-      catch
+      try
       {
-        // ignore
+        port.postMessage(data)
+      }
+      catch (retryError)
+      {
+        // Failed after retry - extension context likely invalidated
+        console.error('Failed to send message after reconnect:', retryError)
       }
     }
   }
@@ -63,10 +72,14 @@ export function createChatPort(): ChatPort
     },
     disconnect()
     {
-      try { port.disconnect() }
-      catch
+      try
       {
-        // ignore
+        port.disconnect()
+      }
+      catch (error)
+      {
+        // Port already disconnected or extension context invalidated
+        console.warn('Failed to disconnect port:', error)
       }
     }
   }

@@ -4,6 +4,7 @@ import { createOpenAiChatModel } from '../ai/model'
 import { buildPrompt } from '../prompts'
 import { parse as parseLoom } from '../loom'
 import { streamChatCompletion } from '../services/openai'
+import { stripCodeFences } from '../utils/markdown'
 
 export type OrchestratorInput = {
   apiKey: string
@@ -53,6 +54,7 @@ class Orchestrator
   {
     // Build context for planner
     const context: Record<string, unknown> = {}
+
     if (input.availableCredentials && input.availableCredentials.length > 0)
     {
       // Pass full credential objects so planner can see names, types, and IDs
@@ -89,26 +91,7 @@ class Orchestrator
     try
     {
       // Strip markdown code fences if present (LLM sometimes wraps response in ```)
-      let cleanedResponse = loomResponse.trim()
-
-      // Remove opening code fence (``` or ```loom or ```yaml etc)
-      if (cleanedResponse.startsWith('```'))
-      {
-        const firstNewline = cleanedResponse.indexOf('\n')
-        if (firstNewline !== -1)
-        {
-          cleanedResponse = cleanedResponse.substring(firstNewline + 1)
-        }
-      }
-
-      // Remove closing code fence
-      if (cleanedResponse.endsWith('```'))
-      {
-        const lastCodeFence = cleanedResponse.lastIndexOf('```')
-        cleanedResponse = cleanedResponse.substring(0, lastCodeFence)
-      }
-
-      cleanedResponse = cleanedResponse.trim()
+      const cleanedResponse = stripCodeFences(loomResponse)
 
       const parsed = parseLoom(cleanedResponse)
 
@@ -136,7 +119,8 @@ class Orchestrator
     // Extract fields from Loom data
     const title = String(loomData.title || 'Workflow')
     const summary = String(loomData.summary || 'Generated workflow')
-    const credentialsNeeded = (loomData.credentialsNeeded as Array<unknown> || []).map(cred => {
+    const credentialsNeeded = (loomData.credentialsNeeded as Array<unknown> || []).map(cred =>
+    {
       const c = cred as Record<string, unknown>
       return {
         type: String(c.type || ''),
@@ -147,7 +131,8 @@ class Orchestrator
       }
     })
 
-    const credentialsAvailable = (loomData.credentialsAvailable as Array<unknown> || []).map(cred => {
+    const credentialsAvailable = (loomData.credentialsAvailable as Array<unknown> || []).map(cred =>
+    {
       const c = cred as Record<string, unknown>
       return {
         type: String(c.type || ''),

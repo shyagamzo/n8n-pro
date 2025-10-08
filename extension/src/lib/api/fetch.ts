@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '../utils/fetch'
+
 /**
  * Error type representing HTTP and network failures.
  */
@@ -55,19 +57,19 @@ async function parseResponseBody(response: Response): Promise<unknown>
  */
 export async function apiFetch<T>(url: string, options: RequestOptions = {}): Promise<T>
 {
-  const controller = new AbortController()
-  const timeoutId = options.timeoutMs ? setTimeout(() => controller.abort(), options.timeoutMs) : undefined
-
   try
   {
-    const response = await fetch(url, {
+    const fetchOptions: RequestInit = {
       method: options.method ?? 'GET',
       headers: buildHeaders(options.headers),
       body: options.body ? JSON.stringify(options.body) : undefined,
-      signal: controller.signal,
       // Explicitly omit credentials to avoid sending cookies and affecting n8n UI sessions
       credentials: 'omit',
-    })
+    }
+
+    const response = options.timeoutMs
+      ? await fetchWithTimeout(url, fetchOptions, options.timeoutMs)
+      : await fetch(url, fetchOptions)
 
     const parsed = await parseResponseBody(response)
 
@@ -94,9 +96,5 @@ export async function apiFetch<T>(url: string, options: RequestOptions = {}): Pr
 
     if (error instanceof ApiError) throw error
     throw new ApiError('Network error', 0, url)
-  }
-  finally
-  {
-    if (timeoutId) clearTimeout(timeoutId)
   }
 }

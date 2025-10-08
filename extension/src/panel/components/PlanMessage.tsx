@@ -83,17 +83,6 @@ export default function PlanMessage({ plan }: PlanMessageProps): React.ReactElem
     fontSize: '13px',
   }
 
-  const cancelButtonStyle: React.CSSProperties = {
-    padding: '8px 14px',
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
-    background: '#fff',
-    color: '#111827',
-    cursor: 'pointer',
-    fontWeight: '500',
-    fontSize: '13px',
-  }
-
   const infoTextStyle: React.CSSProperties = {
     fontSize: '11px',
     color: '#6b7280',

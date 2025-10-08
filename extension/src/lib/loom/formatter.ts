@@ -80,6 +80,7 @@ function formatObject(obj: LoomObject, level: number, options: Required<FormatOp
   const lines: string[] = []
 
   let keys = Object.keys(obj)
+
   if (options.sortKeys)
   {
     keys = keys.sort()

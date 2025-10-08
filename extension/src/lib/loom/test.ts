@@ -486,6 +486,7 @@ section('Test Summary')
 const total = passed + failed
 console.log(`\n${BOLD}Results:${RESET}`)
 console.log(`  ${GREEN}Passed:${RESET} ${passed}/${total}`)
+
 if (failed > 0)
 {
   console.log(`  ${RED}Failed:${RESET} ${failed}/${total}`)
