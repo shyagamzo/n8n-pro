@@ -83,19 +83,26 @@ export async function fetchNodeTypes(options: {
     nodeTypesCache = nodeTypes
     cacheTimestamp = now
 
+    console.info('✅ Node types fetched from n8n API', { count: Object.keys(nodeTypes).length })
     return nodeTypes
   }
   catch (error)
   {
-    console.error('Failed to fetch node types from n8n:', error)
+    // Deep validation requires node types API, which may not be available in all n8n versions
+    // This is not a critical error - we fall back to structural validation
+    console.info('ℹ️ Node types API unavailable (deep validation disabled)', { 
+      endpoint: url,
+      error: error instanceof Error ? error.message : String(error)
+    })
 
     // If we have stale cache, return it as fallback
     if (nodeTypesCache)
     {
-      console.warn('Using stale node types cache due to API error')
+      console.info('Using cached node types from previous fetch')
       return nodeTypesCache
     }
 
+    // Re-throw to let caller handle gracefully
     throw error
   }
 }

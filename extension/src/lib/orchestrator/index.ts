@@ -333,7 +333,11 @@ class Orchestrator
       catch (error)
       {
         // If validator can't fetch node types (404, network error, etc.), fall back to structural validation
-        console.warn('⚠️ Deep validation unavailable, using structural validation only:', error)
+        // This is expected behavior when n8n node types API is unavailable
+        console.info('ℹ️ Deep validation skipped (node types API unavailable)', {
+          reason: error instanceof Error ? error.message : String(error),
+          fallback: 'Using structural validation only'
+        })
         session.log('Validator unavailable, using structural validation', { error })
 
         debugAgentDecision(
