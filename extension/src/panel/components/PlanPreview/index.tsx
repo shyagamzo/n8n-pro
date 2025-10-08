@@ -57,7 +57,7 @@ export default function PlanPreview({ plan, onCancel }: PlanPreviewProps): React
           Cancel
         </button>
       </div>
-      
+
       {hasNeededCredentials && (
         <div style={{ fontSize: '11px', color: '#6b7280', marginTop: 8 }}>
           💡 After creation, you'll get a direct link to open the workflow and configure credentials.
