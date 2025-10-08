@@ -69,7 +69,30 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
   }
 
   const result = await n8n.createWorkflow(workflow)
-  post({ type: 'token', token: `\nCreated workflow with id: ${result.id}` } satisfies BackgroundMessage)
+  
+  // Generate deep link to workflow
+  const workflowUrl = `${baseUrl}/workflow/${result.id}`
+  post({ type: 'token', token: `\n✅ Created workflow: [Open in n8n →](${workflowUrl})` } satisfies BackgroundMessage)
+  
+  // If there are credentials needed, provide guidance
+  if (msg.plan.credentialsNeeded && msg.plan.credentialsNeeded.length > 0)
+  {
+    post({ type: 'token', token: `\n\n**Next steps:**` } satisfies BackgroundMessage)
+    post({ type: 'token', token: `\n1. Open the workflow above` } satisfies BackgroundMessage)
+    post({ type: 'token', token: `\n2. Configure credentials for these nodes:` } satisfies BackgroundMessage)
+    
+    msg.plan.credentialsNeeded.forEach((cred, idx) =>
+    {
+      const credUrl = `${baseUrl}/credentials/new/${encodeURIComponent(cred.type)}`
+      post({ 
+        type: 'token', 
+        token: `\n   ${idx + 1}. **${cred.name || cred.type}** - [Set up credential →](${credUrl})` 
+      } satisfies BackgroundMessage)
+    })
+    
+    post({ type: 'token', token: `\n3. Activate your workflow!` } satisfies BackgroundMessage)
+  }
+  
   post({ type: 'done' } satisfies BackgroundMessage)
 }
 

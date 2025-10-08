@@ -94,8 +94,7 @@ export default function NeededCredentials({
       </div>
 
       <div style={styles.message}>
-        This workflow needs {credentials.length} credential{credentials.length > 1 ? 's' : ''}.
-        {' '}Set them up in n8n after creation.
+        {credentials.length} credential{credentials.length > 1 ? 's' : ''} will need setup after creation.
       </div>
 
       {showDetails && (
@@ -128,13 +127,13 @@ export default function NeededCredentials({
                 rel="noopener noreferrer"
                 style={styles.setupLink}
               >
-                Set up in n8n ↗
+                Create this credential ↗
               </a>
             </div>
           ))}
 
           <div style={styles.tip}>
-            💡 <strong>Tip:</strong> After applying this workflow, configure these credentials in n8n before running.
+            💡 <strong>Tip:</strong> Click "Create & Open in n8n" to get direct links to set up each credential.
           </div>
         </div>
       )}
