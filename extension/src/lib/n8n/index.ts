@@ -1,7 +1,6 @@
 import { apiFetch } from '../api/fetch'
 import type { WorkflowSummary } from './types'
-
-const DEFAULT_BASE_URL = 'http://127.0.0.1:5678'
+import { DEFAULTS } from '../constants'
 
 export type N8nClientOptions = {
   baseUrl?: string
@@ -10,7 +9,7 @@ export type N8nClientOptions = {
 
 export function createN8nClient(options: N8nClientOptions = {})
 {
-  const baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, '')
+  const baseUrl = (options.baseUrl ?? DEFAULTS.N8N_BASE_URL).replace(/\/$/, '')
 
   const authHeaders: Record<string, string> | undefined = options.apiKey
     ? {
@@ -82,7 +81,7 @@ export function createN8nClient(options: N8nClientOptions = {})
    *
    * @param projectId - Optional project ID to filter credentials by project
    */
-  async function listCredentials(_projectId?: string): Promise<Array<{ id: string; name: string; type: string }>>
+  async function listCredentials(): Promise<Array<{ id: string; name: string; type: string }>>
   {
     // Credential listing not supported via API key authentication
     // See comment above for technical details

@@ -1,12 +1,11 @@
 import type { ChatMessage } from '../types/chat'
+import { DEFAULTS } from '../constants'
+import { fetchWithTimeout } from '../utils/fetch'
 
 export type OpenAiStreamOptions = {
   model?: string
   timeoutMs?: number
 }
-
-const DEFAULT_MODEL = 'gpt-4o-mini'
-const DEFAULT_TIMEOUT_MS = 60000
 
 export async function streamChatCompletion(
   apiKey: string,
@@ -15,8 +14,8 @@ export async function streamChatCompletion(
   opts: OpenAiStreamOptions = {}
 ): Promise<void>
 {
-  const model = opts.model ?? DEFAULT_MODEL
-  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS
+  const model = opts.model ?? DEFAULTS.OPENAI_MODEL
+  const timeoutMs = opts.timeoutMs ?? DEFAULTS.OPENAI_TIMEOUT_MS
 
   const body = buildChatBody(messages, model)
 
@@ -47,21 +46,6 @@ function buildChatBody(messages: ChatMessage[], model: string): unknown
       content: msg.text
     })),
     stream: true
-  }
-}
-
-async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response>
-{
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
-
-  try
-  {
-    return await fetch(url, { ...init, signal: controller.signal })
-  }
-  finally
-  {
-    clearTimeout(timer)
   }
 }
 
@@ -102,9 +86,10 @@ function processSseChunk(chunk: string, onToken: (t: string) => void): boolean
       const delta = json?.choices?.[0]?.delta?.content
       if (typeof delta === 'string') onToken(delta)
     }
-    catch
+    catch (error)
     {
-      // ignore malformed SSE lines
+      // Ignore malformed SSE lines - they may be incomplete chunks
+      console.debug('Skipping malformed SSE line:', error)
     }
   }
 

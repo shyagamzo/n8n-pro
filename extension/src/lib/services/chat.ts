@@ -11,43 +11,43 @@ export class ChatService
 
   public constructor()
   {
-    this.port.onMessage((raw: ChatStreamMessage | BackgroundMessage) =>
+    this.port.onMessage((message: ChatStreamMessage | BackgroundMessage) =>
     {
       const { addMessage, finishSending, setAssistantDraft, setPendingPlan } = useChatStore.getState()
 
-      const m = raw as ChatStreamMessage | BackgroundMessage
-
-      if (m.type === 'token')
+      if (message.type === 'token')
       {
-        setAssistantDraft((useChatStore.getState().assistantDraft + m.token).slice())
+        const currentDraft = useChatStore.getState().assistantDraft
+        setAssistantDraft(currentDraft + message.token)
       }
-      else if (m.type === 'done')
+      else if (message.type === 'done')
       {
-        const text = useChatStore.getState().assistantDraft
-        const plan = useChatStore.getState().pendingPlan
-        if (text)
+        const { assistantDraft, pendingPlan } = useChatStore.getState()
+
+        if (assistantDraft)
         {
           addMessage({
             id: generateId(),
             role: 'assistant',
-            text,
-            plan: plan || undefined
+            text: assistantDraft,
+            plan: pendingPlan || undefined
           })
         }
+
         setAssistantDraft('')
         setPendingPlan(null)
         finishSending()
       }
-      else if (m.type === 'error')
+      else if (message.type === 'error')
       {
         setAssistantDraft('')
         setPendingPlan(null)
         finishSending()
-        addMessage({ id: generateId(), role: 'assistant', text: `Error: ${m.error}` })
+        addMessage({ id: generateId(), role: 'assistant', text: `Error: ${message.error}` })
       }
-      else if (m.type === 'plan')
+      else if (message.type === 'plan')
       {
-        setPendingPlan((m.plan as Plan))
+        setPendingPlan(message.plan)
       }
     })
   }

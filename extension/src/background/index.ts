@@ -19,8 +19,15 @@ function createSafePost(port: chrome.runtime.Port)
   {
     if (disconnected) return
 
-    try { port.postMessage(message) }
-    catch { /* ignore */ }
+    try
+    {
+      port.postMessage(message)
+    }
+    catch (error)
+    {
+      // Port disconnected or content script unloaded
+      console.warn('Failed to send message to content script:', error)
+    }
   }
 }
 
@@ -44,15 +51,18 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
 
   // Fetch available credentials and inject them into workflow nodes
   let workflow = msg.plan.workflow
+
   try
   {
     const availableCredentials = await n8n.listCredentials()
+
     if (availableCredentials && availableCredentials.length > 0)
     {
       workflow = injectCredentials(workflow, availableCredentials)
 
       // Log credential matching stats
       const stats = getCredentialMatchStats(msg.plan.workflow, availableCredentials)
+
       if (stats.nodesWithMatchedCredentials > 0)
       {
         post({
@@ -112,9 +122,11 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
 
   // Fetch available credentials from n8n (using internal REST API)
   let availableCredentials: Array<{ id: string; name: string; type: string }> | undefined
+
   try
   {
     const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
+
     if (n8nApiKey)
     {
       const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
@@ -182,7 +194,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
   const msg = message as ApplyPlanRequest
   if (msg?.type !== 'apply_plan') return
 
-  ;(async () =>
+  void (async () =>
   {
     try
     {
@@ -190,17 +202,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
       const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
       await n8n.createWorkflow(msg.plan.workflow)
     }
-    catch
+    catch (error)
     {
-      // one-off; UI will show background errors through chat flow if needed later
+      // One-off message handler - errors are shown through chat flow in primary use case
+      console.error('Failed to create workflow from one-off message:', error)
     }
   })()
 
   // Immediately acknowledge to satisfy sendMessage callbacks, if any
-  try { sendResponse({ ok: true }) }
-  catch
+  try
   {
-    // ignore
+    sendResponse({ ok: true })
+  }
+  catch (error)
+  {
+    // Sender context may be invalidated
+    console.warn('Failed to send response:', error)
   }
 
   return true

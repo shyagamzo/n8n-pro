@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { STORAGE_KEYS, DEFAULTS } from '../constants'
+import { storageGetMany, storageSet } from '../utils/storage'
 
 type PanelProps = {
   title: string
@@ -7,25 +9,21 @@ type PanelProps = {
   children: React.ReactNode
 }
 
-const STORAGE_KEY_POSITION = 'n8n-pro-panel-position'
-const STORAGE_KEY_SIZE = 'n8n-pro-panel-size'
+type PanelPosition = { x: number; y: number }
+type PanelSize = { w: number; h: number }
 
-function getDefaultPosition(): { x: number; y: number }
+function getDefaultPosition(): PanelPosition
 {
-  // Position at bottom-right corner with some padding
-  const padding = 24
-  const defaultWidth = 420
-  const defaultHeight = 560
   return {
-    x: window.innerWidth - defaultWidth - padding,
-    y: window.innerHeight - defaultHeight - padding
+    x: window.innerWidth - DEFAULTS.PANEL_WIDTH - DEFAULTS.PANEL_PADDING,
+    y: window.innerHeight - DEFAULTS.PANEL_HEIGHT - DEFAULTS.PANEL_PADDING
   }
 }
 
 export default function Panel({ title, onClose, onNewSession, children }: PanelProps): React.ReactElement
 {
   const [position, setPosition] = useState(getDefaultPosition())
-  const [size, setSize] = useState({ w: 420, h: 560 })
+  const [size, setSize] = useState<PanelSize>({ w: DEFAULTS.PANEL_WIDTH, h: DEFAULTS.PANEL_HEIGHT })
   const [isLoaded, setIsLoaded] = useState(false)
   const dragging = useRef<null | { offsetX: number; offsetY: number }>(null)
   const resizing = useRef<null | { startX: number; startY: number; startW: number; startH: number }>(null)
@@ -33,18 +31,28 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
   // Load saved position and size from storage
   useEffect(() =>
   {
-    chrome.storage.local.get([STORAGE_KEY_POSITION, STORAGE_KEY_SIZE], (result) =>
+    void (async () =>
     {
-      if (result[STORAGE_KEY_POSITION])
+      const result = await storageGetMany<{ [STORAGE_KEYS.PANEL_POSITION]: PanelPosition; [STORAGE_KEYS.PANEL_SIZE]: PanelSize }>([
+        STORAGE_KEYS.PANEL_POSITION,
+        STORAGE_KEYS.PANEL_SIZE
+      ])
+
+      const savedPosition = result[STORAGE_KEYS.PANEL_POSITION]
+      const savedSize = result[STORAGE_KEYS.PANEL_SIZE]
+
+      if (savedPosition)
       {
-        setPosition(result[STORAGE_KEY_POSITION])
+        setPosition(savedPosition)
       }
-      if (result[STORAGE_KEY_SIZE])
+
+      if (savedSize)
       {
-        setSize(result[STORAGE_KEY_SIZE])
+        setSize(savedSize)
       }
+
       setIsLoaded(true)
-    })
+    })()
   }, [])
 
   // Save position when it changes
@@ -52,7 +60,7 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
   {
     if (isLoaded)
     {
-      chrome.storage.local.set({ [STORAGE_KEY_POSITION]: position })
+      void storageSet(STORAGE_KEYS.PANEL_POSITION, position)
     }
   }, [position, isLoaded])
 
@@ -61,7 +69,7 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
   {
     if (isLoaded)
     {
-      chrome.storage.local.set({ [STORAGE_KEY_SIZE]: size })
+      void storageSet(STORAGE_KEYS.PANEL_SIZE, size)
     }
   }, [size, isLoaded])
 
@@ -78,7 +86,10 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
       {
         const dx = e.clientX - resizing.current.startX
         const dy = e.clientY - resizing.current.startY
-        setSize({ w: Math.max(320, resizing.current.startW + dx), h: Math.max(360, resizing.current.startH + dy) })
+        setSize({
+          w: Math.max(DEFAULTS.PANEL_MIN_WIDTH, resizing.current.startW + dx),
+          h: Math.max(DEFAULTS.PANEL_MIN_HEIGHT, resizing.current.startH + dy)
+        })
       }
     }
 
