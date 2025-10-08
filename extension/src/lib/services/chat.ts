@@ -24,13 +24,24 @@ export class ChatService
       else if (m.type === 'done')
       {
         const text = useChatStore.getState().assistantDraft
-        if (text) addMessage({ id: generateId(), role: 'assistant', text })
+        const plan = useChatStore.getState().pendingPlan
+        if (text) 
+        {
+          addMessage({ 
+            id: generateId(), 
+            role: 'assistant', 
+            text,
+            plan: plan || undefined
+          })
+        }
         setAssistantDraft('')
+        setPendingPlan(null)
         finishSending()
       }
       else if (m.type === 'error')
       {
         setAssistantDraft('')
+        setPendingPlan(null)
         finishSending()
         addMessage({ id: generateId(), role: 'assistant', text: `Error: ${m.error}` })
       }

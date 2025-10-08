@@ -1,6 +1,7 @@
 import React from 'react'
 import type { ChatMessage } from '../types/chat'
 import Markdown from './Markdown'
+import PlanMessage from '../../panel/components/PlanMessage'
 
 type MessageBubbleProps = {
   message: ChatMessage
@@ -37,6 +38,7 @@ export default function MessageBubble({ message }: MessageBubbleProps): React.Re
   return (
     <div style={getBubbleStyle(message.role)}>
       {message.role === 'assistant' ? <Markdown content={message.text} /> : message.text}
+      {message.plan && <PlanMessage plan={message.plan} />}
     </div>
   )
 }
