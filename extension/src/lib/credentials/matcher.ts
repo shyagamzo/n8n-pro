@@ -99,7 +99,7 @@ export function injectCredentials(
 
     // Determine required credential type for this node
     const requiredCredentialType = NODE_TO_CREDENTIAL_MAP[node.type]
-    
+
     if (!requiredCredentialType)
     {
       // Node doesn't require credentials or type not mapped
@@ -108,7 +108,7 @@ export function injectCredentials(
 
     // Find matching credential
     const matchingCredential = findMatchingCredential(requiredCredentialType, availableCredentials)
-    
+
     if (!matchingCredential)
     {
       // No matching credential found
@@ -148,7 +148,7 @@ export function getCredentialMatchStats(
 }
 {
   const validNodes = workflow.nodes.filter(isWorkflowNode)
-  const nodesNeedingCredentials = validNodes.filter(node => 
+  const nodesNeedingCredentials = validNodes.filter(node =>
     NODE_TO_CREDENTIAL_MAP[node.type]
   )
 

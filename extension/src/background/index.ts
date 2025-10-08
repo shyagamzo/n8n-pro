@@ -50,7 +50,7 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
     if (availableCredentials && availableCredentials.length > 0)
     {
       workflow = injectCredentials(workflow, availableCredentials)
-      
+
       // Log credential matching stats
       const stats = getCredentialMatchStats(msg.plan.workflow, availableCredentials)
       if (stats.nodesWithMatchedCredentials > 0)
