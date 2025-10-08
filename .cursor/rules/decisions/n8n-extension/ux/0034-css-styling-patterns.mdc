@@ -1,0 +1,345 @@
+---
+alwaysApply: false
+description: CSS styling patterns and best practices for React components in the n8n extension.
+---
+
+# Decision Record: CSS Styling Patterns for n8n Extension
+
+## Goal
+Establish CSS-first styling patterns for React components, ensuring proper separation of concerns, maintainability, and performance.
+
+## Core Principle
+**Use CSS files for all static styling. Only use inline styles for dynamic/calculated values.**
+
+## CSS Architecture
+
+### File Organization
+- **Co-locate CSS with components** - Place `.css` file next to `.tsx` file
+- **One CSS file per component** - Keep styles scoped and maintainable
+- **Shared CSS for common patterns** - Group related component styles when appropriate
+
+```
+src/
+├── lib/components/
+│   ├── Button.tsx
+│   ├── Button.css          ✅ Co-located with component
+│   ├── Input.tsx
+│   ├── Textarea.tsx
+│   └── FormElements.css    ✅ Shared styles for Input/Textarea
+└── panel/components/
+    ├── ChatComposer.tsx
+    └── ChatComposer.css    ✅ Component-specific styles
+```
+
+### Naming Conventions
+Use BEM-like naming for clarity and scoping:
+
+```css
+/* Component base */
+.component-name { }
+
+/* Element within component */
+.component-name__element { }
+
+/* Modifier variant */
+.component-name--variant { }
+
+/* State modifier */
+.component-name--active { }
+```
+
+**Examples:**
+```css
+.message-bubble { }
+.message-bubble--user { }
+.message-bubble--assistant { }
+.debug-panel__header { }
+.debug-panel__tab { }
+.debug-panel__tab--active { }
+```
+
+## Design Token Usage
+
+### Always Use n8n's CSS Variables
+Use n8n's design tokens with fallback values for consistency and theme support:
+
+```css
+/* ✅ GOOD - Design tokens with fallbacks */
+.component {
+    /* Spacing */
+    padding: var(--spacing-xs, 0.75rem);
+    margin: var(--spacing-s, 1rem);
+    gap: var(--spacing-2xs, 0.5rem);
+    
+    /* Colors */
+    color: var(--color-text-dark, #ffffff);
+    background: var(--color-background-light, #1a1a24);
+    border-color: var(--color-foreground-light, #4f5166);
+    
+    /* Typography */
+    font-size: var(--font-size-s, 0.875rem);
+    font-weight: var(--font-weight-bold, 700);
+    line-height: var(--font-line-height-loose, 1.5);
+    
+    /* Borders & Radius */
+    border-radius: var(--border-radius-base, 0.5rem);
+    border-width: var(--border-width-base, 1px);
+}
+```
+
+```css
+/* ❌ BAD - Hardcoded values */
+.component {
+    padding: 12px;
+    color: #ffffff;
+    background: #1a1a24;
+    font-size: 14px;
+}
+```
+
+### Available Token Categories
+- **Spacing**: `--spacing-5xs` through `--spacing-3xl`
+- **Colors**: `--color-text-*`, `--color-background-*`, `--color-foreground-*`, `--color-primary`, etc.
+- **Typography**: `--font-size-*`, `--font-weight-*`, `--font-line-height-*`, `--font-family-*`
+- **Borders**: `--border-radius-*`, `--border-width-*`
+- **Shadows**: `--shadow-base`, `--shadow-elevate`, etc.
+
+See [`extension/src/lib/styles/tokens.ts`](mdc:extension/src/lib/styles/tokens.ts) for complete token mapping.
+
+## Component Styling Pattern
+
+### Basic Component
+```typescript
+// Button.tsx
+import React from 'react'
+import './Button.css'
+
+type ButtonProps = {
+    variant?: 'primary' | 'secondary'
+    children: React.ReactNode
+    onClick?: () => void
+}
+
+export default function Button({ variant = 'primary', children, onClick }: ButtonProps) {
+    return (
+        <button className={`button button--${variant}`} onClick={onClick}>
+            {children}
+        </button>
+    )
+}
+```
+
+```css
+/* Button.css */
+.button {
+    padding: var(--spacing-2xs, 0.5rem) var(--spacing-xs, 0.75rem);
+    border-radius: var(--border-radius-base, 0.5rem);
+    font-size: var(--font-size-s, 0.875rem);
+    cursor: pointer;
+}
+
+.button--primary {
+    background: var(--color-primary, #ff6d5a);
+    color: var(--color-text-dark, #ffffff);
+}
+
+.button--secondary {
+    background: var(--color-background-base, #2d2e3a);
+    border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+}
+
+.button:hover {
+    opacity: 0.9;
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+```
+
+### Shared Component Styles
+For components with similar styling (Input, Textarea), create shared CSS:
+
+```typescript
+// Input.tsx
+import './FormElements.css'
+
+export default function Input({ label, ...props }) {
+    return (
+        <label className="form-label">
+            {label && <span className="form-label-text">{label}</span>}
+            <input className="form-input" {...props} />
+        </label>
+    )
+}
+```
+
+```css
+/* FormElements.css - Shared by Input and Textarea */
+.form-label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4xs, 0.25rem);
+}
+
+.form-input,
+.form-textarea {
+    padding: var(--spacing-2xs, 0.5rem);
+    border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+    border-radius: var(--border-radius-base, 0.5rem);
+    background: var(--color-background-light, #1a1a24);
+    color: var(--color-text-dark, #ffffff);
+}
+```
+
+## When Inline Styles Are Acceptable
+
+Only use inline `style` prop for **dynamic/calculated values** that cannot be in static CSS:
+
+### ✅ Acceptable Use Cases
+
+**1. Dynamic Positioning (user-controlled)**
+```tsx
+<div 
+    className="panel"
+    style={{
+        top: position.y,      // Changes on drag
+        left: position.x,     // Changes on drag
+        width: size.w,        // Changes on resize
+        height: size.h,       // Changes on resize
+    }}
+>
+```
+
+**2. Runtime Calculations**
+```tsx
+<textarea
+    className="form-textarea"
+    style={{
+        minHeight: `${lineHeight * minRows}px`,  // Calculated at runtime
+        ...props.style                            // Forwarded props
+    }}
+/>
+```
+
+**3. Forwarded Style Props**
+```tsx
+function Component({ style, ...props }: ComponentProps) {
+    return <div className="component" style={style} {...props} />
+}
+```
+
+### ❌ Unacceptable Use Cases
+
+**Don't use inline styles for static styling:**
+```tsx
+// ❌ BAD - Static styles should be in CSS
+<div style={{ 
+    padding: '12px',
+    background: '#f0f0f0',
+    borderRadius: '8px'
+}}>
+```
+
+```tsx
+// ✅ GOOD - Static styles in CSS
+<div className="container">
+```
+
+## CSS Specificity
+
+Our CSS naturally overrides n8n's CSS reset because:
+1. **Scoped selectors** - `.component-name` has higher specificity than element selectors
+2. **Direct application** - Our styles are applied directly to our components
+3. **No !important needed** - Proper specificity is sufficient
+
+```css
+/* ✅ GOOD - Natural specificity */
+.markdown-body ol {
+    margin: var(--spacing-2xs, 0.5rem) 0;
+    padding-left: var(--spacing-m, 1.25rem);
+}
+
+/* ❌ BAD - Unnecessary !important */
+.markdown-body ol {
+    margin: var(--spacing-2xs, 0.5rem) 0 !important;
+}
+```
+
+## Benefits
+
+### Code Quality
+- **Proper separation of concerns** - CSS for styling, JavaScript for logic
+- **Maintainability** - Easy to find and modify styles
+- **Consistency** - All components follow the same pattern
+
+### Performance
+- **No runtime calculations** - Static styles loaded once
+- **Better caching** - CSS files cached separately from JavaScript
+- **Smaller JavaScript bundles** - Styles moved to CSS files
+- **Vite optimization** - CSS processed, minified, and tree-shaken
+
+### Developer Experience
+- **Clear organization** - Styles next to components
+- **Easy debugging** - Inspect CSS in browser DevTools
+- **Design token integration** - Consistent with n8n's design system
+- **Dark theme support** - CSS variables adapt to theme changes
+
+## Migration from Inline Styles
+
+If you encounter inline styles, refactor them to CSS:
+
+### Before (Inline Styles)
+```tsx
+function MyComponent() {
+    const containerStyle = {
+        padding: '12px',
+        background: '#f0f0f0',
+        borderRadius: '8px'
+    }
+    
+    return <div style={containerStyle}>Content</div>
+}
+```
+
+### After (CSS Classes)
+```tsx
+// MyComponent.tsx
+import './MyComponent.css'
+
+function MyComponent() {
+    return <div className="my-component">Content</div>
+}
+```
+
+```css
+/* MyComponent.css */
+.my-component {
+    padding: var(--spacing-xs, 0.75rem);
+    background: var(--color-background-base, #2d2e3a);
+    border-radius: var(--border-radius-base, 0.5rem);
+}
+```
+
+## Summary
+
+✅ **DO:**
+- Use CSS files for all static styling
+- Co-locate CSS files with components
+- Use n8n's design tokens with fallbacks
+- Use BEM-like naming conventions
+- Only use inline styles for dynamic values
+
+❌ **DON'T:**
+- Use inline styles for static styling
+- Hardcode color/spacing values
+- Use `!important` (rely on specificity)
+- Mix styling concerns with business logic
+- Create `styles.ts` files (use `.css` instead)
+
+## Related Documents
+- [Design Token Integration](mdc:0010-styling-and-design-tokens.mdc)
+- [React Component Standards](mdc:0029-n8n-extension-react-component-standards.mdc)
+- [React Patterns](mdc:0024-react-patterns-and-vanilla-js-avoidance.mdc)
+- [Coding Standards](mdc:../architecture/0017-coding-standards-preferences.mdc)

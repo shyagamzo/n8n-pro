@@ -12,11 +12,15 @@ Establish React component standards and patterns specifically for the n8n extens
 - **ALWAYS use React components** - Never use vanilla JavaScript DOM manipulation
 - **Use functional components** with hooks (`useState`, `useEffect`, etc.)
 - **Use TypeScript interfaces** for all props and state
-- **Prefer small inline styles or shared style constants** over large inline objects; keep complex style groups in `styles.ts`
+- **Use CSS files for styling** - Co-locate `.css` files next to components; use CSS classes via `className`
 - **Use React event handlers** (`onClick`, `onChange`, `onKeyPress`, etc.)
 
 ## Component Structure Pattern
 ```typescript
+// Component.tsx
+import React from 'react'
+import './Component.css'
+
 interface ComponentProps {
     // Define all props with types
 }
@@ -32,10 +36,19 @@ function Component({ prop1, prop2 }: ComponentProps): React.JSX.Element {
     }, [dependencies]);
     
     return (
-        <div style={{ /* inline styles */ }}>
+        <div className="component">
             {/* JSX content */}
         </div>
     );
+}
+
+export default Component
+
+// Component.css
+.component {
+    padding: var(--spacing-xs, 0.75rem);
+    background: var(--color-background-base, #2d2e3a);
+    color: var(--color-text-dark, #ffffff);
 }
 ```
 
@@ -51,10 +64,24 @@ function Component({ prop1, prop2 }: ComponentProps): React.JSX.Element {
 - Prevent default behavior when needed: `e.preventDefault()`
 
 ## Styling Approach
-- Use inline styles for simple cases; extract named constants for readability
-- Use CSS properties in camelCase: `backgroundColor`, `fontSize`
-- Prefer shared `styles.ts` per feature for cross-component reuse
+- **CSS files co-located with components** - Create `.css` file next to each `.tsx` file
+- **Use CSS classes** - Apply styles via `className` prop, not inline styles
+- **Design tokens with fallbacks** - Use n8n's CSS variables: `var(--token, fallback)`
+- **Shared CSS files** - Create shared CSS for common components (e.g., `FormElements.css`)
+- **Only dynamic styles inline** - Use `style` prop only for runtime-calculated values
 - Keep components presentational; avoid mixing logic and styles with platform calls
+
+### CSS Best Practices
+- Use BEM-like naming: `.component-name`, `.component-name__element`, `.component-name--modifier`
+- Co-locate CSS files with components for maintainability
+- Use n8n's design tokens for consistency with the host application
+- Group related components' styles in shared CSS files when appropriate
+
+### When Inline Styles Are Acceptable
+- **Dynamic positioning**: Values that change based on user drag/resize
+- **Calculated dimensions**: Runtime-computed heights, widths
+- **Forwarded props**: Spreading `...props.style` for component flexibility
+- **Temporary/Prototype code**: Quick tests (refactor to CSS afterward)
 
 ## Component Roles
 - **Presentational Components**: Render-only; no side effects

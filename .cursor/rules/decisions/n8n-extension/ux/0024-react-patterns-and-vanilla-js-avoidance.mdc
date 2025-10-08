@@ -15,11 +15,14 @@ Establish React-first development patterns for the n8n extension, avoiding vanil
 - **ALWAYS use React components** - Never use vanilla JavaScript DOM manipulation
 - **Use functional components** with hooks (`useState`, `useEffect`, etc.)
 - **Use TypeScript interfaces** for all props and state
-- **Use inline styles** for component styling (no CSS files for components)
+- **Use CSS files** for component styling (co-located `.css` files next to components)
 - **Use React event handlers** (`onClick`, `onChange`, `onKeyPress`, etc.)
 
 ## Component Structure Pattern
 ```typescript
+// Component.tsx
+import './Component.css'
+
 interface ComponentProps {
     // Define all props with types
 }
@@ -35,12 +38,31 @@ function Component({ prop1, prop2 }: ComponentProps): React.JSX.Element {
     }, [dependencies]);
     
     return (
-        <div style={{ /* inline styles */ }}>
+        <div className="component">
             {/* JSX content */}
         </div>
     );
 }
+
+// Component.css
+.component {
+    padding: var(--spacing-xs, 0.75rem);
+    background: var(--color-background-base, #2d2e3a);
+}
 ```
+
+## Styling Standards
+- **CSS files co-located with components** - Create `.css` file next to each `.tsx` file
+- **Use CSS classes** - Apply styles via `className` prop
+- **Design tokens with fallbacks** - Use n8n's CSS variables with fallback values
+- **Only dynamic styles inline** - Use inline `style` prop only for dynamic/calculated values
+- **Shared CSS files** - Create shared CSS files for common component styles (e.g., `FormElements.css`)
+
+### When Inline Styles Are Acceptable
+- **Dynamic positioning** - Values that change based on user interaction (drag/resize)
+- **Calculated dimensions** - Heights/widths computed at runtime
+- **Forwarded props** - Spreading `...props.style` for flexibility
+- **Simple utilities** - Single-property utilities like `width: '100%'` (though CSS is preferred)
 
 ## Content Script Patterns for n8n Extension
 - **Create React root** for injecting React apps into n8n pages

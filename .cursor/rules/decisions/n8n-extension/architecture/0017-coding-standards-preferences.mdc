@@ -36,7 +36,15 @@ Imports should follow this order:
 - **Services**: Wrap Chrome ports/messaging and API calls; expose typed methods (no DOM/React here).
 - **Containers**: Bind services/state to presentational components.
 - **Presentational components**: UI only; no side-effects or platform calls.
-- **Styles**: Use shared `styles.ts` per feature to avoid large inline style objects.
+- **Styles**: Use co-located CSS files (`.css`) next to components; apply via `className` prop.
+
+### Component Styling Standards
+- **CSS files co-located with components** - Create `.css` file next to each `.tsx` component file
+- **Use CSS classes** - Apply styles via `className` prop, not inline styles
+- **Design tokens with fallbacks** - Use n8n's CSS variables: `var(--color-primary, #ff6d5a)`
+- **Shared CSS for common patterns** - Group related component styles (e.g., `FormElements.css`)
+- **Only dynamic styles inline** - Use `style` prop only for runtime-calculated values (positioning, sizing)
+- **BEM-like naming** - Use clear, scoped class names: `.component-name`, `.component-name--modifier`
 
 ### Import Alignment
 - Align imports vertically to the furthest closing bracket

@@ -92,7 +92,7 @@ function MyComponent() {
     padding: '12px',
     background: '#f0f0f0'
   }
-  
+
   return <div style={containerStyle}>Content</div>
 }
 ```
