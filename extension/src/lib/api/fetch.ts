@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from '../utils/fetch'
+import { retry, type RetryOptions } from '../utils/retry'
 
 /**
  * Error type representing HTTP and network failures.
@@ -27,6 +28,8 @@ export type RequestOptions = {
   headers?: Record<string, string>
   body?: unknown
   timeoutMs?: number
+  /** Enable retry with exponential backoff (default: false for POST/PUT/PATCH/DELETE, true for GET) */
+  retry?: boolean | RetryOptions
 }
 
 function buildHeaders(userHeaders?: Record<string, string>): Record<string, string>
@@ -53,48 +56,69 @@ async function parseResponseBody(response: Response): Promise<unknown>
 }
 
 /**
- * Minimal fetch wrapper with timeout, JSON handling, and typed result.
+ * Minimal fetch wrapper with timeout, JSON handling, typed result, and retry support.
  */
 export async function apiFetch<T>(url: string, options: RequestOptions = {}): Promise<T>
 {
-  try
+  const method = options.method ?? 'GET'
+  
+  // Determine if we should retry based on HTTP method
+  // GET requests are idempotent and safe to retry by default
+  // POST/PUT/PATCH/DELETE are not retried by default unless explicitly enabled
+  const shouldRetry = options.retry !== undefined
+    ? options.retry
+    : (method === 'GET')
+
+  const fetchFn = async (): Promise<T> =>
   {
-    const fetchOptions: RequestInit = {
-      method: options.method ?? 'GET',
-      headers: buildHeaders(options.headers),
-      body: options.body ? JSON.stringify(options.body) : undefined,
-      // Explicitly omit credentials to avoid sending cookies and affecting n8n UI sessions
-      credentials: 'omit',
-    }
-
-    const response = options.timeoutMs
-      ? await fetchWithTimeout(url, fetchOptions, options.timeoutMs)
-      : await fetch(url, fetchOptions)
-
-    const parsed = await parseResponseBody(response)
-
-    if (!response.ok)
+    try
     {
-      const statusText = response.statusText || ''
-      let details = ''
+      const fetchOptions: RequestInit = {
+        method,
+        headers: buildHeaders(options.headers),
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        // Explicitly omit credentials to avoid sending cookies and affecting n8n UI sessions
+        credentials: 'omit',
+      }
 
-      if (typeof parsed === 'string') details = parsed
-      else if (parsed && typeof parsed === 'object') details = (parsed as { message?: string }).message || JSON.stringify(parsed)
+      const response = options.timeoutMs
+        ? await fetchWithTimeout(url, fetchOptions, options.timeoutMs)
+        : await fetch(url, fetchOptions)
 
-      const message = `Request failed ${response.status}${statusText ? ' ' + statusText : ''}${details ? `: ${details}` : ''}`
-      throw new ApiError(message, response.status, url, parsed)
+      const parsed = await parseResponseBody(response)
+
+      if (!response.ok)
+      {
+        const statusText = response.statusText || ''
+        let details = ''
+
+        if (typeof parsed === 'string') details = parsed
+        else if (parsed && typeof parsed === 'object') details = (parsed as { message?: string }).message || JSON.stringify(parsed)
+
+        const message = `Request failed ${response.status}${statusText ? ' ' + statusText : ''}${details ? `: ${details}` : ''}`
+        throw new ApiError(message, response.status, url, parsed)
+      }
+
+      return (parsed as T)
     }
+    catch (error)
+    {
+      if (error instanceof DOMException && error.name === 'AbortError')
+      {
+        throw new ApiError('Request timed out', 408, url)
+      }
 
-    return (parsed as T)
+      if (error instanceof ApiError) throw error
+      throw new ApiError('Network error', 0, url)
+    }
   }
-  catch (error)
+
+  // Apply retry logic if enabled
+  if (shouldRetry)
   {
-    if (error instanceof DOMException && error.name === 'AbortError')
-    {
-      throw new ApiError('Request timed out', 408, url)
-    }
-
-    if (error instanceof ApiError) throw error
-    throw new ApiError('Network error', 0, url)
+    const retryOptions = typeof shouldRetry === 'object' ? shouldRetry : {}
+    return retry(fetchFn, retryOptions)
   }
+
+  return fetchFn()
 }
