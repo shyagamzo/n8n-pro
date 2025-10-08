@@ -196,6 +196,9 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
 
   console.log('💬 Handling chat message:', { messageCount: msg.messages.length })
 
+  // Send progress: Analyzing request
+  post({ type: 'progress', status: 'Analyzing your request...', step: 1, total: 3 } satisfies BackgroundMessage)
+
   // First, check if we have enough information to generate a plan
   const readiness = await orchestrator.isReadyToPlan({
     apiKey,
@@ -203,6 +206,9 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
   })
 
   console.log('🔍 Readiness check:', readiness)
+
+  // Send progress: Generating response
+  post({ type: 'progress', status: 'Generating response...', step: 2, total: 3 } satisfies BackgroundMessage)
 
   // Generate conversational response (this happens regardless)
   const reply: string = await orchestrator.handle({
@@ -219,6 +225,9 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
   if (readiness.ready)
   {
     console.log('✅ Ready to plan - generating workflow')
+
+    // Send progress: Creating workflow plan
+    post({ type: 'progress', status: 'Creating workflow plan...', step: 3, total: 3 } satisfies BackgroundMessage)
 
     try
     {

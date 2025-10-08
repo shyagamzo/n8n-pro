@@ -8,5 +8,6 @@ export type BackgroundMessage =
   | { type: 'done' }
   | { type: 'error'; error: string }
   | { type: 'plan'; plan: Plan }
+  | { type: 'progress'; status: string; step: number; total: number }
 
 export type ApplyPlanRequest = { type: 'apply_plan'; plan: Plan }

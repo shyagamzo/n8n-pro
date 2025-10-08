@@ -4,12 +4,19 @@ import type { Plan } from '../types/plan'
 import { STORAGE_KEYS } from '../constants'
 import { storageGet, storageSet } from '../utils/storage'
 
+type ProgressStatus = {
+  status: string
+  step: number
+  total: number
+} | null
+
 type ChatState = {
   isOpen: boolean
   messages: ChatMessage[]
   sending: boolean
   assistantDraft: string
   pendingPlan?: Plan | null
+  progress: ProgressStatus
   setOpen: (open: boolean) => void
   addMessage: (msg: ChatMessage) => void
   startSending: () => void
@@ -18,6 +25,7 @@ type ChatState = {
   clearSession: () => void
   setAssistantDraft: (t: string) => void
   setPendingPlan: (p: Plan | null) => void
+  setProgress: (p: ProgressStatus) => void
   loadMessages: () => Promise<void>
 }
 
@@ -38,6 +46,7 @@ export const useChatStore = create<ChatState>((set) => ({
   sending: false,
   assistantDraft: '',
   pendingPlan: null,
+  progress: null,
   setOpen: (open) => set({ isOpen: open }),
   addMessage: (msg) =>
   {
@@ -49,15 +58,16 @@ export const useChatStore = create<ChatState>((set) => ({
     })
   },
   startSending: () => set({ sending: true }),
-  finishSending: () => set({ sending: false }),
+  finishSending: () => set({ sending: false, progress: null }),
   clear: () => set({ messages: [] }),
   clearSession: () =>
   {
-    set({ messages: [], assistantDraft: '', pendingPlan: null, sending: false })
+    set({ messages: [], assistantDraft: '', pendingPlan: null, sending: false, progress: null })
     saveMessages([])
   },
   setAssistantDraft: (t) => set({ assistantDraft: t }),
   setPendingPlan: (p) => set({ pendingPlan: p }),
+  setProgress: (p) => set({ progress: p }),
   loadMessages: async () =>
   {
     const messages = await loadStoredMessages()

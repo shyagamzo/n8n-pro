@@ -14,12 +14,16 @@ export class ChatService
   {
     this.port.onMessage((message: ChatStreamMessage | BackgroundMessage) =>
     {
-      const { addMessage, finishSending, setAssistantDraft, setPendingPlan } = useChatStore.getState()
+      const { addMessage, finishSending, setAssistantDraft, setPendingPlan, setProgress } = useChatStore.getState()
 
       if (message.type === 'token')
       {
         const currentDraft = useChatStore.getState().assistantDraft
         setAssistantDraft(currentDraft + message.token)
+      }
+      else if (message.type === 'progress')
+      {
+        setProgress({ status: message.status, step: message.step, total: message.total })
       }
       else if (message.type === 'done')
       {
@@ -44,20 +48,20 @@ export class ChatService
         setAssistantDraft('')
         setPendingPlan(null)
         finishSending()
-
+        
         // Create error message with retry capability
         const errorDetails: ErrorDetails = {
           title: this.getErrorTitle(message.error),
           details: this.getErrorDetails(message.error),
           retryable: this.isRetryable(message.error),
-          retryPayload: this.isRetryable(message.error)
+          retryPayload: this.isRetryable(message.error) 
             ? { messages: this.lastSentMessages }
             : undefined
         }
 
-        addMessage({
-          id: generateId(),
-          role: 'error',
+        addMessage({ 
+          id: generateId(), 
+          role: 'error', 
           text: this.getErrorMessage(message.error),
           error: errorDetails
         })
