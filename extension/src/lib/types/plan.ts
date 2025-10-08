@@ -8,6 +8,7 @@ export type Plan = {
   title: string
   summary: string
   credentialsNeeded: CredentialRef[]
+  credentialsAvailable?: CredentialRef[]
   workflow: {
     name: string
     nodes: unknown[]

@@ -67,11 +67,11 @@ export function createN8nClient(options: N8nClientOptions = {})
 
   /**
    * List credentials using n8n's internal REST API.
-   * 
+   *
    * Note: This uses the internal /rest/credentials endpoint (not the public API).
    * The public API (/api/v1/credentials) doesn't support listing for security reasons,
    * but the internal endpoint is used by n8n's UI and is accessible with API keys.
-   * 
+   *
    * @param projectId - Optional project ID to filter credentials by project
    */
   async function listCredentials(projectId?: string): Promise<Array<{ id: string; name: string; type: string }>>
@@ -80,14 +80,14 @@ export function createN8nClient(options: N8nClientOptions = {})
       includeScopes: 'true',
       includeData: 'false', // Don't include sensitive credential data
     })
-    
+
     if (projectId)
     {
       params.append('filter', JSON.stringify({ projectId }))
     }
-    
+
     const url = `${baseUrl}/rest/credentials?${params.toString()}`
-    
+
     return apiFetch<Array<{ id: string; name: string; type: string }>>(url, {
       method: 'GET',
       headers: authHeaders,
