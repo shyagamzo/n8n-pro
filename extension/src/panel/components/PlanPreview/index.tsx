@@ -3,6 +3,7 @@ import type { Plan } from '../../../lib/types/plan'
 import { chat } from '../../../lib/services/chat'
 import AvailableCredentials from './AvailableCredentials'
 import NeededCredentials from './NeededCredentials'
+import '../../../lib/styles/utilities.css'
 import './styles.css'
 
 type PlanPreviewProps = {
@@ -19,12 +20,12 @@ export default function PlanPreview({ plan, onCancel }: PlanPreviewProps): React
   const hasAnyCredentials = hasNeededCredentials || hasAvailableCredentials
 
   return (
-    <div className="plan-preview-container">
-      <div className="plan-preview-title">{plan.title}</div>
-      <div className="plan-preview-summary">{plan.summary}</div>
+    <div className="plan-preview-container container-card mt-xs">
+      <div className="plan-preview-title text-bold text-sm">{plan.title}</div>
+      <div className="plan-preview-summary text-secondary text-xs mb-sm">{plan.summary}</div>
 
       {hasAnyCredentials && (
-        <div className="plan-preview-credentials">
+        <div className="plan-preview-credentials mb-sm">
           {hasAvailableCredentials && plan.credentialsAvailable && (
             <AvailableCredentials
               credentials={plan.credentialsAvailable}
@@ -42,24 +43,24 @@ export default function PlanPreview({ plan, onCancel }: PlanPreviewProps): React
 
           <button
             onClick={() => setShowCredDetails(!showCredDetails)}
-            className="plan-preview-toggle"
+            className="plan-preview-toggle btn-icon"
           >
             {showCredDetails ? '▼ Hide credential details' : '▶ Show credential details'}
           </button>
         </div>
       )}
 
-      <div className="plan-preview-actions">
-        <button onClick={() => chat.applyPlan(plan)} className="plan-preview-apply">
+      <div className="plan-preview-actions flex gap-sm">
+        <button onClick={() => chat.applyPlan(plan)} className="plan-preview-apply btn btn-small">
           {hasNeededCredentials ? 'Create & Open in n8n' : 'Create Workflow'}
         </button>
-        <button onClick={onCancel} className="plan-preview-cancel">
+        <button onClick={onCancel} className="plan-preview-cancel btn btn-small">
           Cancel
         </button>
       </div>
 
       {hasNeededCredentials && (
-        <div className="plan-preview-helper-text">
+        <div className="plan-preview-helper-text text-xs text-secondary mt-xs">
           💡 After creation, you'll get a direct link to open the workflow and configure credentials.
         </div>
       )}

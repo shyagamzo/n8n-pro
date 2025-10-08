@@ -266,3 +266,4 @@ Just clean, semantic CSS classes using n8n's design tokens directly with fallbac
 
 This is the **ideal React styling architecture** for our extension! 🎯✨🚀
 
+

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import type { Plan } from '../../lib/types/plan'
+import '../../lib/styles/utilities.css'
 import './DebugPanel.css'
 
 type DebugPanelProps = {
@@ -14,8 +15,8 @@ export default function DebugPanel({ plan }: DebugPanelProps): React.ReactElemen
   if (!expanded)
   {
     return (
-      <div className="debug-panel-collapsed">
-        <button onClick={() => setExpanded(true)} className="debug-panel-toggle">
+      <div className="debug-panel-collapsed border-top">
+        <button onClick={() => setExpanded(true)} className="debug-panel-toggle w-full btn border rounded">
           🐛 Show Debug Info
         </button>
       </div>
@@ -23,10 +24,10 @@ export default function DebugPanel({ plan }: DebugPanelProps): React.ReactElemen
   }
 
   return (
-    <div className="debug-panel">
-      <div className="debug-panel-header">
-        <span className="debug-panel-title">🐛 Debug Information</span>
-        <button onClick={() => setExpanded(false)} className="debug-panel-close">
+    <div className="debug-panel container-card flex-column">
+      <div className="debug-panel-header section-header">
+        <span className="debug-panel-title section-header-title">🐛 Debug Information</span>
+        <button onClick={() => setExpanded(false)} className="debug-panel-close btn-icon">
           ✕
         </button>
       </div>
@@ -34,38 +35,38 @@ export default function DebugPanel({ plan }: DebugPanelProps): React.ReactElemen
       <div className="debug-panel-tabs">
         <button
           onClick={() => setActiveTab('plan')}
-          className={`debug-panel-tab ${activeTab === 'plan' ? 'debug-panel-tab--active' : ''}`}
+          className={`debug-panel-tab btn ${activeTab === 'plan' ? 'debug-panel-tab--active' : ''}`}
         >
           Plan
         </button>
         <button
           onClick={() => setActiveTab('workflow')}
-          className={`debug-panel-tab ${activeTab === 'workflow' ? 'debug-panel-tab--active' : ''}`}
+          className={`debug-panel-tab btn ${activeTab === 'workflow' ? 'debug-panel-tab--active' : ''}`}
         >
           Workflow JSON
         </button>
         <button
           onClick={() => setActiveTab('validation')}
-          className={`debug-panel-tab ${activeTab === 'validation' ? 'debug-panel-tab--active' : ''}`}
+          className={`debug-panel-tab btn ${activeTab === 'validation' ? 'debug-panel-tab--active' : ''}`}
         >
           Validation
         </button>
       </div>
 
-      <div className="debug-panel-content">
+      <div className="debug-panel-content flex-1 overflow-auto">
         {activeTab === 'plan' && (
-          <div className="debug-panel-code-block">
-            <div className="debug-panel-label">Full Plan Object:</div>
-            <pre className="debug-panel-pre">
+          <div className="debug-panel-code-block container-elevated">
+            <div className="debug-panel-label text-bold text-xs">Full Plan Object:</div>
+            <pre className="debug-panel-pre code-block">
               {JSON.stringify(plan, null, 2)}
             </pre>
           </div>
         )}
 
         {activeTab === 'workflow' && (
-          <div className="debug-panel-code-block">
-            <div className="debug-panel-label">Workflow Structure (sent to n8n API):</div>
-            <pre className="debug-panel-pre">
+          <div className="debug-panel-code-block container-elevated">
+            <div className="debug-panel-label text-bold text-xs">Workflow Structure (sent to n8n API):</div>
+            <pre className="debug-panel-pre code-block">
               {JSON.stringify(plan.workflow, null, 2)}
             </pre>
             <div className="debug-panel-help">
@@ -75,7 +76,7 @@ export default function DebugPanel({ plan }: DebugPanelProps): React.ReactElemen
         )}
 
         {activeTab === 'validation' && (
-          <div className="debug-panel-code-block">
+          <div className="debug-panel-code-block container-elevated">
             <div className="debug-panel-label">Validation Summary:</div>
             <div className="debug-panel-validation-info">
               <div><strong>Workflow Name:</strong> {plan.workflow.name}</div>
@@ -108,11 +109,11 @@ export default function DebugPanel({ plan }: DebugPanelProps): React.ReactElemen
         )}
       </div>
 
-      <div className="debug-panel-footer">
-        <button onClick={() => copyToClipboard(plan)} className="debug-panel-copy-button">
+      <div className="debug-panel-footer flex gap-sm border-top">
+        <button onClick={() => copyToClipboard(plan)} className="debug-panel-copy-button btn btn-small flex-1 hoverable">
           📋 Copy Full Plan to Clipboard
         </button>
-        <button onClick={() => copyToClipboard(plan.workflow)} className="debug-panel-copy-button">
+        <button onClick={() => copyToClipboard(plan.workflow)} className="debug-panel-copy-button btn btn-small flex-1 hoverable">
           📋 Copy Workflow JSON
         </button>
       </div>
