@@ -71,11 +71,11 @@ Components use n8n's CSS variables directly in CSS files:
     /* Spacing */
     padding: var(--spacing-xs, 0.75rem);
     margin: var(--spacing-s, 1rem);
-    
+
     /* Colors */
     color: var(--color-text-dark, #ffffff);
     background: var(--color-background-light, #1a1a24);
-    
+
     /* Typography */
     font-size: var(--font-size-s, 0.875rem);
     font-weight: var(--font-weight-bold, 600);
@@ -183,7 +183,7 @@ TypeScript file documents **available tokens** with JSDoc:
 ```typescript
 /**
  * Spacing Tokens
- * 
+ *
  * Consistent spacing scale from n8n's design system.
  * Use in CSS: var(--spacing-xs, 0.75rem)
  */
