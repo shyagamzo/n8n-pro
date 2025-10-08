@@ -67,6 +67,8 @@ credentialsNeeded:
   - type: slackApi
     name: Slack Account
     requiredFor: Send message to Slack
+    nodeId: Slack
+    nodeName: Send Message
 credentialsAvailable:
   - type: gmailOAuth2
     name: Gmail Account
@@ -88,6 +90,9 @@ workflow:
           type: main
           index: 0
 ```
+
+**Important:** Include `nodeId` and `nodeName` for each credential in `credentialsNeeded`.
+This enables deep linking directly to the node that needs the credential.
 
 **Loom Rules:**
 - Use 2-space indentation for nesting
@@ -116,6 +121,8 @@ credentialsNeeded:
   - type: slackApi
     name: Slack Account
     requiredFor: Sending messages to Slack channels
+    nodeId: Slack
+    nodeName: Send Message
 workflow:
   name: Daily Morning Greeting
   nodes:
@@ -220,6 +227,7 @@ workflow:
 - Never include actual credential values
 - Explain what each credential is used for
 - Prefer using existing credentials over requesting new ones
+- **Include nodeId and nodeName** for each credential to enable deep linking to specific nodes
 
 ### Workflow Design
 - Keep workflows simple and linear when possible

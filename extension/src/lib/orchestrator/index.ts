@@ -120,6 +120,8 @@ class Orchestrator
         type: String(c.type || ''),
         name: c.name ? String(c.name) : undefined,
         requiredFor: c.requiredFor ? String(c.requiredFor) : undefined,
+        nodeId: c.nodeId ? String(c.nodeId) : undefined,
+        nodeName: c.nodeName ? String(c.nodeName) : undefined,
       }
     })
 

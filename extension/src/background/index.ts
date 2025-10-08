@@ -74,23 +74,27 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
   const workflowUrl = `${baseUrl}/workflow/${result.id}`
   post({ type: 'token', token: `\n✅ Created workflow: [Open in n8n →](${workflowUrl})` } satisfies BackgroundMessage)
 
-  // If there are credentials needed, provide guidance
+  // If there are credentials needed, provide node-specific deep links
   if (msg.plan.credentialsNeeded && msg.plan.credentialsNeeded.length > 0)
   {
-    post({ type: 'token', token: '\n\n**Next steps:**' } satisfies BackgroundMessage)
-    post({ type: 'token', token: '\n1. Open the workflow above' } satisfies BackgroundMessage)
-    post({ type: 'token', token: '\n2. Configure credentials for these nodes:' } satisfies BackgroundMessage)
+    post({ type: 'token', token: '\n\n**Next steps to activate:**' } satisfies BackgroundMessage)
 
     msg.plan.credentialsNeeded.forEach((cred, idx) =>
     {
+      const nodeUrl = cred.nodeId
+        ? `${baseUrl}/workflow/${result.id}/${encodeURIComponent(cred.nodeId)}`
+        : workflowUrl
       const credUrl = `${baseUrl}/credentials/new/${encodeURIComponent(cred.type)}`
+      
+      const nodeName = cred.nodeName || cred.name || cred.type
+      
       post({
         type: 'token',
-        token: `\n   ${idx + 1}. **${cred.name || cred.type}** - [Set up credential →](${credUrl})`
+        token: `\n${idx + 1}. **${nodeName}** node: [Open node →](${nodeUrl}) or [Create credential →](${credUrl})`
       } satisfies BackgroundMessage)
     })
 
-    post({ type: 'token', token: '\n3. Activate your workflow!' } satisfies BackgroundMessage)
+    post({ type: 'token', token: '\n\n💡 **Tip:** If you already have credentials, click "Open node" to select them. Otherwise, create new ones.' } satisfies BackgroundMessage)
   }
 
   post({ type: 'done' } satisfies BackgroundMessage)

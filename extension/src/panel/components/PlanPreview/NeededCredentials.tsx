@@ -4,6 +4,7 @@ import type { CredentialRef } from '../../../lib/types/plan'
 type NeededCredentialsProps = {
   credentials: CredentialRef[]
   showDetails: boolean
+  workflowId?: string  // Optional: enables node-specific deep links
 }
 
 const styles = {
@@ -84,8 +85,11 @@ const styles = {
 export default function NeededCredentials({
   credentials,
   showDetails,
+  workflowId,
 }: NeededCredentialsProps): React.ReactElement
 {
+  const baseUrl = 'http://localhost:5678'
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -108,7 +112,7 @@ export default function NeededCredentials({
               }}
             >
               <div style={styles.credentialName}>
-                {cred.name || cred.type}
+                {cred.nodeName || cred.name || cred.type}
               </div>
 
               <div style={styles.credentialType}>
@@ -121,19 +125,33 @@ export default function NeededCredentials({
                 </div>
               )}
 
+              {workflowId && cred.nodeId && (
+                <div style={{ fontSize: '11px', marginBottom: 4 }}>
+                  <a
+                    href={`${baseUrl}/workflow/${workflowId}/${encodeURIComponent(cred.nodeId)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={styles.setupLink}
+                  >
+                    Open node in n8n ↗
+                  </a>
+                  {' or '}
+                </div>
+              )}
+
               <a
-                href={`http://localhost:5678/credentials/new/${encodeURIComponent(cred.type)}`}
+                href={`${baseUrl}/credentials/new/${encodeURIComponent(cred.type)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={styles.setupLink}
               >
-                Create this credential ↗
+                Create new credential ↗
               </a>
             </div>
           ))}
 
           <div style={styles.tip}>
-            💡 <strong>Tip:</strong> Click "Create & Open in n8n" to get direct links to set up each credential.
+            💡 <strong>Tip:</strong> After creation, click node links to configure credentials directly, or create new credentials first.
           </div>
         </div>
       )}
