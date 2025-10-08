@@ -58,9 +58,12 @@ availableCredentials: [
 
 ## Output Format
 
-Return workflow plan using **Loom format** (indentation-based, not JSON):
+**CRITICAL:** Return ONLY the workflow plan in **Loom format** (indentation-based, not JSON).
 
-```
+**DO NOT** wrap your response in markdown code blocks (no ```). Return the raw Loom text directly.
+
+**Example Loom output (copy this structure exactly):**
+
 title: Brief workflow title
 summary: Human-readable description of what the workflow does
 credentialsNeeded:
@@ -89,18 +92,20 @@ workflow:
         - node: Send Slack Message
           type: main
           index: 0
-```
 
 **Important:** Include `nodeId` and `nodeName` for each credential in `credentialsNeeded`.
 This enables deep linking directly to the node that needs the credential.
 
 **Loom Rules:**
 - Use 2-space indentation for nesting
-- No quotes needed
+- No quotes needed (unless the value contains special characters)
 - Arrays with `-` prefix for items
-- Types auto-detected
-- `credentialsNeeded`: Only list credentials that user needs to create
+- Types auto-detected (strings, numbers, booleans, null)
+- Empty arrays: use `[]` on the same line as the field name
+- `credentialsNeeded`: Only list credentials that user needs to create (use `credentialsNeeded: []` if none needed)
 - `credentialsAvailable`: List credentials that are already configured (optional)
+
+**CRITICAL REMINDER:** Your entire response must be valid Loom format. No markdown, no code blocks, no explanatory text before or after. Just pure Loom.
 
 ## Examples
 
@@ -113,8 +118,8 @@ This enables deep linking directly to the node that needs the credential.
 
 **Available Credentials:** None
 
-**Plan:**
-```
+**Expected Loom Output:**
+
 title: Daily Morning Slack Message
 summary: Sends 'Good morning team!' to #general every day at 9 AM
 credentialsNeeded:
@@ -150,7 +155,6 @@ workflow:
         - node: Send Message
           type: main
           index: 0
-```
 
 ### Example 2: Webhook with Data Processing (Credential Available)
 
@@ -161,8 +165,8 @@ workflow:
 **Available Credentials:**
 - `{ id: "xyz789", name: "My Airtable", type: "airtableApi" }`
 
-**Plan:**
-```
+**Expected Loom Output:**
+
 title: Webhook to Airtable
 summary: Receives data via webhook, transforms it, and saves to Airtable
 credentialsNeeded: []
@@ -210,7 +214,6 @@ workflow:
         - node: Save to Airtable
           type: main
           index: 0
-```
 
 ## Best Practices
 

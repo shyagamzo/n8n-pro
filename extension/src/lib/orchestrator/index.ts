@@ -105,7 +105,7 @@ class Orchestrator
     const planRequest: ChatMessage = {
       id: 'plan-request',
       role: 'user',
-      text: 'Generate a workflow plan based on our conversation. Output in Loom format.',
+      text: 'Generate a workflow plan based on our conversation. Return ONLY raw Loom format - no markdown code blocks, no explanatory text, just the pure Loom structure.',
     }
 
     // Prepend system message and append plan request
@@ -202,10 +202,10 @@ class Orchestrator
     const summary = String(loomData.summary || 'Generated workflow')
     // Handle case where credentialsNeeded might be parsed as string '[]' instead of array
     const credentialsNeededRaw = loomData.credentialsNeeded
-    const credentialsNeeded = Array.isArray(credentialsNeededRaw) 
-      ? credentialsNeededRaw 
+    const credentialsNeeded = Array.isArray(credentialsNeededRaw)
+      ? credentialsNeededRaw
       : []
-    
+
     const credentialsNeededArray = credentialsNeeded.map(cred =>
     {
       const c = cred as Record<string, unknown>
@@ -220,10 +220,10 @@ class Orchestrator
 
     // Handle case where credentialsAvailable might be parsed as string '[]' instead of array
     const credentialsAvailableRaw = loomData.credentialsAvailable
-    const credentialsAvailable = Array.isArray(credentialsAvailableRaw) 
-      ? credentialsAvailableRaw 
+    const credentialsAvailable = Array.isArray(credentialsAvailableRaw)
+      ? credentialsAvailableRaw
       : []
-    
+
     const credentialsAvailableArray = credentialsAvailable.map(cred =>
     {
       const c = cred as Record<string, unknown>
