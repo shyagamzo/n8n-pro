@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import type { Plan } from '../../lib/types/plan'
 import { chat } from '../../lib/services/chat'
 import DebugPanel from './DebugPanel'
+import '../../lib/styles/utilities.css'
 import './PlanMessage.css'
 
 type PlanMessageProps = {
@@ -17,14 +18,14 @@ export default function PlanMessage({ plan }: PlanMessageProps): React.ReactElem
   const hasAnyCredentials = hasNeededCredentials || hasAvailableCredentials
 
   return (
-    <div className="plan-message-container">
+    <div className="plan-message-container container-card">
       <div className="plan-message-title">{plan.title}</div>
       <div className="plan-message-summary">{plan.summary}</div>
 
       {hasAnyCredentials && (
         <div className="plan-message-credentials">
           {hasNeededCredentials && (
-            <div className="plan-message-warning">
+            <div className="plan-message-warning alert-warning">
               <span className="plan-message-warning-icon">⚠️</span>
               <strong>Setup Required</strong><br />
               {plan.credentialsNeeded?.length} credential{plan.credentialsNeeded?.length !== 1 ? 's' : ''} will need setup after creation.

@@ -70,17 +70,17 @@ Use n8n's design tokens with fallback values for consistency and theme support:
     padding: var(--spacing-xs, 0.75rem);
     margin: var(--spacing-s, 1rem);
     gap: var(--spacing-2xs, 0.5rem);
-    
+
     /* Colors */
     color: var(--color-text-dark, #ffffff);
     background: var(--color-background-light, #1a1a24);
     border-color: var(--color-foreground-light, #4f5166);
-    
+
     /* Typography */
     font-size: var(--font-size-s, 0.875rem);
     font-weight: var(--font-weight-bold, 700);
     line-height: var(--font-line-height-loose, 1.5);
-    
+
     /* Borders & Radius */
     border-radius: var(--border-radius-base, 0.5rem);
     border-width: var(--border-width-base, 1px);
@@ -201,7 +201,7 @@ Only use inline `style` prop for **dynamic/calculated values** that cannot be in
 
 **1. Dynamic Positioning (user-controlled)**
 ```tsx
-<div 
+<div
     className="panel"
     style={{
         top: position.y,      // Changes on drag
@@ -235,7 +235,7 @@ function Component({ style, ...props }: ComponentProps) {
 **Don't use inline styles for static styling:**
 ```tsx
 // ❌ BAD - Static styles should be in CSS
-<div style={{ 
+<div style={{
     padding: '12px',
     background: '#f0f0f0',
     borderRadius: '8px'
@@ -298,7 +298,7 @@ function MyComponent() {
         background: '#f0f0f0',
         borderRadius: '8px'
     }
-    
+
     return <div style={containerStyle}>Content</div>
 }
 ```

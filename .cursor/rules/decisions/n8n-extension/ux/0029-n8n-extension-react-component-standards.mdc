@@ -27,14 +27,14 @@ interface ComponentProps {
 
 function Component({ prop1, prop2 }: ComponentProps): React.JSX.Element {
     const [state, setState] = React.useState<Type>(initialValue);
-    
+
     React.useEffect(() => {
         // Effect logic
         return () => {
             // Cleanup
         };
     }, [dependencies]);
-    
+
     return (
         <div className="component">
             {/* JSX content */}

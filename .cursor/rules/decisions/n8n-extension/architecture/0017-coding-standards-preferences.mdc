@@ -188,7 +188,7 @@ src/
  * ```
  */
 async function createWorkflow(
-    description: string, 
+    description: string,
     options?: WorkflowOptions
 ): Promise<Workflow>
 {

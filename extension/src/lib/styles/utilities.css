@@ -1,0 +1,348 @@
+/**
+ * Utility CSS Classes - n8n Extension
+ * 
+ * Reusable utility classes for common patterns across components.
+ * Import this file in components that need these utilities.
+ */
+
+/* ============================================
+   LAYOUT UTILITIES
+   ============================================ */
+
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-align-center {
+  display: flex;
+  align-items: center;
+}
+
+.flex-justify-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.flex-justify-end {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* ============================================
+   COMMON CONTAINER PATTERNS
+   ============================================ */
+
+/* Card-like container - used in PlanMessage, DebugPanel, etc. */
+.container-card {
+  padding: var(--spacing-xs, 0.75rem);
+  border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  border-radius: var(--border-radius-base, 0.5rem);
+  background: var(--color-background-base, #2d2e3a);
+}
+
+/* Elevated container - slightly lighter background */
+.container-elevated {
+  padding: var(--spacing-xs, 0.75rem);
+  border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  border-radius: var(--border-radius-base, 0.5rem);
+  background: var(--color-background-xlight, #3a3b4a);
+}
+
+/* Section header pattern - used in Panel, DebugPanel */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs, 0.75rem);
+  border-bottom: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+  background: var(--color-background-light, #1a1a24);
+}
+
+.section-header-title {
+  font-weight: var(--font-weight-bold, 700);
+  font-size: var(--font-size-s, 0.875rem);
+  color: var(--color-text-dark, #ffffff);
+}
+
+/* ============================================
+   BUTTON UTILITIES
+   ============================================ */
+
+/* Base button reset */
+.btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Icon button (close, toggle, etc.) */
+.btn-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-4xs, 0.25rem);
+  color: var(--color-text-base, #c5c7d0);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  color: var(--color-text-dark, #ffffff);
+}
+
+/* Small button variant */
+.btn-small {
+  padding: var(--spacing-4xs, 0.25rem) var(--spacing-2xs, 0.5rem);
+  font-size: var(--font-size-2xs, 0.75rem);
+  border-radius: var(--border-radius-small, 0.25rem);
+}
+
+/* ============================================
+   TEXT UTILITIES
+   ============================================ */
+
+.text-bold {
+  font-weight: var(--font-weight-bold, 700);
+}
+
+.text-medium {
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.text-xs {
+  font-size: var(--font-size-2xs, 0.75rem);
+}
+
+.text-sm {
+  font-size: var(--font-size-s, 0.875rem);
+}
+
+.text-base {
+  font-size: var(--font-size-m, 1rem);
+}
+
+.text-primary {
+  color: var(--color-text-dark, #ffffff);
+}
+
+.text-secondary {
+  color: var(--color-text-base, #c5c7d0);
+}
+
+.text-muted {
+  color: var(--color-text-light, #7f8195);
+}
+
+/* ============================================
+   SPACING UTILITIES
+   ============================================ */
+
+.gap-xs {
+  gap: var(--spacing-4xs, 0.25rem);
+}
+
+.gap-sm {
+  gap: var(--spacing-2xs, 0.5rem);
+}
+
+.gap-md {
+  gap: var(--spacing-xs, 0.75rem);
+}
+
+.gap-lg {
+  gap: var(--spacing-s, 1rem);
+}
+
+.mt-xs {
+  margin-top: var(--spacing-2xs, 0.5rem);
+}
+
+.mt-sm {
+  margin-top: var(--spacing-xs, 0.75rem);
+}
+
+.mt-md {
+  margin-top: var(--spacing-s, 1rem);
+}
+
+.mb-xs {
+  margin-bottom: var(--spacing-2xs, 0.5rem);
+}
+
+.mb-sm {
+  margin-bottom: var(--spacing-xs, 0.75rem);
+}
+
+.mb-md {
+  margin-bottom: var(--spacing-s, 1rem);
+}
+
+/* ============================================
+   STATUS/ALERT PATTERNS
+   ============================================ */
+
+/* Warning message box */
+.alert-warning {
+  background: var(--color-background-xlight, #3a3b4a);
+  border: var(--border-width-base, 1px) solid var(--color-warning, #f59e0b);
+  border-radius: var(--border-radius-small, 0.25rem);
+  padding: var(--spacing-2xs, 0.5rem);
+  font-size: var(--font-size-3xs, 0.625rem);
+  color: var(--color-text-base, #c5c7d0);
+}
+
+/* Success message box */
+.alert-success {
+  background: var(--color-background-xlight, #3a3b4a);
+  border: var(--border-width-base, 1px) solid var(--color-success, #10b981);
+  border-radius: var(--border-radius-small, 0.25rem);
+  padding: var(--spacing-2xs, 0.5rem);
+  font-size: var(--font-size-3xs, 0.625rem);
+  color: var(--color-text-base, #c5c7d0);
+}
+
+/* Danger/error message box */
+.alert-danger {
+  background: var(--color-background-xlight, #3a3b4a);
+  border: var(--border-width-base, 1px) solid var(--color-danger, #f44336);
+  border-radius: var(--border-radius-small, 0.25rem);
+  padding: var(--spacing-2xs, 0.5rem);
+  font-size: var(--font-size-3xs, 0.625rem);
+  color: var(--color-text-base, #c5c7d0);
+}
+
+/* Info message box */
+.alert-info {
+  background: var(--color-background-xlight, #3a3b4a);
+  border: var(--border-width-base, 1px) solid var(--color-primary, #ff6d5a);
+  border-radius: var(--border-radius-small, 0.25rem);
+  padding: var(--spacing-2xs, 0.5rem);
+  font-size: var(--font-size-3xs, 0.625rem);
+  color: var(--color-text-base, #c5c7d0);
+}
+
+/* ============================================
+   COMMON INTERACTIVE PATTERNS
+   ============================================ */
+
+/* Hoverable item */
+.hoverable {
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.hoverable:hover {
+  background: var(--color-background-xlight, #3a3b4a);
+}
+
+/* Clickable/tappable area */
+.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Draggable handle */
+.draggable-handle {
+  cursor: move;
+  user-select: none;
+}
+
+/* ============================================
+   VISIBILITY UTILITIES
+   ============================================ */
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+/* ============================================
+   COMMON CODE/MONO PATTERNS
+   ============================================ */
+
+.code-inline {
+  background: var(--color-background-base, #2d2e3a);
+  padding: var(--spacing-5xs, 0.125rem) var(--spacing-4xs, 0.25rem);
+  border-radius: var(--border-radius-small, 0.25rem);
+  font-family: var(--font-family-mono, 'Monaco', 'Menlo', monospace);
+  font-size: var(--font-size-3xs, 0.625rem);
+}
+
+.code-block {
+  background: var(--color-background-xlight, #3a3b4a);
+  padding: var(--spacing-xs, 0.75rem);
+  border-radius: var(--border-radius-base, 0.5rem);
+  font-family: var(--font-family-mono, 'Monaco', 'Menlo', monospace);
+  font-size: var(--font-size-3xs, 0.625rem);
+  overflow-x: auto;
+}
+
+/* ============================================
+   WIDTH UTILITIES
+   ============================================ */
+
+.w-full {
+  width: 100%;
+}
+
+.max-w-full {
+  max-width: 100%;
+}
+
+/* ============================================
+   BORDER UTILITIES
+   ============================================ */
+
+.border {
+  border: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+}
+
+.border-top {
+  border-top: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+}
+
+.border-bottom {
+  border-bottom: var(--border-width-base, 1px) solid var(--color-foreground-light, #4f5166);
+}
+
+.rounded {
+  border-radius: var(--border-radius-base, 0.5rem);
+}
+
+.rounded-sm {
+  border-radius: var(--border-radius-small, 0.25rem);
+}
+
+.rounded-lg {
+  border-radius: var(--border-radius-large, 0.75rem);
+}
+
