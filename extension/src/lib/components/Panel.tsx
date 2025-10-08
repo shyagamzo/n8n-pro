@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { STORAGE_KEYS, DEFAULTS } from '../constants'
 import { storageGetMany, storageSet } from '../utils/storage'
+import ConnectionStatus from './ConnectionStatus'
 import './Panel.css'
 
 type PanelProps = {
@@ -8,6 +9,7 @@ type PanelProps = {
   onClose: () => void
   onNewSession?: () => void
   children: React.ReactNode
+  showConnectionStatus?: boolean
 }
 
 type PanelPosition = { x: number; y: number }
@@ -21,7 +23,7 @@ function getDefaultPosition(): PanelPosition
   }
 }
 
-export default function Panel({ title, onClose, onNewSession, children }: PanelProps): React.ReactElement
+export default function Panel({ title, onClose, onNewSession, children, showConnectionStatus = false }: PanelProps): React.ReactElement
 {
   const [position, setPosition] = useState(getDefaultPosition())
   const [size, setSize] = useState<PanelSize>({ w: DEFAULTS.PANEL_WIDTH, h: DEFAULTS.PANEL_HEIGHT })
@@ -134,6 +136,7 @@ export default function Panel({ title, onClose, onNewSession, children }: PanelP
           <span className="panel-title-text">{title}</span>
         </div>
         <div className="panel-controls">
+          {showConnectionStatus && <ConnectionStatus />}
           {onNewSession && (
             <button
               className="panel-button"

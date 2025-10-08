@@ -44,20 +44,20 @@ export class ChatService
         setAssistantDraft('')
         setPendingPlan(null)
         finishSending()
-        
+
         // Create error message with retry capability
         const errorDetails: ErrorDetails = {
           title: this.getErrorTitle(message.error),
           details: this.getErrorDetails(message.error),
           retryable: this.isRetryable(message.error),
-          retryPayload: this.isRetryable(message.error) 
+          retryPayload: this.isRetryable(message.error)
             ? { messages: this.lastSentMessages }
             : undefined
         }
 
-        addMessage({ 
-          id: generateId(), 
-          role: 'error', 
+        addMessage({
+          id: generateId(),
+          role: 'error',
           text: this.getErrorMessage(message.error),
           error: errorDetails
         })
@@ -115,7 +115,7 @@ export class ChatService
     addMessage({ id: generateId(), role: 'user', text })
     setAssistantDraft('')
     startSending()
-    
+
     const currentMessages: ChatMessage[] = useChatStore.getState().messages
     this.lastSentMessages = currentMessages
     this.port.sendChat(currentMessages)
@@ -124,10 +124,10 @@ export class ChatService
   public retry(payload: { messages: ChatMessage[] }): void
   {
     const { startSending, setAssistantDraft } = useChatStore.getState()
-    
+
     startSending()
     setAssistantDraft('')
-    
+
     this.lastSentMessages = payload.messages
     this.port.sendChat(payload.messages)
   }
