@@ -3,6 +3,7 @@ import ChatPanel from './ChatPanel'
 import { useChatStore } from '../lib/state/chatStore'
 import { chat } from '../lib/services/chat'
 import ConfirmModal from '../lib/components/ConfirmModal'
+import ErrorBoundary from '../lib/components/ErrorBoundary'
 
 export default function ChatContainer(): React.ReactElement | null
 {
@@ -16,7 +17,7 @@ export default function ChatContainer(): React.ReactElement | null
   }, [loadMessages])
 
   return (
-    <>
+    <ErrorBoundary>
       <ChatPanel
         open={isOpen}
         onClose={() => setOpen(false)}
@@ -33,14 +34,15 @@ export default function ChatContainer(): React.ReactElement | null
           message="This will clear the current chat history. Are you sure you want to continue?"
           confirmText="Start New Session"
           cancelText="Cancel"
-          onConfirm={() => {
+          onConfirm={() =>
+          {
             clearSession()
             setShowConfirmModal(false)
           }}
           onCancel={() => setShowConfirmModal(false)}
         />
       )}
-    </>
+    </ErrorBoundary>
   )
 }
 
