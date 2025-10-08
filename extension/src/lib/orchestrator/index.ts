@@ -1,11 +1,12 @@
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
 import { createOpenAiChatModel } from '../ai/model'
+import { createAgentTracer } from '../ai/tracing'
 import { buildPrompt } from '../prompts'
 import { parse as parseLoom } from '../loom'
 import { streamChatCompletion } from '../services/openai'
 import { stripCodeFences } from '../utils/markdown'
-import { debugLLMResponse, debugLoomParsing, debugPlanGenerated, DebugSession } from '../utils/debug'
+import { debugLLMResponse, debugLoomParsing, debugPlanGenerated, DebugSession, debugAgentDecision, debugAgentHandoff } from '../utils/debug'
 import { validateWorkflow, formatValidationResult } from '../validation/workflow'
 
 export type OrchestratorInput = {
@@ -19,6 +20,15 @@ class Orchestrator
 {
   public async handle(input: OrchestratorInput, onToken?: StreamTokenHandler): Promise<string>
   {
+    // Create agent tracer for this conversation
+    const tracer = createAgentTracer()
+    tracer.setAgent('orchestrator')
+    tracer.logDecision(
+      'Starting chat handler',
+      'Using general assistant for now. TODO: Replace with LangGraph classifier → enrichment → planner → executor',
+      { messageCount: input.messages.length }
+    )
+
     // TODO: Replace with LangGraph graph: classifier → enrichment → planner → executor
     // For now, use a general assistant prompt with n8n knowledge
     const systemPrompt = buildPrompt('planner', {
@@ -32,6 +42,15 @@ class Orchestrator
       ...input.messages,
     ]
 
+    // Log decision to use planner directly (bypassing classifier/enrichment for now)
+    debugAgentDecision(
+      'orchestrator',
+      'Using planner agent directly',
+      'Classifier and enrichment not yet implemented in MVP',
+      { promptLength: systemPrompt.length }
+    )
+    debugAgentHandoff('orchestrator', 'planner', 'Direct handoff for chat completion')
+
     // Stream the response token by token to the UI
     if (onToken)
     {
@@ -40,12 +59,15 @@ class Orchestrator
         messagesWithSystem,
         onToken
       )
+      tracer.completeTrace()
     }
     else
     {
       // Fallback to blocking call if no streaming callback provided
-      const model = createOpenAiChatModel({ apiKey: input.apiKey })
-      return await model.generateText(messagesWithSystem)
+      const model = createOpenAiChatModel({ apiKey: input.apiKey, tracer })
+      const result = await model.generateText(messagesWithSystem)
+      tracer.completeTrace()
+      return result
     }
 
     return ''
@@ -57,6 +79,16 @@ class Orchestrator
    */
   public async isReadyToPlan(input: OrchestratorInput): Promise<{ ready: boolean; reason?: string }>
   {
+    // Create agent tracer for readiness check
+    const tracer = createAgentTracer()
+    tracer.setAgent('orchestrator')
+    tracer.logDecision('Checking if ready to plan', 'Assessing conversation completeness')
+
+    // Handoff to enrichment agent (simulated for now)
+    debugAgentHandoff('orchestrator', 'enrichment', 'Checking if more information is needed')
+    tracer.logHandoff('enrichment', 'Assessing readiness to generate workflow plan')
+    tracer.setAgent('enrichment')
+
     // Build enrichment prompt to assess readiness
     const systemPrompt = buildPrompt('planner', {
       includeNodesReference: false,
@@ -77,10 +109,20 @@ class Orchestrator
       readinessCheck,
     ]
 
-    const model = createOpenAiChatModel({ apiKey: input.apiKey })
+    const model = createOpenAiChatModel({ apiKey: input.apiKey, tracer })
     const response = await model.generateText(messagesWithSystem)
 
     const isReady = response.trim().toUpperCase().startsWith('READY')
+
+    // Log enrichment decision
+    debugAgentDecision(
+      'enrichment',
+      isReady ? 'Ready to plan' : 'Need more information',
+      response,
+      { messageCount: input.messages.length }
+    )
+
+    tracer.completeTrace()
 
     return {
       ready: isReady,
@@ -92,6 +134,16 @@ class Orchestrator
   {
     const session = new DebugSession('Orchestrator', 'plan')
     session.log('Starting plan generation', { messageCount: input.messages.length })
+
+    // Create agent tracer for plan generation
+    const tracer = createAgentTracer(session.getSessionId())
+    tracer.setAgent('orchestrator')
+    tracer.logDecision('Starting plan generation', 'User requested workflow plan')
+
+    // Handoff to planner agent
+    debugAgentHandoff('orchestrator', 'planner', 'Generate workflow plan from conversation')
+    tracer.logHandoff('planner', 'Generate structured workflow from user requirements')
+    tracer.setAgent('planner')
 
     // Build planner prompt
     const systemPrompt = buildPrompt('planner', {
@@ -116,8 +168,16 @@ class Orchestrator
     ]
 
     // Call LLM to generate plan
-    const model = createOpenAiChatModel({ apiKey: input.apiKey })
+    const model = createOpenAiChatModel({ apiKey: input.apiKey, tracer })
     session.log('Calling LLM for plan generation')
+    
+    debugAgentDecision(
+      'planner',
+      'Generating workflow plan',
+      'Using LLM to convert conversation to Loom format',
+      { messageCount: messagesWithSystem.length }
+    )
+    
     const loomResponse = await model.generateText(messagesWithSystem)
 
     // Log LLM response
@@ -148,6 +208,17 @@ class Orchestrator
       // Convert parsed Loom to Plan type
       const plan = this.loomToPlan(parsed.data)
 
+      // Log planner decision
+      debugAgentDecision(
+        'planner',
+        'Plan generated successfully',
+        'Converted Loom to workflow plan',
+        { 
+          nodeCount: plan.workflow.nodes?.length || 0,
+          credentialsNeeded: plan.credentialsNeeded?.length || 0
+        }
+      )
+
       // Validate workflow structure
       session.log('Validating workflow structure')
       const validation = validateWorkflow(plan.workflow)
@@ -164,6 +235,13 @@ class Orchestrator
           warningCount: validation.warnings.length
         })
         console.warn('⚠️ Workflow validation issues detected:', formatValidationResult(validation))
+        
+        debugAgentDecision(
+          'planner',
+          'Validation failed',
+          'Workflow has structural issues',
+          { errors: validation.errors.length, warnings: validation.warnings.length }
+        )
       }
       else if (validation.warnings.length > 0)
       {
@@ -175,7 +253,13 @@ class Orchestrator
         session.log('Workflow validation passed')
       }
 
+      // Handoff back to orchestrator
+      debugAgentHandoff('planner', 'orchestrator', 'Plan ready for user review')
+      tracer.logHandoff('orchestrator', 'Return plan to user')
+      tracer.setAgent('orchestrator')
+
       session.end(true)
+      tracer.completeTrace()
       return plan
     }
     catch (error)
@@ -183,7 +267,16 @@ class Orchestrator
       console.error('❌ Plan parsing error:', error)
       console.error('📄 Raw LLM response:', loomResponse)
       session.log('Error occurred', { error })
+      
+      debugAgentDecision(
+        'planner',
+        'Plan generation failed',
+        error instanceof Error ? error.message : 'Unknown error',
+        { responseLength: loomResponse.length }
+      )
+      
       session.end(false)
+      tracer.completeTrace()
 
       // Don't create a useless fallback workflow - throw error instead
       throw new Error(
