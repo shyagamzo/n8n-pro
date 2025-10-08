@@ -7,12 +7,12 @@ type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   maxRows?: number
 }
 
-const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({ 
-  label, 
-  autoResize = true, 
-  minRows = 1, 
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
+  label,
+  autoResize = true,
+  minRows = 1,
   maxRows = 10,
-  ...props 
+  ...props
 }, ref): React.ReactElement =>
 {
   const internalRef = useRef<HTMLTextAreaElement>(null)
@@ -24,13 +24,13 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
 
     // Reset height to auto to get the correct scrollHeight
     textarea.style.height = 'auto'
-    
+
     // Calculate the height based on content
     const scrollHeight = textarea.scrollHeight
     const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20
     const minHeight = lineHeight * minRows
     const maxHeight = lineHeight * maxRows
-    
+
     // Set height within bounds
     const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight)
     textarea.style.height = `${newHeight}px`

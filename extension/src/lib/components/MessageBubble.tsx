@@ -37,7 +37,7 @@ export default function MessageBubble({ message }: MessageBubbleProps): React.Re
 {
   return (
     <div style={getBubbleStyle(message.role)}>
-      {message.role === 'assistant' ? <Markdown content={message.text} /> : message.text}
+      <Markdown content={message.text} />
       {message.plan && <PlanMessage plan={message.plan} />}
     </div>
   )

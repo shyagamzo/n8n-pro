@@ -20,12 +20,12 @@ function extractLoomFromMarkdown(text: string): string
   // Look for code blocks with loom, yaml, or no language specified
   const codeBlockRegex = /```(?:loom|yaml|yml)?\s*\n([\s\S]*?)\n```/g
   const match = codeBlockRegex.exec(text)
-  
+
   if (match && match[1])
   {
     return match[1].trim()
   }
-  
+
   // If no code block found, return original text
   return text
 }
@@ -51,7 +51,7 @@ export function parse<T = LoomObject>(text: string, options: ParseOptions = {}):
 {
   const opts = { ...DEFAULT_OPTIONS, ...options }
   const errors: ParseError[] = []
-  
+
   // Extract Loom content from markdown code blocks if present
   const loomText = extractLoomFromMarkdown(text)
   const lines = loomText.split('\n')
