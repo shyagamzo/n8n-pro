@@ -19,7 +19,7 @@ import type { AgentType, AgentTrace, AgentDecision, AgentHandoff } from '../type
 export class AgentTracingCallback extends BaseCallbackHandler
 {
   name = 'agent_tracing_callback'
-  
+
   private traces: Map<string, AgentTrace> = new Map()
   private currentAgent: AgentType = 'orchestrator'
   private currentTraceId: string
@@ -29,7 +29,7 @@ export class AgentTracingCallback extends BaseCallbackHandler
   {
     super()
     this.currentTraceId = traceId || `trace-${Date.now()}`
-    
+
     // Initialize trace
     const trace: AgentTrace = {
       traceId: this.currentTraceId,

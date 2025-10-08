@@ -90,8 +90,8 @@ tracer.logDecision(
 tracer.logHandoff('enrichment', 'Need more information about trigger')
 
 // Attach to LLM calls
-const model = createOpenAiChatModel({ 
-  apiKey: input.apiKey, 
+const model = createOpenAiChatModel({
+  apiKey: input.apiKey,
   tracer  // LangChain will automatically call trace callbacks
 })
 

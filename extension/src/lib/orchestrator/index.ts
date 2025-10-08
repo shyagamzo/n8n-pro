@@ -170,14 +170,14 @@ class Orchestrator
     // Call LLM to generate plan
     const model = createOpenAiChatModel({ apiKey: input.apiKey, tracer })
     session.log('Calling LLM for plan generation')
-    
+
     debugAgentDecision(
       'planner',
       'Generating workflow plan',
       'Using LLM to convert conversation to Loom format',
       { messageCount: messagesWithSystem.length }
     )
-    
+
     const loomResponse = await model.generateText(messagesWithSystem)
 
     // Log LLM response
@@ -213,7 +213,7 @@ class Orchestrator
         'planner',
         'Plan generated successfully',
         'Converted Loom to workflow plan',
-        { 
+        {
           nodeCount: plan.workflow.nodes?.length || 0,
           credentialsNeeded: plan.credentialsNeeded?.length || 0
         }
@@ -235,7 +235,7 @@ class Orchestrator
           warningCount: validation.warnings.length
         })
         console.warn('⚠️ Workflow validation issues detected:', formatValidationResult(validation))
-        
+
         debugAgentDecision(
           'planner',
           'Validation failed',
@@ -267,14 +267,14 @@ class Orchestrator
       console.error('❌ Plan parsing error:', error)
       console.error('📄 Raw LLM response:', loomResponse)
       session.log('Error occurred', { error })
-      
+
       debugAgentDecision(
         'planner',
         'Plan generation failed',
         error instanceof Error ? error.message : 'Unknown error',
         { responseLength: loomResponse.length }
       )
-      
+
       session.end(false)
       tracer.completeTrace()
 
