@@ -59,7 +59,7 @@ export default function PlanPreview({ plan, onCancel }: PlanPreviewProps): React
       </div>
 
       {hasNeededCredentials && (
-        <div style={{ fontSize: '11px', color: '#6b7280', marginTop: 8 }}>
+        <div className="plan-preview-helper-text">
           💡 After creation, you'll get a direct link to open the workflow and configure credentials.
         </div>
       )}

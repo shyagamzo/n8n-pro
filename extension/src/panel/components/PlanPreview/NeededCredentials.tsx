@@ -46,7 +46,7 @@ export default function NeededCredentials({
               )}
 
               {workflowId && cred.nodeId && (
-                <div style={{ fontSize: '11px', marginBottom: 4 }}>
+                <div className="credential-link-wrapper">
                   <a
                     href={`${baseUrl}/workflow/${workflowId}/${encodeURIComponent(cred.nodeId)}`}
                     target="_blank"

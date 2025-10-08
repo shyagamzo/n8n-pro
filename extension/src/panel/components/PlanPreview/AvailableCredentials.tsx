@@ -15,7 +15,7 @@ export default function AvailableCredentials({
 }: AvailableCredentialsProps): React.ReactElement
 {
   const containerClass = `available-credentials ${hasNeededCredentials ? 'available-credentials--with-margin' : ''}`.trim()
-  
+
   return (
     <div className={containerClass}>
       <div className="available-credentials-header">

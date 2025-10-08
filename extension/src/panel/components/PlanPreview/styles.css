@@ -60,3 +60,9 @@
   font-weight: var(--font-weight-medium, 500);
   font-size: var(--font-size-2xs, 0.75rem);
 }
+
+.plan-preview-helper-text {
+  font-size: var(--font-size-3xs, 0.625rem);
+  color: var(--color-text-base, #c5c7d0);
+  margin-top: var(--spacing-2xs, 0.5rem);
+}
