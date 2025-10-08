@@ -121,6 +121,7 @@ export function buildPrompt(agent: AgentType, options: PromptOptions = {}): stri
   if (options.context)
   {
     const contextSection = formatContext(options.context)
+
     if (contextSection)
     {
       sections.push('\n---\n\n# Current Context\n\n' + contextSection)

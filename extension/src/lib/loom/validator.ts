@@ -63,6 +63,7 @@ function validateObject(obj: LoomObject, schema: LoomSchema, path: string, error
   for (const [key, value] of Object.entries(obj))
   {
     const fieldSchema = schema[key]
+
     if (!fieldSchema)
     {
       // Unknown field - skip in non-strict mode
@@ -81,6 +82,7 @@ function validateField(value: LoomValue, schema: LoomFieldSchema, path: string, 
 {
   // Type validation
   const actualType = getType(value)
+
   if (actualType !== schema.type)
   {
     errors.push({
@@ -103,6 +105,7 @@ function validateField(value: LoomValue, schema: LoomFieldSchema, path: string, 
   if (schema.validate)
   {
     const result = schema.validate(value)
+
     if (typeof result === 'string')
     {
       errors.push({ path, message: result })

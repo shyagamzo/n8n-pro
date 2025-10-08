@@ -3,7 +3,6 @@ import type { ChatMessage } from '../lib/types/chat'
 import { orchestrator } from '../lib/orchestrator'
 import { createN8nClient } from '../lib/n8n'
 import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
-import { injectCredentials, getCredentialMatchStats } from '../lib/credentials/matcher'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
@@ -19,8 +18,15 @@ function createSafePost(port: chrome.runtime.Port)
   {
     if (disconnected) return
 
-    try { port.postMessage(message) }
-    catch { /* ignore */ }
+    try
+    {
+      port.postMessage(message)
+    }
+    catch (error)
+    {
+      // Port disconnected or content script unloaded
+      console.warn('Failed to send message to content script:', error)
+    }
   }
 }
 
@@ -42,33 +48,7 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
     return
   }
 
-  // Fetch available credentials and inject them into workflow nodes
-  let workflow = msg.plan.workflow
-  try
-  {
-    const availableCredentials = await n8n.listCredentials()
-    if (availableCredentials && availableCredentials.length > 0)
-    {
-      workflow = injectCredentials(workflow, availableCredentials)
-
-      // Log credential matching stats
-      const stats = getCredentialMatchStats(msg.plan.workflow, availableCredentials)
-      if (stats.nodesWithMatchedCredentials > 0)
-      {
-        post({
-          type: 'token',
-          token: `\n✓ Auto-linked ${stats.nodesWithMatchedCredentials} node(s) to existing credentials`
-        } satisfies BackgroundMessage)
-      }
-    }
-  }
-  catch (error)
-  {
-    // Credential injection is optional - continue without it if it fails
-    console.warn('Could not inject credentials:', error)
-  }
-
-  const result = await n8n.createWorkflow(workflow)
+  const result = await n8n.createWorkflow(msg.plan.workflow)
 
   // Generate deep link to workflow
   const workflowUrl = `${baseUrl}/workflow/${result.id}`
@@ -110,28 +90,10 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
     return
   }
 
-  // Fetch available credentials from n8n (using internal REST API)
-  let availableCredentials: Array<{ id: string; name: string; type: string }> | undefined
-  try
-  {
-    const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
-    if (n8nApiKey)
-    {
-      const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
-      availableCredentials = await n8n.listCredentials()
-    }
-  }
-  catch (error)
-  {
-    // Credentials fetch is optional - continue without them if it fails
-    console.warn('Could not fetch n8n credentials:', error)
-  }
-
   // Generate dynamic workflow plan based on conversation
   const plan = await orchestrator.plan({
     apiKey,
     messages: (msg.messages as ChatMessage[]),
-    availableCredentials,
   })
 
   post({ type: 'plan', plan } satisfies BackgroundMessage)
@@ -140,7 +102,6 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
   const reply: string = await orchestrator.handle({
     apiKey,
     messages: (msg.messages as ChatMessage[]),
-    availableCredentials,
   }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
 
   if (reply && reply.length > 0)
@@ -182,7 +143,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
   const msg = message as ApplyPlanRequest
   if (msg?.type !== 'apply_plan') return
 
-  ;(async () =>
+  void (async () =>
   {
     try
     {
@@ -190,17 +151,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
       const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
       await n8n.createWorkflow(msg.plan.workflow)
     }
-    catch
+    catch (error)
     {
-      // one-off; UI will show background errors through chat flow if needed later
+      // One-off message handler - errors are shown through chat flow in primary use case
+      console.error('Failed to create workflow from one-off message:', error)
     }
   })()
 
   // Immediately acknowledge to satisfy sendMessage callbacks, if any
-  try { sendResponse({ ok: true }) }
-  catch
+  try
   {
-    // ignore
+    sendResponse({ ok: true })
+  }
+  catch (error)
+  {
+    // Sender context may be invalidated
+    console.warn('Failed to send response:', error)
   }
 
   return true

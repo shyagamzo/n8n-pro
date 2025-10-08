@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
+import { STORAGE_KEYS } from '../constants'
+import { storageGet, storageSet } from '../utils/storage'
 
 type ChatState = {
   isOpen: boolean
@@ -19,25 +21,18 @@ type ChatState = {
   loadMessages: () => Promise<void>
 }
 
-const STORAGE_KEY_MESSAGES = 'n8n-pro-chat-messages'
-
 async function saveMessages(messages: ChatMessage[]): Promise<void>
 {
-  await chrome.storage.local.set({ [STORAGE_KEY_MESSAGES]: messages })
+  await storageSet(STORAGE_KEYS.CHAT_MESSAGES, messages)
 }
 
 async function loadStoredMessages(): Promise<ChatMessage[]>
 {
-  return new Promise((resolve) =>
-  {
-    chrome.storage.local.get([STORAGE_KEY_MESSAGES], (result) =>
-    {
-      resolve(result[STORAGE_KEY_MESSAGES] || [])
-    })
-  })
+  const messages = await storageGet<ChatMessage[]>(STORAGE_KEYS.CHAT_MESSAGES)
+  return messages ?? []
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
+export const useChatStore = create<ChatState>((set) => ({
   isOpen: false,
   messages: [],
   sending: false,

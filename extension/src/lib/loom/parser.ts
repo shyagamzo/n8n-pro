@@ -237,6 +237,7 @@ function parseArray(
       {
         // Nested array
         const { array: nestedArray, consumed } = parseArray(lines, i + 1, end, nextIndent, options, errors)
+
         if (itemText)
         {
           // Item has inline value plus nested array - treat as object
@@ -246,6 +247,7 @@ function parseArray(
         {
           array.push(nestedArray)
         }
+
         i += consumed + 1
       }
       else
@@ -258,6 +260,7 @@ function parseArray(
         {
           // Item has inline key-value plus nested properties
           const colonIndex = itemText.indexOf(':')
+
           if (colonIndex > 0)
           {
             const key = itemText.slice(0, colonIndex).trim()
@@ -274,6 +277,7 @@ function parseArray(
         {
           array.push(obj)
         }
+
         i = endIndex
       }
     }

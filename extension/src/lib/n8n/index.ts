@@ -1,7 +1,6 @@
 import { apiFetch } from '../api/fetch'
 import type { WorkflowSummary } from './types'
-
-const DEFAULT_BASE_URL = 'http://127.0.0.1:5678'
+import { DEFAULTS } from '../constants'
 
 export type N8nClientOptions = {
   baseUrl?: string
@@ -10,7 +9,7 @@ export type N8nClientOptions = {
 
 export function createN8nClient(options: N8nClientOptions = {})
 {
-  const baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, '')
+  const baseUrl = (options.baseUrl ?? DEFAULTS.N8N_BASE_URL).replace(/\/$/, '')
 
   const authHeaders: Record<string, string> | undefined = options.apiKey
     ? {
@@ -65,35 +64,10 @@ export function createN8nClient(options: N8nClientOptions = {})
     })
   }
 
-  /**
-   * List credentials - Currently not supported
-   *
-   * IMPORTANT: n8n's credential listing is not accessible via API key authentication:
-   * - Public API (/api/v1/credentials): Does not support GET/listing (405 Method Not Allowed)
-   * - Internal API (/rest/credentials): Requires session cookie auth, not API key (401 Unauthorized)
-   *
-   * The internal /rest/ endpoints are used by n8n's UI and require active browser
-   * session cookies. API keys only work with the public /api/v1/ endpoints.
-   *
-   * For now, we return empty array. Future solutions:
-   * - Wait for n8n to add credential listing to public API
-   * - Use content script with page context to access cookies
-   * - Accept limitation and work without pre-checking credentials
-   *
-   * @param projectId - Optional project ID to filter credentials by project
-   */
-  async function listCredentials(_projectId?: string): Promise<Array<{ id: string; name: string; type: string }>>
-  {
-    // Credential listing not supported via API key authentication
-    // See comment above for technical details
-    return []
-  }
-
   return {
     getWorkflows,
     getWorkflow,
     createWorkflow,
     updateWorkflow,
-    listCredentials,
   }
 }

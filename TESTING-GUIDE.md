@@ -389,13 +389,17 @@ const n8n = createN8nClient({
   apiKey: 'your-api-key'
 })
 
-// Test credentials fetch
-const creds = await n8n.listCredentials()
-console.log('Credentials:', creds)
-
 // Test workflow list
 const workflows = await n8n.getWorkflows()
 console.log('Workflows:', workflows)
+
+// Test workflow creation
+const result = await n8n.createWorkflow({
+  name: 'Test Workflow',
+  nodes: [],
+  connections: {}
+})
+console.log('Created workflow:', result)
 ```
 
 ---
