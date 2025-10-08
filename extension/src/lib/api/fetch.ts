@@ -1,23 +1,8 @@
 import { fetchWithTimeout } from '../utils/fetch'
+import { ApiError } from '../errors'
 
-/**
- * Error type representing HTTP and network failures.
- */
-export class ApiError extends Error
-{
-  public readonly status: number
-  public readonly url: string
-  public readonly body?: unknown
-
-  constructor(message: string, status: number, url: string, body?: unknown)
-  {
-    super(message)
-    this.name = 'ApiError'
-    this.status = status
-    this.url = url
-    this.body = body
-  }
-}
+// Re-export ApiError for backwards compatibility
+export { ApiError } from '../errors'
 
 /**
  * Options for apiFetch.
