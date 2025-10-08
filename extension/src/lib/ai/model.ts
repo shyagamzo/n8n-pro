@@ -1,12 +1,14 @@
 import type { ChatMessage } from '../types/chat'
 import { ChatOpenAI } from '@langchain/openai'
 import { AIMessage, HumanMessage, SystemMessage, type BaseMessage } from '@langchain/core/messages'
+import type { AgentTracingCallback } from './tracing'
 
 export type ChatModelOptions = {
   apiKey: string
   model?: string
   temperature?: number
   timeoutMs?: number
+  tracer?: AgentTracingCallback
 }
 
 export interface ChatModel
@@ -25,6 +27,7 @@ export function createOpenAiChatModel(options: ChatModelOptions): ChatModel
     temperature,
     apiKey: options.apiKey,
     timeout: options.timeoutMs,
+    callbacks: options.tracer ? [options.tracer] : undefined,
   })
 
   function toLcMessages(messages: ChatMessage[]): BaseMessage[]
