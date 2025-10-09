@@ -10,17 +10,20 @@ export class ChatService
   private port = createChatPort()
   private lastSentMessages: ChatMessage[] = []
 
+  private messageHandlers: Record<string, (msg: any) => void> = {
+    token: (msg) => this.handleToken(msg),
+    workflow_created: (msg) => this.handleWorkflowCreated(msg),
+    agent_activity: (msg) => this.handleAgentActivity(msg),
+    done: () => this.handleDone(),
+    error: (msg) => this.handleError(msg),
+    plan: (msg) => this.handlePlan(msg),
+  }
+
   public constructor()
   {
     this.port.onMessage((message: BackgroundMessage) =>
     {
-      // Route to appropriate handler - reads like English
-      if (message.type === 'token') this.handleToken(message)
-      else if (message.type === 'workflow_created') this.handleWorkflowCreated(message)
-      else if (message.type === 'agent_activity') this.handleAgentActivity(message)
-      else if (message.type === 'done') this.handleDone()
-      else if (message.type === 'error') this.handleError(message)
-      else if (message.type === 'plan') this.handlePlan(message)
+      this.messageHandlers[message.type]?.(message)
     })
   }
 
