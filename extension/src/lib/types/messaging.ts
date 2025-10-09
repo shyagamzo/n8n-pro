@@ -10,7 +10,7 @@ export type BackgroundMessage =
   | { type: 'plan'; plan: Plan }
   | { type: 'progress'; status: string; step: number; total: number }
   | { type: 'workflow_created'; workflowId: string; workflowUrl: string }
-  | { 
+  | {
       type: 'agent_activity'
       agent: AgentType
       activity: string

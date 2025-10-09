@@ -94,47 +94,19 @@ function getFallbackMessage(context: NarratorContext): string
 
 /**
  * Generate narration in parallel with agent work
- * Returns a promise that resolves faster than the main agent
+ * Clean API: Just use Promise.all() with this and your work
+ * 
+ * @example
+ * const [narration, plan] = await Promise.all([
+ *   narrate({ agent: 'planner', action: 'designing workflow', phase: 'started' }, apiKey),
+ *   plannerAgent.generate(messages)
+ * ])
  */
-export async function narrateInParallel<T>(
+export async function narrate(
   context: NarratorContext,
-  apiKey: string,
-  agentWork: Promise<T>
-): Promise<{ narration: string; result: T }>
+  apiKey: string
+): Promise<string>
 {
-  // Run both in parallel
-  const [narration, result] = await Promise.all([
-    narrateAgentActivity(context, apiKey),
-    agentWork
-  ])
-
-  return { narration, result }
-}
-
-/**
- * Start narration immediately, return result promise
- * Useful when you need to show the narration ASAP
- */
-export async function narrateAndExecute<T>(
-  context: NarratorContext,
-  apiKey: string,
-  agentWork: () => Promise<T>,
-  onNarration: (message: string) => void
-): Promise<T>
-{
-  // Start narration immediately
-  const narrationPromise = narrateAgentActivity(context, apiKey)
-  
-  // Start agent work immediately  
-  const workPromise = agentWork()
-
-  // Show narration as soon as it's ready (usually 0.5-1s)
-  narrationPromise.then(onNarration).catch(err => {
-    console.warn('Narration failed:', err)
-    onNarration(getFallbackMessage(context))
-  })
-
-  // Return the agent work result
-  return workPromise
+  return narrateAgentActivity(context, apiKey)
 }
 

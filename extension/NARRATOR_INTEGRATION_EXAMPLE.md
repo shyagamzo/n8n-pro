@@ -5,7 +5,7 @@ This shows how to integrate the parallel narrator agent into the orchestrator.
 ## Example: Planner with Narrator
 
 ```typescript
-import { narrateAndExecute } from '../services/narrator'
+import { narrate } from '../services/narrator'
 import { v4 as uuidv4 } from 'uuid'
 
 // In orchestrator plan() method
@@ -17,54 +17,50 @@ public async plan(input: OrchestratorInput): Promise<Plan>
   // Extract user intent for narrator context
   const userIntent = input.messages[input.messages.length - 1].text
 
-  // Run planner WITH parallel narration
-  const plan = await narrateAndExecute(
-    {
+  // Build planner prompt
+  const systemPrompt = buildPrompt('planner', {
+    includeNodesReference: true,
+    includeWorkflowPatterns: true,
+    includeConstraints: true,
+  })
+
+  const messagesWithSystem: ChatMessage[] = [
+    { id: 'system', role: 'system', text: systemPrompt },
+    ...input.messages,
+    { id: 'plan-request', role: 'user', text: 'Generate workflow plan...' }
+  ]
+
+  // Run narration and planner in parallel - clean and simple!
+  const [narration, loomResponse] = await Promise.all([
+    narrate({
       agent: 'planner',
       action: 'designing workflow',
       userIntent,
       phase: 'started'
-    },
-    input.apiKey,
-    async () => {
-      // This is the actual planner work
-      const systemPrompt = buildPrompt('planner', {
-        includeNodesReference: true,
-        includeWorkflowPatterns: true,
-        includeConstraints: true,
-      })
+    }, input.apiKey),
 
-      const messagesWithSystem: ChatMessage[] = [
-        { id: 'system', role: 'system', text: systemPrompt },
-        ...input.messages,
-        { id: 'plan-request', role: 'user', text: 'Generate workflow plan...' }
-      ]
+    createOpenAiChatModel({ apiKey: input.apiKey }).generateText(messagesWithSystem)
+  ])
 
-      const model = createOpenAiChatModel({ apiKey: input.apiKey })
-      const loomResponse = await model.generateText(messagesWithSystem)
-      
-      const cleanedResponse = stripCodeFences(loomResponse)
-      const parsed = parseLoom(cleanedResponse)
-      
-      if (!parsed.success || !parsed.data) {
-        throw new Error('Failed to parse Loom response')
-      }
+  // Show narration immediately (it arrived in ~0.5s, before plan completed)
+  post({
+    type: 'agent_activity',
+    agent: 'planner',
+    activity: narration,
+    status: 'started',
+    id: uuidv4(),
+    timestamp: Date.now()
+  })
 
-      return this.loomToPlan(parsed.data)
-    },
-    (narration) => {
-      // This callback is called as soon as narration is ready (0.5-1s)
-      // Post it immediately to show user what's happening
-      post({ 
-        type: 'agent_activity',
-        agent: 'planner',
-        activity: narration,
-        status: 'started',
-        id: uuidv4(),
-        timestamp: Date.now()
-      })
-    }
-  )
+  // Parse the plan
+  const cleanedResponse = stripCodeFences(loomResponse)
+  const parsed = parseLoom(cleanedResponse)
+
+  if (!parsed.success || !parsed.data) {
+    throw new Error('Failed to parse Loom response')
+  }
+
+  const plan = this.loomToPlan(parsed.data)
 
   // Plan is ready, send completion activity
   post({
@@ -85,37 +81,29 @@ public async plan(input: OrchestratorInput): Promise<Plan>
 ```typescript
 // In the validator section
 try {
-  // Start narration in parallel
-  const validationPromise = narrateAndExecute(
-    {
+  const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
+  const nodeTypes = await fetchNodeTypes({ baseUrl, apiKey: n8nApiKey })
+
+  // Run narration and validation in parallel
+  const [narration, validatorResult] = await Promise.all([
+    narrate({
       agent: 'validator',
       action: 'checking workflow structure',
       phase: 'started'
-    },
-    input.apiKey,
-    async () => {
-      const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
-      const nodeTypes = await fetchNodeTypes({ baseUrl, apiKey: n8nApiKey })
-      
-      return await validatePlan({
-        apiKey: input.apiKey,
-        plan,
-        nodeTypes
-      })
-    },
-    (narration) => {
-      post({
-        type: 'agent_activity',
-        agent: 'validator',
-        activity: narration,
-        status: 'started',
-        id: uuidv4(),
-        timestamp: Date.now()
-      })
-    }
-  )
+    }, input.apiKey),
 
-  const validatorResult = await validationPromise
+    validatePlan({ apiKey: input.apiKey, plan, nodeTypes })
+  ])
+
+  // Show narration
+  post({
+    type: 'agent_activity',
+    agent: 'validator',
+    activity: narration,
+    status: 'started',
+    id: uuidv4(),
+    timestamp: Date.now()
+  })
 
   if (!validatorResult.valid) {
     // Error activity
@@ -127,7 +115,7 @@ try {
       id: uuidv4(),
       timestamp: Date.now()
     })
-    
+
     throw new Error('Validation failed')
   }
 
@@ -149,19 +137,30 @@ catch (error) {
 ## Example: Executor with Step-by-Step Narration
 
 ```typescript
-// When executor creates workflow
+// Start execution with narration
+const [startNarration, workflow] = await Promise.all([
+  narrate({
+    agent: 'executor',
+    action: 'creating workflow',
+    phase: 'started'
+  }, apiKey),
+
+  n8n.createWorkflow(workflowData)
+])
+
 post({
   type: 'agent_activity',
   agent: 'executor',
-  activity: '🚀 Creating your workflow...',
+  activity: startNarration,
   status: 'started',
   id: uuidv4(),
   timestamp: Date.now()
 })
 
-// As each node is added
+// As each step completes, narrate the next one
+// (These run sequentially, but narration is still fast)
 for (const node of workflow.nodes) {
-  const narration = await narrateAgentActivity({
+  const narration = await narrate({
     agent: 'executor',
     action: `adding ${node.type.split('.').pop()} node`,
     phase: 'working'
@@ -175,9 +174,6 @@ for (const node of workflow.nodes) {
     id: uuidv4(),
     timestamp: Date.now()
   })
-  
-  // Actually create the node
-  await createNode(node)
 }
 
 // Final success
@@ -231,8 +227,8 @@ The UI would handle `agent_activity` messages and display them in an activity pa
 // In ChatContainer or similar
 {messages.map(msg => <ChatMessage key={msg.id} message={msg} />)}
 
-<AgentActivityPanel 
-  activities={activities.filter(a => a.status !== 'complete')} 
+<AgentActivityPanel
+  activities={activities.filter(a => a.status !== 'complete')}
 />
 
 <ChatInput />
