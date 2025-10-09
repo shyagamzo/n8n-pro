@@ -1,8 +1,9 @@
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
+import type { BackgroundMessage } from '../types/messaging'
 import { createOpenAiChatModel } from '../ai/model'
 import { createAgentTracer } from '../ai/tracing'
-import { buildPrompt } from '../prompts'
+import { buildPrompt, type AgentType } from '../prompts'
 import { parse as parseLoom } from '../loom'
 import { streamChatCompletion } from '../services/openai'
 import { stripCodeFences } from '../utils/markdown'
@@ -13,7 +14,6 @@ import { fetchNodeTypes } from '../n8n/node-types'
 import { logValidation, formatValidationErrors } from '../utils/validation-logger'
 import { getN8nApiKey, getBaseUrl } from '../services/settings'
 import { narrate } from '../services/narrator'
-import type { BackgroundMessage } from '../types/messaging'
 
 export type OrchestratorInput = {
   apiKey: string
@@ -25,8 +25,58 @@ export type ActivityHandler = (message: BackgroundMessage) => void
 
 class Orchestrator
 {
+  private postHandler?: ActivityHandler
+  private currentApiKey?: string
+
+  public setPostHandler(handler: ActivityHandler): void
+  {
+    this.postHandler = handler
+  }
+
+  private async narrateAndPost(
+    agent: AgentType,
+    action: string,
+    phase: 'started' | 'working' | 'complete' | 'error',
+    userIntent?: string
+  ): Promise<void>
+  {
+    if (!this.postHandler || !this.currentApiKey) return
+
+    // Fire-and-forget: narration posts when ready (parallel execution)
+    narrate(
+      { agent, action, userIntent, phase },
+      this.currentApiKey
+    )
+      .then(activity =>
+      {
+        this.postHandler?.({
+          type: 'agent_activity',
+          agent,
+          activity,
+          status: phase,
+          id: `${agent}-${phase}-${Date.now()}`,
+          timestamp: Date.now()
+        })
+      })
+      .catch(() =>
+      {
+        // Use fallback message if narrator fails
+        const fallback = `${phase === 'started' ? '⏳' : phase === 'complete' ? '✅' : '⚙️'} ${agent}...`
+        this.postHandler?.({
+          type: 'agent_activity',
+          agent,
+          activity: fallback,
+          status: phase,
+          id: `${agent}-${phase}-${Date.now()}`,
+          timestamp: Date.now()
+        })
+      })
+  }
+
   public async handle(input: OrchestratorInput, onToken?: StreamTokenHandler): Promise<string>
   {
+    this.currentApiKey = input.apiKey
+
     // Create agent tracer for this conversation
     const tracer = createAgentTracer()
     tracer.setAgent('orchestrator')
@@ -86,6 +136,8 @@ class Orchestrator
    */
   public async isReadyToPlan(input: OrchestratorInput): Promise<{ ready: boolean; reason?: string }>
   {
+    this.currentApiKey = input.apiKey
+
     // Create agent tracer for readiness check
     const tracer = createAgentTracer()
     tracer.setAgent('orchestrator')
@@ -137,8 +189,10 @@ class Orchestrator
     }
   }
 
-  public async plan(input: OrchestratorInput, post?: ActivityHandler): Promise<Plan>
+  public async plan(input: OrchestratorInput): Promise<Plan>
   {
+    this.currentApiKey = input.apiKey
+
     const session = new DebugSession('Orchestrator', 'plan')
     session.log('Starting plan generation', { messageCount: input.messages.length })
 
@@ -188,52 +242,11 @@ class Orchestrator
     // Extract user intent for narrator
     const userIntent = input.messages[input.messages.length - 1]?.text || 'workflow automation'
 
-    // Run planner and narrator in parallel
-    let narration = '📝 Designing your workflow...' // Fallback
-    let loomResponse: string
+    // Start narration (fire-and-forget, posts when ready)
+    void this.narrateAndPost('planner', 'designing workflow', 'started', userIntent)
 
-    try
-    {
-      const results = await Promise.all([
-        narrate({
-          agent: 'planner',
-          action: 'designing workflow',
-          userIntent,
-          phase: 'started'
-        }, input.apiKey).catch(err => {
-          console.warn('Narrator failed, using fallback:', err)
-          return '📝 Designing your workflow...'
-        }),
-
-        model.generateText(messagesWithSystem)
-      ])
-
-      narration = results[0]
-      loomResponse = results[1]
-    }
-    catch (error)
-    {
-      console.error('Failed to generate plan or narration:', error)
-      throw error
-    }
-
-    // Show narration to user immediately
-    if (post)
-    {
-      console.info('📤 Posting planner activity:', narration)
-      post({
-        type: 'agent_activity',
-        agent: 'planner',
-        activity: narration,
-        status: 'started',
-        id: `planner-${Date.now()}`,
-        timestamp: Date.now()
-      })
-    }
-    else
-    {
-      console.warn('⚠️ No post function provided to orchestrator.plan()')
-    }
+    // Call planner (runs in parallel with narrator)
+    const loomResponse = await model.generateText(messagesWithSystem)
 
     // Log LLM response
     debugLLMResponse(loomResponse, systemPrompt)
@@ -308,18 +321,8 @@ class Orchestrator
         session.log('Workflow validation passed')
       }
 
-      // Send planner completion activity
-      if (post)
-      {
-        post({
-          type: 'agent_activity',
-          agent: 'planner',
-          activity: '✅ Workflow design complete!',
-          status: 'complete',
-          id: `planner-complete-${Date.now()}`,
-          timestamp: Date.now()
-        })
-      }
+      // Planner complete
+      void this.narrateAndPost('planner', 'workflow design complete', 'complete')
 
       // Deep validation with Validator Agent
       session.log('Running deep validation with Validator Agent')
@@ -336,33 +339,15 @@ class Orchestrator
           apiKey: n8nApiKey || undefined
         })
 
-        // Run validator with parallel narration
-        const [validatorNarration, validatorResult] = await Promise.all([
-          narrate({
-            agent: 'validator',
-            action: 'validating workflow structure',
-            phase: 'started'
-          }, input.apiKey),
+        // Start validator narration
+        void this.narrateAndPost('validator', 'validating workflow structure', 'started')
 
-          validatePlan({
-            apiKey: input.apiKey,
-            plan,
-            nodeTypes
-          })
-        ])
-
-        // Show validation narration
-        if (post)
-        {
-          post({
-            type: 'agent_activity',
-            agent: 'validator',
-            activity: validatorNarration,
-            status: 'started',
-            id: `validator-${Date.now()}`,
-            timestamp: Date.now()
-          })
-        }
+        // Run validator
+        const validatorResult = await validatePlan({
+          apiKey: input.apiKey,
+          plan,
+          nodeTypes
+        })
 
         // Log validation results
         logValidation({
@@ -390,18 +375,8 @@ class Orchestrator
             { errors: validatorResult.errors?.length, warnings: validatorResult.warnings?.length }
           )
 
-          // Show error activity
-          if (post)
-          {
-            post({
-              type: 'agent_activity',
-              agent: 'validator',
-              activity: '🫣 Found workflow issues...',
-              status: 'error',
-              id: `validator-error-${Date.now()}`,
-              timestamp: Date.now()
-            })
-          }
+          // Validator found errors
+          void this.narrateAndPost('validator', 'found workflow issues', 'error')
 
           // Format validation errors for user
           const errorMessage = formatValidationErrors(validatorResult)
@@ -422,18 +397,8 @@ class Orchestrator
           { warnings: validatorResult.warnings?.length || 0 }
         )
 
-        // Show validation success
-        if (post)
-        {
-          post({
-            type: 'agent_activity',
-            agent: 'validator',
-            activity: '✅ Validation passed!',
-            status: 'complete',
-            id: `validator-complete-${Date.now()}`,
-            timestamp: Date.now()
-          })
-        }
+        // Validator passed
+        void this.narrateAndPost('validator', 'validation passed', 'complete')
 
         if (validatorResult.warnings && validatorResult.warnings.length > 0)
         {

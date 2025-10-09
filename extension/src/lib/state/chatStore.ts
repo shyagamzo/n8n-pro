@@ -80,19 +80,9 @@ export const useChatStore = create<ChatState>((set) => ({
   setPendingPlan: (p) => set({ pendingPlan: p }),
   addActivity: (activity) =>
   {
-    console.info('📊 Adding activity to store:', {
-      id: activity.id,
-      agent: activity.agent,
-      activity: activity.activity,
-      status: activity.status,
-      currentCount: useChatStore.getState().activities.length
-    })
-
     set((s) => ({
       activities: [...s.activities, activity]
     }))
-
-    console.info('📊 Activities in store:', useChatStore.getState().activities.length)
 
     // Auto-remove completed activities after 3 seconds
     if (activity.status === 'complete')

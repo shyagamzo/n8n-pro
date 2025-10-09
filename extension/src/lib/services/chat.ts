@@ -56,12 +56,6 @@ export class ChatService
     timestamp: number
   }): void
   {
-    console.info('📢 Received agent activity:', {
-      agent: message.agent,
-      activity: message.activity,
-      status: message.status
-    })
-
     useChatStore.getState().addActivity({
       id: message.id,
       agent: message.agent,
