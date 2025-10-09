@@ -85,6 +85,85 @@ Separate lines into logical groups:
 - **Clear Boundaries**: Functions should have clear input/output contracts
 - **No Side Effects**: Prefer pure functions when possible
 
+### Readable Control Flow (Critical)
+
+**Principle:** Code should read like English. "If X, then doThis()" - not "If X, then inline 20 lines of logic"
+
+**BAD - Unreadable compound blocks:**
+```typescript
+if (message.type === 'error')
+{
+  setAssistantDraft('')
+  setPendingPlan(null)
+  finishSending()
+  
+  const errorDetails: ErrorDetails = {
+    title: this.getErrorTitle(message.error),
+    details: this.getErrorDetails(message.error),
+    retryable: this.isRetryable(message.error),
+    retryPayload: this.isRetryable(message.error)
+      ? { messages: this.lastSentMessages }
+      : undefined
+  }
+  
+  addMessage({
+    id: generateId(),
+    role: 'error',
+    text: this.getErrorMessage(message.error),
+    error: errorDetails
+  })
+}
+// ^ What's the mission here? Have to read all 20 lines to understand!
+```
+
+**GOOD - Readable with extracted handlers:**
+```typescript
+// Main handler reads like English
+if (message.type === 'error') this.handleError(message)
+
+// Handler has clear, self-documenting mission
+private handleError(message: { type: 'error'; error: string }): void
+{
+  const { setAssistantDraft, setPendingPlan, finishSending, addMessage } = useChatStore.getState()
+  
+  setAssistantDraft('')
+  setPendingPlan(null)
+  finishSending()
+  
+  const errorDetails = this.buildErrorDetails(message.error)
+  addMessage(this.createErrorMessage(message.error, errorDetails))
+}
+```
+
+**Rules:**
+1. **If block > 5 lines**: Extract to named function
+2. **If block has "mission"**: Extract to function named after mission
+3. **Main control flow**: Should read like table of contents
+4. **Handler functions**: Should have clear, action-oriented names
+5. **No nested blocks**: Keep nesting shallow with early returns
+
+**Examples:**
+- ✅ `if (isReady) handleReady()` - Clear mission
+- ✅ `if (error) handleError(error)` - Self-documenting
+- ✅ `if (token) appendToken(token)` - Obvious intent
+- ❌ `if (error) { /* 30 lines */ }` - Unreadable
+- ❌ `if (x) { if (y) { if (z) { /* nested */ }}}` - Too complex
+
+**Message/Event Handlers Pattern:**
+```typescript
+// ✅ GOOD - Router pattern
+onMessage(message: Message): void
+{
+  if (message.type === 'create') this.handleCreate(message)
+  else if (message.type === 'update') this.handleUpdate(message)
+  else if (message.type === 'delete') this.handleDelete(message)
+}
+
+private handleCreate(message: CreateMessage): void { /* focused logic */ }
+private handleUpdate(message: UpdateMessage): void { /* focused logic */ }
+private handleDelete(message: DeleteMessage): void { /* focused logic */ }
+```
+
 ## File & Folder Structure
 
 ### Project Organization (Separation of Concerns)

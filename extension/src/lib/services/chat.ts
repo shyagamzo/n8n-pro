@@ -2,7 +2,7 @@ import { createChatPort } from './messaging'
 import { useChatStore } from '../state/chatStore'
 import { generateId } from '../utils/id'
 import type { ChatMessage, ErrorDetails } from '../types/chat'
-import type { BackgroundMessage, ApplyPlanRequest } from '../types/messaging'
+import type { BackgroundMessage, ApplyPlanRequest, AgentType } from '../types/messaging'
 import type { Plan } from '../types/plan'
 
 export class ChatService
@@ -14,93 +14,107 @@ export class ChatService
   {
     this.port.onMessage((message: BackgroundMessage) =>
     {
-      const {
-        addMessage, finishSending, setAssistantDraft, setPendingPlan,
-        addActivity, addToast
-      } = useChatStore.getState()
-
-      if (message.type === 'token')
-      {
-        const currentDraft = useChatStore.getState().assistantDraft
-        setAssistantDraft(currentDraft + message.token)
-      }
-      else if (message.type === 'workflow_created')
-      {
-        // Show success toast with link to workflow
-        addToast({
-          id: `workflow-${message.workflowId}`,
-          type: 'success',
-          message: 'Workflow created successfully!',
-          action: {
-            label: 'Open in n8n',
-            onClick: () => window.open(message.workflowUrl, '_blank')
-          },
-          duration: 7000
-        })
-      }
-      else if (message.type === 'agent_activity')
-      {
-        // Handle agent activity messages
-        console.info('📢 Received agent activity:', {
-          agent: message.agent,
-          activity: message.activity,
-          status: message.status
-        })
-
-        addActivity({
-          id: message.id,
-          agent: message.agent,
-          activity: message.activity,
-          status: message.status,
-          timestamp: message.timestamp
-        })
-      }
-      else if (message.type === 'done')
-      {
-        const { assistantDraft, pendingPlan } = useChatStore.getState()
-
-        if (assistantDraft)
-        {
-          addMessage({
-            id: generateId(),
-            role: 'assistant',
-            text: assistantDraft,
-            plan: pendingPlan || undefined
-          })
-        }
-
-        setAssistantDraft('')
-        setPendingPlan(null)
-        finishSending()
-      }
-      else if (message.type === 'error')
-      {
-        setAssistantDraft('')
-        setPendingPlan(null)
-        finishSending()
-
-        // Create error message with retry capability
-        const errorDetails: ErrorDetails = {
-          title: this.getErrorTitle(message.error),
-          details: this.getErrorDetails(message.error),
-          retryable: this.isRetryable(message.error),
-          retryPayload: this.isRetryable(message.error)
-            ? { messages: this.lastSentMessages }
-            : undefined
-        }
-
-        addMessage({
-          id: generateId(),
-          role: 'error',
-          text: this.getErrorMessage(message.error),
-          error: errorDetails
-        })
-      }
-      else if (message.type === 'plan')
-      {
-        setPendingPlan(message.plan)
-      }
+      // Route to appropriate handler - reads like English
+      if (message.type === 'token') this.handleToken(message)
+      else if (message.type === 'workflow_created') this.handleWorkflowCreated(message)
+      else if (message.type === 'agent_activity') this.handleAgentActivity(message)
+      else if (message.type === 'done') this.handleDone()
+      else if (message.type === 'error') this.handleError(message)
+      else if (message.type === 'plan') this.handlePlan(message)
     })
+  }
+
+  private handleToken(message: { type: 'token'; token: string }): void
+  {
+    const currentDraft = useChatStore.getState().assistantDraft
+    useChatStore.getState().setAssistantDraft(currentDraft + message.token)
+  }
+
+  private handleWorkflowCreated(message: { type: 'workflow_created'; workflowId: string; workflowUrl: string }): void
+  {
+    useChatStore.getState().addToast({
+      id: `workflow-${message.workflowId}`,
+      type: 'success',
+      message: 'Workflow created successfully!',
+      action: {
+        label: 'Open in n8n',
+        onClick: () => window.open(message.workflowUrl, '_blank')
+      },
+      duration: 7000
+    })
+  }
+
+  private handleAgentActivity(message: {
+    type: 'agent_activity'
+    agent: AgentType
+    activity: string
+    status: 'started' | 'working' | 'complete' | 'error'
+    id: string
+    timestamp: number
+  }): void
+  {
+    console.info('📢 Received agent activity:', {
+      agent: message.agent,
+      activity: message.activity,
+      status: message.status
+    })
+
+    useChatStore.getState().addActivity({
+      id: message.id,
+      agent: message.agent,
+      activity: message.activity,
+      status: message.status,
+      timestamp: message.timestamp
+    })
+  }
+
+  private handleDone(): void
+  {
+    const { assistantDraft, pendingPlan, addMessage, setAssistantDraft, setPendingPlan, finishSending } = useChatStore.getState()
+
+    if (assistantDraft)
+    {
+      addMessage({
+        id: generateId(),
+        role: 'assistant',
+        text: assistantDraft,
+        plan: pendingPlan || undefined
+      })
+    }
+
+    setAssistantDraft('')
+    setPendingPlan(null)
+    finishSending()
+  }
+
+  private handleError(message: { type: 'error'; error: string }): void
+  {
+    const { setAssistantDraft, setPendingPlan, finishSending, addMessage } = useChatStore.getState()
+
+    setAssistantDraft('')
+    setPendingPlan(null)
+    finishSending()
+
+    const errorDetails: ErrorDetails = {
+      title: this.getErrorTitle(message.error),
+      details: this.getErrorDetails(message.error),
+      retryable: this.isRetryable(message.error),
+      retryPayload: this.isRetryable(message.error)
+        ? { messages: this.lastSentMessages }
+        : undefined
+    }
+
+    addMessage({
+      id: generateId(),
+      role: 'error',
+      text: this.getErrorMessage(message.error),
+      error: errorDetails
+    })
+  }
+
+  private handlePlan(message: { type: 'plan'; plan: Plan }): void
+  {
+    useChatStore.getState().setPendingPlan(message.plan)
   }
 
   private getErrorTitle(error: string): string
