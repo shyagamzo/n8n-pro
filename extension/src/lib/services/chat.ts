@@ -1,7 +1,7 @@
 import { createChatPort } from './messaging'
 import { useChatStore } from '../state/chatStore'
 import { generateId } from '../utils/id'
-import type { ChatMessage, ChatStreamMessage, ErrorDetails } from '../types/chat'
+import type { ChatMessage, ErrorDetails } from '../types/chat'
 import type { BackgroundMessage, ApplyPlanRequest } from '../types/messaging'
 import type { Plan } from '../types/plan'
 
@@ -12,11 +12,11 @@ export class ChatService
 
   public constructor()
   {
-    this.port.onMessage((message: ChatStreamMessage | BackgroundMessage) =>
+    this.port.onMessage((message: BackgroundMessage) =>
     {
-      const { 
-        addMessage, finishSending, setAssistantDraft, setPendingPlan, 
-        addActivity, addToast 
+      const {
+        addMessage, finishSending, setAssistantDraft, setPendingPlan,
+        addActivity, addToast
       } = useChatStore.getState()
 
       if (message.type === 'token')
@@ -41,6 +41,12 @@ export class ChatService
       else if (message.type === 'agent_activity')
       {
         // Handle agent activity messages
+        console.info('📢 Received agent activity:', {
+          agent: message.agent,
+          activity: message.activity,
+          status: message.status
+        })
+
         addActivity({
           id: message.id,
           agent: message.agent,

@@ -250,6 +250,16 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
 
   console.log('💬 Handling chat message:', { messageCount: msg.messages.length })
 
+  // TEST: Send a test activity to verify the flow works
+  post({
+    type: 'agent_activity',
+    agent: 'orchestrator',
+    activity: '🧪 Testing activity system...',
+    status: 'started',
+    id: `test-${Date.now()}`,
+    timestamp: Date.now()
+  })
+
   // First, check if we have enough information to generate a plan
   const readiness = await orchestrator.isReadyToPlan({
     apiKey,

@@ -189,20 +189,38 @@ class Orchestrator
     const userIntent = input.messages[input.messages.length - 1]?.text || 'workflow automation'
 
     // Run planner and narrator in parallel
-    const [narration, loomResponse] = await Promise.all([
-      narrate({
-        agent: 'planner',
-        action: 'designing workflow',
-        userIntent,
-        phase: 'started'
-      }, input.apiKey),
+    let narration = '📝 Designing your workflow...' // Fallback
+    let loomResponse: string
 
-      model.generateText(messagesWithSystem)
-    ])
+    try
+    {
+      const results = await Promise.all([
+        narrate({
+          agent: 'planner',
+          action: 'designing workflow',
+          userIntent,
+          phase: 'started'
+        }, input.apiKey).catch(err => {
+          console.warn('Narrator failed, using fallback:', err)
+          return '📝 Designing your workflow...'
+        }),
+
+        model.generateText(messagesWithSystem)
+      ])
+
+      narration = results[0]
+      loomResponse = results[1]
+    }
+    catch (error)
+    {
+      console.error('Failed to generate plan or narration:', error)
+      throw error
+    }
 
     // Show narration to user immediately
     if (post)
     {
+      console.info('📤 Posting planner activity:', narration)
       post({
         type: 'agent_activity',
         agent: 'planner',
@@ -211,6 +229,10 @@ class Orchestrator
         id: `planner-${Date.now()}`,
         timestamp: Date.now()
       })
+    }
+    else
+    {
+      console.warn('⚠️ No post function provided to orchestrator.plan()')
     }
 
     // Log LLM response

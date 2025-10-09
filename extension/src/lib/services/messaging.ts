@@ -1,10 +1,10 @@
-import type { ChatStreamMessage, ChatMessage } from '../types/chat'
-import type { ApplyPlanRequest } from '../types/messaging'
+import type { ChatMessage } from '../types/chat'
+import type { ApplyPlanRequest, BackgroundMessage } from '../types/messaging'
 
 export type ChatPort = {
   sendChat: (messages: ChatMessage[]) => void
   applyPlan: (req: ApplyPlanRequest) => void
-  onMessage: (cb: (m: ChatStreamMessage) => void) => void
+  onMessage: (cb: (m: BackgroundMessage) => void) => void
   disconnect: () => void
 }
 
@@ -68,7 +68,7 @@ export function createChatPort(): ChatPort
     },
     onMessage(cb)
     {
-      port.onMessage.addListener((m: ChatStreamMessage) => cb(m))
+      port.onMessage.addListener((m: BackgroundMessage) => cb(m))
     },
     disconnect()
     {
