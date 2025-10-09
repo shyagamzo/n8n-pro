@@ -10,9 +10,9 @@ import ToastContainer from '../lib/components/ToastContainer'
 
 export default function ChatContainer(): React.ReactElement | null
 {
-  const { 
-    isOpen, setOpen, messages, assistantDraft, sending, activities, 
-    clearSession, loadMessages, toasts, removeToast 
+  const {
+    isOpen, setOpen, messages, assistantDraft, sending, activities,
+    clearSession, loadMessages, toasts, removeToast
   } = useChatStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [isLoading, setIsLoading] = useState(true)

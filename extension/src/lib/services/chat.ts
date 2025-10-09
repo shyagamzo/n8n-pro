@@ -16,17 +16,13 @@ export class ChatService
     {
       const { 
         addMessage, finishSending, setAssistantDraft, setPendingPlan, 
-        setProgress, addActivity, addToast 
+        addActivity, addToast 
       } = useChatStore.getState()
 
       if (message.type === 'token')
       {
         const currentDraft = useChatStore.getState().assistantDraft
         setAssistantDraft(currentDraft + message.token)
-      }
-      else if (message.type === 'progress')
-      {
-        setProgress({ status: message.status, step: message.step, total: message.total })
       }
       else if (message.type === 'workflow_created')
       {

@@ -3,9 +3,7 @@ import type { ChatMessage } from '../../lib/types/chat'
 import MessageBubble from '../../lib/components/MessageBubble'
 import Markdown from '../../lib/components/Markdown'
 import ThinkingAnimation from '../../lib/components/ThinkingAnimation'
-import ProgressIndicator from '../../lib/components/ProgressIndicator'
 import EmptyState from './EmptyState'
-import { useChatStore } from '../../lib/state/chatStore'
 import '../../lib/styles/utilities.css'
 import '../styles.css'
 
@@ -18,7 +16,6 @@ type MessagesListProps = {
 
 export default function MessagesList({ messages, draft, sending, onSend }: MessagesListProps): React.ReactElement
 {
-  const progress = useChatStore((state) => state.progress)
   const hasMessages = messages.length > 0 || sending || draft
 
   return (
@@ -29,16 +26,10 @@ export default function MessagesList({ messages, draft, sending, onSend }: Messa
           <MessageBubble message={m} />
         </div>
       ))}
-      {sending || draft || progress ? (
+      {sending || draft ? (
         <div className="message-wrapper flex w-full">
           <div className="draft-bubble">
-            {progress ? (
-              <ProgressIndicator 
-                status={progress.status} 
-                step={progress.step} 
-                total={progress.total} 
-              />
-            ) : draft ? (
+            {draft ? (
               <Markdown content={draft} />
             ) : (
               <ThinkingAnimation />

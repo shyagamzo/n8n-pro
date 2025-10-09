@@ -6,12 +6,6 @@ import type { AgentType } from '../types/messaging'
 import { STORAGE_KEYS } from '../constants'
 import { storageGet, storageSet } from '../utils/storage'
 
-type ProgressStatus = {
-  status: string
-  step: number
-  total: number
-} | null
-
 export type AgentActivity = {
   id: string
   agent: AgentType
@@ -26,7 +20,6 @@ type ChatState = {
   sending: boolean
   assistantDraft: string
   pendingPlan?: Plan | null
-  progress: ProgressStatus
   activities: AgentActivity[]
   toasts: ToastProps[]
   setOpen: (open: boolean) => void
@@ -37,7 +30,6 @@ type ChatState = {
   clearSession: () => void
   setAssistantDraft: (t: string) => void
   setPendingPlan: (p: Plan | null) => void
-  setProgress: (p: ProgressStatus) => void
   addActivity: (activity: AgentActivity) => void
   updateActivity: (id: string, updates: Partial<AgentActivity>) => void
   removeActivity: (id: string) => void
@@ -64,7 +56,6 @@ export const useChatStore = create<ChatState>((set) => ({
   sending: false,
   assistantDraft: '',
   pendingPlan: null,
-  progress: null,
   activities: [],
   toasts: [],
   setOpen: (open) => set({ isOpen: open }),
@@ -78,16 +69,15 @@ export const useChatStore = create<ChatState>((set) => ({
     })
   },
   startSending: () => set({ sending: true }),
-  finishSending: () => set({ sending: false, progress: null, activities: [] }),
+  finishSending: () => set({ sending: false, activities: [] }),
   clear: () => set({ messages: [] }),
   clearSession: () =>
   {
-    set({ messages: [], assistantDraft: '', pendingPlan: null, sending: false, progress: null, activities: [] })
+    set({ messages: [], assistantDraft: '', pendingPlan: null, sending: false, activities: [] })
     saveMessages([])
   },
   setAssistantDraft: (t) => set({ assistantDraft: t }),
   setPendingPlan: (p) => set({ pendingPlan: p }),
-  setProgress: (p) => set({ progress: p }),
   addActivity: (activity) =>
   {
     set((s) => ({
