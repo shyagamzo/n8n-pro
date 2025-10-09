@@ -10,6 +10,7 @@ import classifierPrompt from './agents/classifier.md?raw'
 import enrichmentPrompt from './agents/enrichment.md?raw'
 import plannerPrompt from './agents/planner.md?raw'
 import validatorPrompt from './agents/validator.md?raw'
+import narratorPrompt from './agents/narrator.md?raw'
 import executorPrompt from './agents/executor.md?raw'
 
 // Import shared knowledge base
@@ -20,7 +21,7 @@ import constraints from './shared/constraints.md?raw'
 /**
  * Agent types supported by the system
  */
-export type AgentType = 'classifier' | 'enrichment' | 'planner' | 'validator' | 'executor'
+export type AgentType = 'classifier' | 'enrichment' | 'planner' | 'validator' | 'narrator' | 'executor'
 
 /**
  * Prompt composition options for dynamic content injection
@@ -55,6 +56,7 @@ const agentPrompts: Record<AgentType, string> = {
   enrichment: enrichmentPrompt,
   planner: plannerPrompt,
   validator: validatorPrompt,
+  narrator: narratorPrompt,
   executor: executorPrompt,
 }
 

@@ -10,13 +10,21 @@ export type BackgroundMessage =
   | { type: 'plan'; plan: Plan }
   | { type: 'progress'; status: string; step: number; total: number }
   | { type: 'workflow_created'; workflowId: string; workflowUrl: string }
+  | { 
+      type: 'agent_activity'
+      agent: AgentType
+      activity: string
+      status: 'started' | 'working' | 'complete' | 'error'
+      id: string
+      timestamp: number
+    }
 
 export type ApplyPlanRequest = { type: 'apply_plan'; plan: Plan }
 
 /**
  * Agent trace types for debugging multi-agent communication
  */
-export type AgentType = 'classifier' | 'enrichment' | 'planner' | 'validator' | 'executor' | 'orchestrator'
+export type AgentType = 'classifier' | 'enrichment' | 'planner' | 'validator' | 'narrator' | 'executor' | 'orchestrator'
 
 export type AgentDecision = {
   agent: AgentType

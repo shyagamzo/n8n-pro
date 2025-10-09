@@ -90,7 +90,7 @@ export async function fetchNodeTypes(options: {
   {
     // Deep validation requires node types API, which may not be available in all n8n versions
     // This is not a critical error - we fall back to structural validation
-    console.info('ℹ️ Node types API unavailable (deep validation disabled)', { 
+    console.info('ℹ️ Node types API unavailable (deep validation disabled)', {
       endpoint: url,
       error: error instanceof Error ? error.message : String(error)
     })
