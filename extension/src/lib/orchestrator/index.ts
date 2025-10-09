@@ -144,15 +144,15 @@ class Orchestrator
     const session = this.initializePlanningSession(input)
     const narrator = postHandler ? createNarrationManager(postHandler, input.apiKey) : undefined
     const userIntent = input.messages[input.messages.length - 1]?.text || 'workflow automation'
-    
+
     const loomResponse = await this.invokePlannerAgent(input, session, narrator, userIntent)
     const plan = await this.parsePlanFromLoom(loomResponse, session)
-    
+
     this.validatePlanStructure(plan, session)
     narrator?.post('planner', 'workflow design complete', 'complete')
-    
+
     await this.performDeepValidation(plan, input.apiKey, session, narrator)
-    
+
     session.end(true)
     return plan
   }
@@ -174,7 +174,7 @@ class Orchestrator
   }
 
   private async invokePlannerAgent(
-    input: OrchestratorInput, 
+    input: OrchestratorInput,
     session: DebugSession,
     narrator?: ReturnType<typeof createNarrationManager>,
     userIntent?: string
@@ -201,7 +201,7 @@ class Orchestrator
 
     const tracer = createAgentTracer(session.getSessionId())
     const model = createOpenAiChatModel({ apiKey: input.apiKey, tracer })
-    
+
     session.log('Calling LLM for plan generation')
     debugAgentDecision('planner', 'Generating workflow plan', 'Using LLM to convert conversation to Loom format', { messageCount: messagesWithSystem.length })
 
@@ -225,7 +225,7 @@ class Orchestrator
     {
       debugLoomParsing(cleanedResponse, parsed, false)
       session.log('Loom parsing failed', { errors: parsed.errors })
-      
+
       session.end(false)
       throw new Error(
         'Failed to generate a valid workflow plan. ' +
@@ -257,7 +257,7 @@ class Orchestrator
   {
     session.log('Validating workflow structure')
     const validation = validateWorkflow(plan.workflow)
-    
+
     debugPlanGenerated({
       plan,
       validation,
@@ -298,7 +298,7 @@ class Orchestrator
   ): Promise<void>
   {
     session.log('Running deep validation with Validator Agent')
-    
+
     const tracer = createAgentTracer(session.getSessionId())
     debugAgentHandoff('planner', 'validator', 'Validate workflow against n8n API')
     tracer.logHandoff('validator', 'Check node types and parameters against n8n')
