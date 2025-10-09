@@ -13,7 +13,7 @@ export async function invokeEnrichmentForChat(
 {
   const tracer = createAgentTracer()
   tracer.setAgent('orchestrator')
-  
+
   debugAgentHandoff('orchestrator', 'enrichment', 'Conversational response and requirement gathering')
 
   const systemPrompt = buildPrompt('enrichment', {
@@ -38,7 +38,7 @@ export async function invokeEnrichmentForChat(
   const model = createOpenAiChatModel({ apiKey, tracer })
   const result = await model.generateText(messagesWithSystem)
   tracer.completeTrace()
-  
+
   return result
 }
 
@@ -46,7 +46,7 @@ export async function checkReadinessToPlan(apiKey: string, messages: ChatMessage
 {
   const tracer = createAgentTracer()
   tracer.setAgent('orchestrator')
-  
+
   debugAgentHandoff('orchestrator', 'enrichment', 'Checking if more information is needed')
   tracer.logHandoff('enrichment', 'Assessing readiness to generate workflow plan')
   tracer.setAgent('enrichment')
