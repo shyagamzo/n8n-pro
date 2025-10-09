@@ -288,7 +288,7 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
       const plan = await orchestrator.plan({
         apiKey,
         messages: (msg.messages as ChatMessage[]),
-      })
+      }, post)
 
       post({ type: 'plan', plan } satisfies BackgroundMessage)
       console.log('📋 Plan generated and sent:', { title: plan.title })

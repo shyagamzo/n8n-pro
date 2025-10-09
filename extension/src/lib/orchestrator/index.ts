@@ -12,6 +12,8 @@ import { validatePlan } from './validator'
 import { fetchNodeTypes } from '../n8n/node-types'
 import { logValidation, formatValidationErrors } from '../utils/validation-logger'
 import { getN8nApiKey, getBaseUrl } from '../services/settings'
+import { narrate } from '../services/narrator'
+import type { BackgroundMessage } from '../types/messaging'
 
 export type OrchestratorInput = {
   apiKey: string
@@ -19,6 +21,7 @@ export type OrchestratorInput = {
 }
 
 export type StreamTokenHandler = (token: string) => void
+export type ActivityHandler = (message: BackgroundMessage) => void
 
 class Orchestrator
 {
@@ -134,7 +137,7 @@ class Orchestrator
     }
   }
 
-  public async plan(input: OrchestratorInput): Promise<Plan>
+  public async plan(input: OrchestratorInput, post?: ActivityHandler): Promise<Plan>
   {
     const session = new DebugSession('Orchestrator', 'plan')
     session.log('Starting plan generation', { messageCount: input.messages.length })
@@ -171,7 +174,7 @@ class Orchestrator
       planRequest,
     ]
 
-    // Call LLM to generate plan
+    // Call LLM to generate plan with parallel narration
     const model = createOpenAiChatModel({ apiKey: input.apiKey, tracer })
     session.log('Calling LLM for plan generation')
 
@@ -182,7 +185,33 @@ class Orchestrator
       { messageCount: messagesWithSystem.length }
     )
 
-    const loomResponse = await model.generateText(messagesWithSystem)
+    // Extract user intent for narrator
+    const userIntent = input.messages[input.messages.length - 1]?.text || 'workflow automation'
+
+    // Run planner and narrator in parallel
+    const [narration, loomResponse] = await Promise.all([
+      narrate({
+        agent: 'planner',
+        action: 'designing workflow',
+        userIntent,
+        phase: 'started'
+      }, input.apiKey),
+
+      model.generateText(messagesWithSystem)
+    ])
+
+    // Show narration to user immediately
+    if (post)
+    {
+      post({
+        type: 'agent_activity',
+        agent: 'planner',
+        activity: narration,
+        status: 'started',
+        id: `planner-${Date.now()}`,
+        timestamp: Date.now()
+      })
+    }
 
     // Log LLM response
     debugLLMResponse(loomResponse, systemPrompt)
@@ -257,6 +286,19 @@ class Orchestrator
         session.log('Workflow validation passed')
       }
 
+      // Send planner completion activity
+      if (post)
+      {
+        post({
+          type: 'agent_activity',
+          agent: 'planner',
+          activity: '✅ Workflow design complete!',
+          status: 'complete',
+          id: `planner-complete-${Date.now()}`,
+          timestamp: Date.now()
+        })
+      }
+
       // Deep validation with Validator Agent
       session.log('Running deep validation with Validator Agent')
       debugAgentHandoff('planner', 'validator', 'Validate workflow against n8n API')
@@ -272,12 +314,33 @@ class Orchestrator
           apiKey: n8nApiKey || undefined
         })
 
-        // Run validator
-        const validatorResult = await validatePlan({
-          apiKey: input.apiKey,
-          plan,
-          nodeTypes
-        })
+        // Run validator with parallel narration
+        const [validatorNarration, validatorResult] = await Promise.all([
+          narrate({
+            agent: 'validator',
+            action: 'validating workflow structure',
+            phase: 'started'
+          }, input.apiKey),
+
+          validatePlan({
+            apiKey: input.apiKey,
+            plan,
+            nodeTypes
+          })
+        ])
+
+        // Show validation narration
+        if (post)
+        {
+          post({
+            type: 'agent_activity',
+            agent: 'validator',
+            activity: validatorNarration,
+            status: 'started',
+            id: `validator-${Date.now()}`,
+            timestamp: Date.now()
+          })
+        }
 
         // Log validation results
         logValidation({
@@ -305,6 +368,19 @@ class Orchestrator
             { errors: validatorResult.errors?.length, warnings: validatorResult.warnings?.length }
           )
 
+          // Show error activity
+          if (post)
+          {
+            post({
+              type: 'agent_activity',
+              agent: 'validator',
+              activity: '🫣 Found workflow issues...',
+              status: 'error',
+              id: `validator-error-${Date.now()}`,
+              timestamp: Date.now()
+            })
+          }
+
           // Format validation errors for user
           const errorMessage = formatValidationErrors(validatorResult)
           console.error('❌ Validator rejected plan:', errorMessage)
@@ -323,6 +399,19 @@ class Orchestrator
           'Workflow is valid and ready for creation',
           { warnings: validatorResult.warnings?.length || 0 }
         )
+
+        // Show validation success
+        if (post)
+        {
+          post({
+            type: 'agent_activity',
+            agent: 'validator',
+            activity: '✅ Validation passed!',
+            status: 'complete',
+            id: `validator-complete-${Date.now()}`,
+            timestamp: Date.now()
+          })
+        }
 
         if (validatorResult.warnings && validatorResult.warnings.length > 0)
         {

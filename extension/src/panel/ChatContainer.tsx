@@ -10,7 +10,10 @@ import ToastContainer from '../lib/components/ToastContainer'
 
 export default function ChatContainer(): React.ReactElement | null
 {
-  const { isOpen, setOpen, messages, assistantDraft, sending, clearSession, loadMessages, toasts, removeToast } = useChatStore()
+  const { 
+    isOpen, setOpen, messages, assistantDraft, sending, activities, 
+    clearSession, loadMessages, toasts, removeToast 
+  } = useChatStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -43,6 +46,7 @@ export default function ChatContainer(): React.ReactElement | null
         messages={messages}
         draft={assistantDraft}
         sending={sending}
+        activities={activities}
         onSend={(text) => chat.send(text)}
       />
       {isOpen && (

@@ -14,7 +14,10 @@ export class ChatService
   {
     this.port.onMessage((message: ChatStreamMessage | BackgroundMessage) =>
     {
-      const { addMessage, finishSending, setAssistantDraft, setPendingPlan, setProgress, addToast } = useChatStore.getState()
+      const { 
+        addMessage, finishSending, setAssistantDraft, setPendingPlan, 
+        setProgress, addActivity, addToast 
+      } = useChatStore.getState()
 
       if (message.type === 'token')
       {
@@ -37,6 +40,17 @@ export class ChatService
             onClick: () => window.open(message.workflowUrl, '_blank')
           },
           duration: 7000
+        })
+      }
+      else if (message.type === 'agent_activity')
+      {
+        // Handle agent activity messages
+        addActivity({
+          id: message.id,
+          agent: message.agent,
+          activity: message.activity,
+          status: message.status,
+          timestamp: message.timestamp
         })
       }
       else if (message.type === 'done')

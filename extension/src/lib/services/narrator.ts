@@ -51,7 +51,7 @@ export async function narrateAgentActivity(
   catch (error)
   {
     console.warn('Narrator failed, using fallback:', error)
-    
+
     // Fallback to template-based messages
     return getFallbackMessage(context)
   }
@@ -95,7 +95,7 @@ function getFallbackMessage(context: NarratorContext): string
 /**
  * Generate narration in parallel with agent work
  * Clean API: Just use Promise.all() with this and your work
- * 
+ *
  * @example
  * const [narration, plan] = await Promise.all([
  *   narrate({ agent: 'planner', action: 'designing workflow', phase: 'started' }, apiKey),

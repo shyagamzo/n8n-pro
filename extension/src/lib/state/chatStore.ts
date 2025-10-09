@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
 import type { ToastProps } from '../components/Toast'
+import type { AgentType } from '../types/messaging'
 import { STORAGE_KEYS } from '../constants'
 import { storageGet, storageSet } from '../utils/storage'
 
@@ -11,6 +12,14 @@ type ProgressStatus = {
   total: number
 } | null
 
+export type AgentActivity = {
+  id: string
+  agent: AgentType
+  activity: string
+  status: 'started' | 'working' | 'complete' | 'error'
+  timestamp: number
+}
+
 type ChatState = {
   isOpen: boolean
   messages: ChatMessage[]
@@ -18,6 +27,7 @@ type ChatState = {
   assistantDraft: string
   pendingPlan?: Plan | null
   progress: ProgressStatus
+  activities: AgentActivity[]
   toasts: ToastProps[]
   setOpen: (open: boolean) => void
   addMessage: (msg: ChatMessage) => void
@@ -28,6 +38,10 @@ type ChatState = {
   setAssistantDraft: (t: string) => void
   setPendingPlan: (p: Plan | null) => void
   setProgress: (p: ProgressStatus) => void
+  addActivity: (activity: AgentActivity) => void
+  updateActivity: (id: string, updates: Partial<AgentActivity>) => void
+  removeActivity: (id: string) => void
+  clearActivities: () => void
   addToast: (toast: Omit<ToastProps, 'onClose'>) => void
   removeToast: (id: string) => void
   loadMessages: () => Promise<void>
@@ -51,6 +65,7 @@ export const useChatStore = create<ChatState>((set) => ({
   assistantDraft: '',
   pendingPlan: null,
   progress: null,
+  activities: [],
   toasts: [],
   setOpen: (open) => set({ isOpen: open }),
   addMessage: (msg) =>
@@ -63,16 +78,44 @@ export const useChatStore = create<ChatState>((set) => ({
     })
   },
   startSending: () => set({ sending: true }),
-  finishSending: () => set({ sending: false, progress: null }),
+  finishSending: () => set({ sending: false, progress: null, activities: [] }),
   clear: () => set({ messages: [] }),
   clearSession: () =>
   {
-    set({ messages: [], assistantDraft: '', pendingPlan: null, sending: false, progress: null })
+    set({ messages: [], assistantDraft: '', pendingPlan: null, sending: false, progress: null, activities: [] })
     saveMessages([])
   },
   setAssistantDraft: (t) => set({ assistantDraft: t }),
   setPendingPlan: (p) => set({ pendingPlan: p }),
   setProgress: (p) => set({ progress: p }),
+  addActivity: (activity) =>
+  {
+    set((s) => ({
+      activities: [...s.activities, activity]
+    }))
+
+    // Auto-remove completed activities after 3 seconds
+    if (activity.status === 'complete')
+    {
+      setTimeout(() =>
+      {
+        useChatStore.getState().removeActivity(activity.id)
+      }, 3000)
+    }
+  },
+  updateActivity: (id, updates) =>
+  {
+    set((s) => ({
+      activities: s.activities.map(a => a.id === id ? { ...a, ...updates } : a)
+    }))
+  },
+  removeActivity: (id) =>
+  {
+    set((s) => ({
+      activities: s.activities.filter(a => a.id !== id)
+    }))
+  },
+  clearActivities: () => set({ activities: [] }),
   addToast: (toast) =>
   {
     set((s) => ({
