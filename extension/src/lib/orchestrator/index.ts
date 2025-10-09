@@ -3,8 +3,9 @@ import type { Plan } from '../types/plan'
 import type { BackgroundMessage } from '../types/messaging'
 import { createOpenAiChatModel } from '../ai/model'
 import { createAgentTracer } from '../ai/tracing'
-import { buildPrompt, type AgentType } from '../prompts'
+import { buildPrompt } from '../prompts'
 import { parse as parseLoom } from '../loom'
+import { loomToPlan } from './plan-converter'
 import { streamChatCompletion } from '../services/openai'
 import { stripCodeFences } from '../utils/markdown'
 import { debugLLMResponse, debugLoomParsing, debugPlanGenerated, DebugSession, debugAgentDecision, debugAgentHandoff } from '../utils/debug'
@@ -13,7 +14,7 @@ import { validatePlan } from './validator'
 import { fetchNodeTypes } from '../n8n/node-types'
 import { logValidation, formatValidationErrors } from '../utils/validation-logger'
 import { getN8nApiKey, getBaseUrl } from '../services/settings'
-import { narrate } from '../services/narrator'
+import { createNarrationManager } from './narration'
 
 export type OrchestratorInput = {
   apiKey: string
@@ -25,58 +26,9 @@ export type ActivityHandler = (message: BackgroundMessage) => void
 
 class Orchestrator
 {
-  private postHandler?: ActivityHandler
-  private currentApiKey?: string
-
-  public setPostHandler(handler: ActivityHandler): void
-  {
-    this.postHandler = handler
-  }
-
-  private async narrateAndPost(
-    agent: AgentType,
-    action: string,
-    phase: 'started' | 'working' | 'complete' | 'error',
-    userIntent?: string
-  ): Promise<void>
-  {
-    if (!this.postHandler || !this.currentApiKey) return
-
-    // Fire-and-forget: narration posts when ready (parallel execution)
-    narrate(
-      { agent, action, userIntent, phase },
-      this.currentApiKey
-    )
-      .then(activity =>
-      {
-        this.postHandler?.({
-          type: 'agent_activity',
-          agent,
-          activity,
-          status: phase,
-          id: `${agent}-${phase}-${Date.now()}`,
-          timestamp: Date.now()
-        })
-      })
-      .catch(() =>
-      {
-        // Use fallback message if narrator fails
-        const fallback = `${phase === 'started' ? '⏳' : phase === 'complete' ? '✅' : '⚙️'} ${agent}...`
-        this.postHandler?.({
-          type: 'agent_activity',
-          agent,
-          activity: fallback,
-          status: phase,
-          id: `${agent}-${phase}-${Date.now()}`,
-          timestamp: Date.now()
-        })
-      })
-  }
 
   public async handle(input: OrchestratorInput, onToken?: StreamTokenHandler): Promise<string>
   {
-    this.currentApiKey = input.apiKey
-
     // Create agent tracer for this conversation
     const tracer = createAgentTracer()
     tracer.setAgent('orchestrator')
@@ -136,8 +88,6 @@ class Orchestrator
    */
   public async isReadyToPlan(input: OrchestratorInput): Promise<{ ready: boolean; reason?: string }>
   {
-    this.currentApiKey = input.apiKey
-
     // Create agent tracer for readiness check
     const tracer = createAgentTracer()
     tracer.setAgent('orchestrator')
@@ -189,10 +139,8 @@ class Orchestrator
     }
   }
 
-  public async plan(input: OrchestratorInput): Promise<Plan>
+  public async plan(input: OrchestratorInput, postHandler?: ActivityHandler): Promise<Plan>
   {
-    this.currentApiKey = input.apiKey
-
     const session = new DebugSession('Orchestrator', 'plan')
     session.log('Starting plan generation', { messageCount: input.messages.length })
 
@@ -239,11 +187,12 @@ class Orchestrator
       { messageCount: messagesWithSystem.length }
     )
 
-    // Extract user intent for narrator
+    // Set up narrator if post handler provided
+    const narrator = postHandler ? createNarrationManager(postHandler, input.apiKey) : undefined
     const userIntent = input.messages[input.messages.length - 1]?.text || 'workflow automation'
 
-    // Start narration (fire-and-forget, posts when ready)
-    void this.narrateAndPost('planner', 'designing workflow', 'started', userIntent)
+    // Start narration
+    narrator?.post('planner', 'designing workflow', 'started', userIntent)
 
     // Call planner (runs in parallel with narrator)
     const loomResponse = await model.generateText(messagesWithSystem)
@@ -274,7 +223,7 @@ class Orchestrator
       session.log('Loom parsing succeeded')
 
       // Convert parsed Loom to Plan type
-      const plan = this.loomToPlan(parsed.data)
+      const plan = loomToPlan(parsed.data)
 
       // Log planner decision
       debugAgentDecision(
@@ -322,7 +271,7 @@ class Orchestrator
       }
 
       // Planner complete
-      void this.narrateAndPost('planner', 'workflow design complete', 'complete')
+      narrator?.post('planner', 'workflow design complete', 'complete')
 
       // Deep validation with Validator Agent
       session.log('Running deep validation with Validator Agent')
@@ -340,7 +289,7 @@ class Orchestrator
         })
 
         // Start validator narration
-        void this.narrateAndPost('validator', 'validating workflow structure', 'started')
+        narrator?.post('validator', 'validating workflow structure', 'started')
 
         // Run validator
         const validatorResult = await validatePlan({
@@ -376,7 +325,7 @@ class Orchestrator
           )
 
           // Validator found errors
-          void this.narrateAndPost('validator', 'found workflow issues', 'error')
+          narrator?.post('validator', 'found workflow issues', 'error')
 
           // Format validation errors for user
           const errorMessage = formatValidationErrors(validatorResult)
@@ -398,7 +347,7 @@ class Orchestrator
         )
 
         // Validator passed
-        void this.narrateAndPost('validator', 'validation passed', 'complete')
+        narrator?.post('validator', 'validation passed', 'complete')
 
         if (validatorResult.warnings && validatorResult.warnings.length > 0)
         {
@@ -460,60 +409,6 @@ class Orchestrator
         'Please try rephrasing your request or providing more details. ' +
         'Check console for full error details.'
       )
-    }
-  }
-
-  private loomToPlan(loomData: Record<string, unknown>): Plan
-  {
-    // Extract fields from Loom data
-    const title = String(loomData.title || 'Workflow')
-    const summary = String(loomData.summary || 'Generated workflow')
-    // Handle case where credentialsNeeded might be parsed as string '[]' instead of array
-    const credentialsNeededRaw = loomData.credentialsNeeded
-    const credentialsNeeded = Array.isArray(credentialsNeededRaw)
-      ? credentialsNeededRaw
-      : []
-
-    const credentialsNeededArray = credentialsNeeded.map(cred =>
-    {
-      const c = cred as Record<string, unknown>
-      return {
-        type: String(c.type || ''),
-        name: c.name ? String(c.name) : undefined,
-        requiredFor: c.requiredFor ? String(c.requiredFor) : undefined,
-        nodeId: c.nodeId ? String(c.nodeId) : undefined,
-        nodeName: c.nodeName ? String(c.nodeName) : undefined,
-      }
-    })
-
-    // Handle case where credentialsAvailable might be parsed as string '[]' instead of array
-    const credentialsAvailableRaw = loomData.credentialsAvailable
-    const credentialsAvailable = Array.isArray(credentialsAvailableRaw)
-      ? credentialsAvailableRaw
-      : []
-
-    const credentialsAvailableArray = credentialsAvailable.map(cred =>
-    {
-      const c = cred as Record<string, unknown>
-      return {
-        type: String(c.type || ''),
-        name: c.name ? String(c.name) : undefined,
-        requiredFor: c.status ? String(c.status) : undefined,
-      }
-    })
-
-    const workflow = loomData.workflow as Record<string, unknown> || {}
-
-    return {
-      title,
-      summary,
-      credentialsNeeded: credentialsNeededArray,
-      credentialsAvailable: credentialsAvailableArray.length > 0 ? credentialsAvailableArray : undefined,
-      workflow: {
-        name: String(workflow.name || title),
-        nodes: (workflow.nodes as unknown[]) || [],
-        connections: (workflow.connections as Record<string, unknown>) || {},
-      },
     }
   }
 

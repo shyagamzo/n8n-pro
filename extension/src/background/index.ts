@@ -250,9 +250,6 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
 
   console.log('💬 Handling chat message:', { messageCount: msg.messages.length })
 
-  // Set post handler for orchestrator (centralized narration)
-  orchestrator.setPostHandler(post)
-
   // First, check if we have enough information to generate a plan
   const readiness = await orchestrator.isReadyToPlan({
     apiKey,
@@ -282,7 +279,7 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
       const plan = await orchestrator.plan({
         apiKey,
         messages: (msg.messages as ChatMessage[]),
-      })
+      }, post)
 
       post({ type: 'plan', plan } satisfies BackgroundMessage)
       console.log('📋 Plan generated and sent:', { title: plan.title })
