@@ -6,25 +6,27 @@ import type { RunnableConfig } from '@langchain/core/runnables'
 import type { OrchestratorStateType } from '../state'
 import { buildPrompt } from '../../prompts'
 import { debugAgentDecision, debugAgentHandoff } from '../../utils/debug'
+import { enrichmentTools } from '../tools/enrichment'
 
 /**
  * Enrichment node handles conversational chat and requirement gathering.
- *
+ * 
  * Features:
- * - State-based interruption for clarification (browser-compatible)
+ * - Tool-based clarification (askClarification tool)
  * - Token streaming support via callbacks
- * - No tools - pure conversational LLM
+ * - Clean content (no markers in streamed output)
  * - Returns Command for explicit routing control
- *
+ * 
  * Flow:
- * 1. LLM responds to user message
- * 2. If needs clarification: set state flag → return to END → UI handles prompt
- * 3. If user provides answer: loop back to enrichment with answer
- * 4. If ready or just chatting: return to END
- *
- * Note: Uses state-based interruption instead of interrupt() function
- * because interrupt() requires Node.js AsyncLocalStorage which doesn't
- * work reliably in browser environments.
+ * 1. LLM responds to user message OR calls askClarification tool
+ * 2. If tool called: extract question → set in state → return to END
+ * 3. If normal response: return content → END
+ * 4. UI detects clarificationQuestion in state and prompts user
+ * 
+ * Benefits:
+ * - No markers appear in streamed content
+ * - Tool calls are structured and reliable
+ * - Follows proper LangGraph patterns
  */
 export async function enrichmentNode(
   state: OrchestratorStateType,
@@ -41,27 +43,29 @@ export async function enrichmentNode(
 
   debugAgentHandoff('orchestrator', 'enrichment', 'Conversational response and requirement gathering')
 
+  // Bind askClarification tool for requesting user input
   const model = new ChatOpenAI({
     apiKey,
     model: modelName,
     temperature: 0.7,
     streaming: true
     // Don't pass callbacks here - LangGraph propagates them automatically
-    // Passing them would result in duplicate token emissions
-  })
+  }).bindTools(enrichmentTools)
 
   const systemPrompt = buildPrompt('enrichment', {
     includeNodesReference: true,
     includeConstraints: true
   }) + `
 
-IMPORTANT RESPONSE MARKERS:
-- If you need clarification from the user, end your response with: [NEEDS_INPUT]
-- If the user wants a workflow and you have enough information, end with: [READY]
-- If just chatting (no workflow intent), end with: [CHAT]
+IMPORTANT: You have access to the askClarification tool.
 
-Use [NEEDS_INPUT] sparingly - only when you truly need critical information to proceed.
-Ask ONE specific question at a time.
+When you need more information from the user:
+- Call the askClarification tool with your question
+- Ask ONE specific question at a time
+- Only use when you truly need critical information
+
+When you have enough information or are just chatting:
+- Respond normally without calling any tools
 `
 
   const response = await model.invoke([
@@ -69,58 +73,58 @@ Ask ONE specific question at a time.
     ...state.messages
   ])
 
+  debugAgentDecision(
+    'enrichment',
+    'Generated response',
+    `Response length: ${(response.content as string).length}`,
+    { hasToolCalls: !!(response as AIMessage).tool_calls?.length }
+  )
+
+  // Check if LLM called askClarification tool
+  const toolCalls = (response as AIMessage).tool_calls
+
+  if (toolCalls && toolCalls.length > 0)
+  {
+    const askClarCall = toolCalls.find((tc: any) => tc.name === 'askClarification')
+
+    if (askClarCall)
+    {
+      const question = askClarCall.args?.question as string
+
+      debugAgentDecision(
+        'enrichment',
+        'Needs clarification',
+        'Tool called for user input',
+        { question }
+      )
+
+      // Set clarification question in state
+      // Don't add messages yet - wait for user response
+      return new Command({
+        goto: 'END',
+        update: {
+          clarificationQuestion: question
+        }
+      })
+    }
+  }
+
+  // Normal response - no clarification needed
   const content = response.content as string
 
   debugAgentDecision(
     'enrichment',
-    'Generated response',
-    `Response length: ${content.length}`,
-    { hasMarker: /\[(NEEDS_INPUT|READY|CHAT)\]/.test(content) }
+    'Chat complete',
+    content.substring(0, 100),
+    { contentLength: content.length }
   )
 
-  // Handle clarification using state-based interruption (browser-compatible)
-  if (content.includes('[NEEDS_INPUT]'))
-  {
-    const cleanContent = content.replace('[NEEDS_INPUT]', '').trim()
-
-    debugAgentDecision(
-      'enrichment',
-      'Needs clarification',
-      'Setting clarification question in state',
-      { question: cleanContent }
-    )
-
-    // Set clarification question in state instead of using interrupt()
-    // The orchestrator will detect this and handle the user prompt
-    return new Command({
-      goto: 'END',
-      update: {
-        clarificationQuestion: cleanContent,
-        messages: [new AIMessage(cleanContent)]
-      }
-    })
-  }
-
-  // Clean up markers
-  const cleanContent = content
-    .replace('[READY]', '')
-    .replace('[CHAT]', '')
-    .trim()
-
-  const isReady = content.includes('[READY]')
-
-  debugAgentDecision(
-    'enrichment',
-    isReady ? 'Ready to plan' : 'Chat complete',
-    cleanContent.substring(0, 100),
-    { readyToPlan: isReady }
-  )
-
-  // Return clean response and end enrichment
+  // Return response
   return new Command({
     goto: 'END',
     update: {
-      messages: [new AIMessage(cleanContent)]
+      messages: [response as AIMessage],
+      clarificationQuestion: undefined  // Clear any previous clarification
     }
   })
 }
