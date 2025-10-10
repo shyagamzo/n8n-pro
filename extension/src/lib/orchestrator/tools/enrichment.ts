@@ -7,11 +7,11 @@ const askClarificationSchema = z.object({
 
 /**
  * Tool for enrichment agent to request clarification from the user.
- * 
+ *
  * When the enrichment agent needs more information, it calls this tool
  * instead of including markers in its response. This ensures the clarification
  * request is separate from the streamed content.
- * 
+ *
  * The tool call triggers an interrupt in the graph, allowing the UI to
  * prompt the user for input without showing internal markers.
  */

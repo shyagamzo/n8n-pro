@@ -105,10 +105,10 @@ const toolCalls = response.tool_calls
 
 if (toolCalls?.length > 0) {
   const askClarCall = toolCalls.find(tc => tc.name === 'askClarification')
-  
+
   if (askClarCall) {
     const question = askClarCall.args.question
-    
+
     // Set in state (not streamed to user)
     return new Command({
       goto: 'END',

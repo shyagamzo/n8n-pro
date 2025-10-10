@@ -10,19 +10,19 @@ import { enrichmentTools } from '../tools/enrichment'
 
 /**
  * Enrichment node handles conversational chat and requirement gathering.
- * 
+ *
  * Features:
  * - Tool-based clarification (askClarification tool)
  * - Token streaming support via callbacks
  * - Clean content (no markers in streamed output)
  * - Returns Command for explicit routing control
- * 
+ *
  * Flow:
  * 1. LLM responds to user message OR calls askClarification tool
  * 2. If tool called: extract question → set in state → return to END
  * 3. If normal response: return content → END
  * 4. UI detects clarificationQuestion in state and prompts user
- * 
+ *
  * Benefits:
  * - No markers appear in streamed content
  * - Tool calls are structured and reliable
