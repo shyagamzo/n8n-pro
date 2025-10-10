@@ -1,8 +1,10 @@
 # LangGraph Refactoring Summary
 
-**Branch**: `♻️/langgraph-refactor`
-**Date**: October 10, 2025
-**Status**: ✅ Complete - Build passing
+**Branch**: `♻️/langgraph-refactor`  
+**Date**: October 10, 2025  
+**Status**: ✅ Complete - Build passing  
+**Total Commits**: 30 focused commits  
+**Browser Compatible**: ✅ Yes
 
 ---
 
@@ -14,13 +16,12 @@ Complete refactoring of the orchestrator system to properly utilize LangGraph's 
 
 ## Implementation Statistics
 
-- **Total Commits**: 17 small, focused commits
-- **Files Created**: 14 new files
-- **Files Deleted**: 6 legacy files
-- **Lines Added**: 1,748
-- **Lines Deleted**: 1,183
-- **Net Change**: +565 lines (but -1,124 lines of legacy orchestration code removed)
+- **Total Commits**: 30 focused commits
+- **Files Created**: 15 new files
+- **Files Deleted**: 6 legacy files  
+- **Lines Removed**: ~1,124 lines of legacy orchestration code
 - **Build Status**: ✅ Passing
+- **Browser Compatible**: ✅ Yes (tool-based clarification, no interrupt())
 - **Code Reduction**: ~80% less custom orchestration code
 
 ---
@@ -69,18 +70,27 @@ orchestrator.applyWorkflow()
 
 ### ✅ 2. Proper Agent Nodes
 Each node has a specific responsibility:
-- **Enrichment**: Chat + clarification (uses `interrupt()`)
+- **Enrichment**: Chat + clarification (uses `askClarification` tool)
 - **Planner**: Workflow generation (uses tools for n8n knowledge)
 - **Planner Tools**: Tool execution for planner
 - **Validator**: LLM-based validation (no custom schemas!)
 - **Executor**: Workflow creation (uses tools for n8n API)
 - **Executor Tools**: Tool execution for executor
 
+### ✅ 2.1. Browser Compatibility Fixes
+Critical fixes for browser/extension environment:
+- **Tool-based clarification**: Uses `askClarification` tool instead of `interrupt()` function
+- **AsyncLocalStorage stub**: Prevents bundling errors from Node.js modules
+- **No markers in stream**: Tool calls don't appear in streamed content
+- **State-based interruption**: Clarification via state fields, not exception throwing
+- **Callback propagation**: LangGraph auto-propagates, no manual passthrough needed
+
 ### ✅ 3. Tool Architecture
 - **Separation of concerns**: Each agent has dedicated tools
+- **Enrichment tools**: `askClarification` (for user input)
 - **Planner tools**: `fetch_n8n_node_types`, `get_node_docs`
 - **Executor tools**: `create_n8n_workflow`, `check_credentials`
-- **Tool nodes**: Separate nodes for tool execution with loop-back
+- **Tool nodes**: Separate nodes for tool execution with loop-back (planner, executor only)
 
 ### ✅ 4. Session Management
 - `OrchestratorManager` maps session IDs to orchestrator instances
@@ -88,11 +98,13 @@ Each node has a specific responsibility:
 - Automatic cleanup on port disconnect
 - State persists across messages via checkpointer
 
-### ✅ 5. Two Interrupt Points
-1. **Enrichment**: Conditional `interrupt()` for clarification
-   - Only triggers when `[NEEDS_INPUT]` marker present
+### ✅ 5. Two Interrupt Points (Browser-Compatible)
+1. **Enrichment**: Tool-based clarification via `askClarification`
+   - LLM calls tool when clarification needed
+   - Question extracted from tool call (not streamed content)
+   - No markers visible to user
+   - State-based detection and handling
    - One question at a time
-   - Loops back to enrichment with user response
 
 2. **Executor**: Always pauses via `interruptBefore: ['executor']`
    - User approves workflow in UI
@@ -248,9 +260,13 @@ Each node has a specific responsibility:
 - ✅ `config.metadata` for context passing
 
 ### Browser Compatibility
+- ✅ Tool-based clarification instead of `interrupt()` function
+- ✅ No AsyncLocalStorage dependency for interrupts
 - ✅ Node.js module stubs for `async_hooks`
 - ✅ Vite alias configuration
 - ✅ Chrome extension compatibility maintained
+- ✅ No callback passthrough to models (auto-propagation)
+- ✅ web_accessible_resources for asset loading
 
 ### Integration Points
 - ✅ Background script session management
