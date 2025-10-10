@@ -1,6 +1,6 @@
 /**
  * Stub for Node.js async_hooks module.
- * 
+ *
  * LangGraph imports this module but doesn't require it for browser/extension environments.
  * This stub provides the minimal interface to prevent bundling errors.
  */

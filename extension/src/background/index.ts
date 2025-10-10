@@ -1,10 +1,9 @@
 import type { ChatRequest, BackgroundMessage, ApplyPlanRequest } from '../lib/types/messaging'
 import type { ChatMessage } from '../lib/types/chat'
-import { orchestrator } from '../lib/orchestrator'
+import { getOrchestrator, cleanupOrchestrator } from './orchestrator-manager'
 import { createN8nClient } from '../lib/n8n'
 import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
-import { validateWorkflow, formatValidationResult } from '../lib/validation/workflow'
-import { debugWorkflowCreation, debugWorkflowCreated, debugWorkflowError } from '../lib/utils/debug'
+import { debugWorkflowCreated, debugWorkflowError } from '../lib/utils/debug'
 
 chrome.runtime.onInstalled.addListener(() =>
 {
@@ -78,9 +77,30 @@ function normalizeConnections(connections: unknown): Record<string, unknown>
   return normalized
 }
 
-async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessage) => void): Promise<void>
+async function handleApplyPlan(
+  msg: ApplyPlanRequest,
+  post: (m: BackgroundMessage) => void,
+  sessionId: string
+): Promise<void>
 {
-  const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
+  const [openaiApiKey, n8nApiKey, baseUrl] = await Promise.all([
+    getOpenAiKey(),
+    getN8nApiKey(),
+    getBaseUrl()
+  ])
+
+  if (!openaiApiKey)
+  {
+    post({ type: 'error', error: 'OpenAI API key not set.' } satisfies BackgroundMessage)
+    return
+  }
+
+  if (!n8nApiKey)
+  {
+    post({ type: 'error', error: 'n8n API key not set. Configure it in Options.' } satisfies BackgroundMessage)
+    return
+  }
+
   const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
   post({ type: 'token', token: '\nApplying plan…' } satisfies BackgroundMessage)
 
@@ -101,77 +121,57 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
     return
   }
 
+  // Get session-specific orchestrator
+  const orchestrator = getOrchestrator(sessionId)
+
   // Log workflow creation attempt
-  console.log('📤 Creating workflow in n8n:', {
+  console.log('📤 Resuming workflow creation from executor interrupt:', {
     workflowName: msg.plan.workflow.name,
     nodeCount: msg.plan.workflow.nodes?.length || 0,
-    baseUrl
+    sessionId
   })
-
-  // Validate workflow before sending
-  const validation = validateWorkflow(msg.plan.workflow)
-  if (!validation.valid)
-  {
-    console.error('❌ Workflow validation failed:', validation.errors)
-    post({
-      type: 'error',
-      error: `Workflow validation failed:\n\n${formatValidationResult(validation)}\n\n**Debug info:** Check browser console for full workflow structure.`
-    } satisfies BackgroundMessage)
-    console.error('📋 Invalid workflow structure:', msg.plan.workflow)
-    return
-  }
-
-  if (validation.warnings.length > 0)
-  {
-    console.warn('⚠️ Workflow validation warnings:', validation.warnings)
-  }
-
-  debugWorkflowCreation(msg.plan.workflow)
-
-  // Normalize connections format for n8n API
-  const normalizedWorkflow = {
-    ...msg.plan.workflow,
-    connections: normalizeConnections(msg.plan.workflow.connections)
-  }
 
   try
   {
-    const result = await n8n.createWorkflow(normalizedWorkflow)
+    // Resume graph execution from executor interrupt
+    // The executor node will create the workflow in n8n
+    const result = await orchestrator.applyWorkflow(openaiApiKey, n8nApiKey)
 
-    debugWorkflowCreated(result.id, `${baseUrl}/workflow/${result.id}`)
+    if (!result.workflowId)
+    {
+      throw new Error('Workflow creation did not return a workflow ID')
+    }
+
+    debugWorkflowCreated(result.workflowId, `${baseUrl}/workflow/${result.workflowId}`)
     console.log('✅ Workflow created successfully:', {
-      workflowId: result.id,
+      workflowId: result.workflowId,
       workflowName: msg.plan.workflow.name
     })
 
     // Generate deep link to workflow
-    const workflowUrl = `${baseUrl}/workflow/${result.id}`
+    const workflowUrl = `${baseUrl}/workflow/${result.workflowId}`
     post({ type: 'token', token: `\n✅ Created workflow: [Open in n8n →](${workflowUrl})` } satisfies BackgroundMessage)
 
     // Send workflow created notification for toast
-    post({ type: 'workflow_created', workflowId: result.id, workflowUrl } satisfies BackgroundMessage)
+    post({ type: 'workflow_created', workflowId: result.workflowId, workflowUrl } satisfies BackgroundMessage)
 
-    // If there are credentials needed, provide node-specific deep links
-    if (msg.plan.credentialsNeeded && msg.plan.credentialsNeeded.length > 0)
+    // If there are credentials needed from the orchestrator
+    if (result.credentialGuidance && result.credentialGuidance.missing.length > 0)
     {
       post({ type: 'token', token: '\n\n**Next steps to activate:**' } satisfies BackgroundMessage)
 
-      msg.plan.credentialsNeeded.forEach((cred, idx) =>
+      result.credentialGuidance.missing.forEach((cred, idx) =>
       {
-        const nodeUrl = cred.nodeId
-          ? `${baseUrl}/workflow/${result.id}/${encodeURIComponent(cred.nodeId)}`
-          : workflowUrl
-        const credUrl = `${baseUrl}/credentials/new/${encodeURIComponent(cred.type)}`
-
-        const nodeName = cred.nodeName || cred.name || cred.type
+        const setupLink = result.credentialGuidance!.setupLinks.find(link => link.name === cred.name)
+        const credUrl = setupLink?.url || `${baseUrl}/credentials/new/${encodeURIComponent(cred.type)}`
 
         post({
           type: 'token',
-          token: `\n${idx + 1}. **${nodeName}** node: [Open node →](${nodeUrl}) or [Create credential →](${credUrl})`
+          token: `\n${idx + 1}. **${cred.name}** (${cred.type}): [Create credential →](${credUrl})`
         } satisfies BackgroundMessage)
       })
 
-      post({ type: 'token', token: '\n\n💡 **Tip:** If you already have credentials, click "Open node" to select them. Otherwise, create new ones.' } satisfies BackgroundMessage)
+      post({ type: 'token', token: '\n\n💡 **Tip:** Set up these credentials to activate your workflow.' } satisfies BackgroundMessage)
     }
 
     post({ type: 'done' } satisfies BackgroundMessage)
@@ -185,62 +185,29 @@ async function handleApplyPlan(msg: ApplyPlanRequest, post: (m: BackgroundMessag
 
     console.error('❌ Workflow creation failed:', {
       error: err.message || String(error),
-      status: err.status,
-      body: err.body,
+      sessionId,
       workflow: msg.plan.workflow
     })
 
     // Build detailed error message
     let errorMessage = '❌ **Failed to create workflow**\n\n'
-
-    if (err.status)
-    {
-      errorMessage += `**HTTP Status:** ${err.status}\n`
-    }
-
     errorMessage += `**Error:** ${err.message || String(error)}\n\n`
-
-    if (err.body && typeof err.body === 'object')
-    {
-      const body = err.body as Record<string, unknown>
-      if (body.message)
-      {
-        errorMessage += `**Details:** ${body.message}\n\n`
-      }
-
-      // Include specific n8n validation errors if available
-      if (body.errors && Array.isArray(body.errors))
-      {
-        errorMessage += '**Validation errors:**\n'
-        body.errors.forEach((e: unknown) =>
-        {
-          if (typeof e === 'string')
-          {
-            errorMessage += `- ${e}\n`
-          }
-          else if (e && typeof e === 'object')
-          {
-            const errObj = e as Record<string, unknown>
-            errorMessage += `- ${errObj.message || JSON.stringify(e)}\n`
-          }
-        })
-        errorMessage += '\n'
-      }
-    }
-
     errorMessage += '**Troubleshooting:**\n'
-    errorMessage += '1. Check browser console for full workflow structure\n'
-    errorMessage += '2. Verify node types and parameters are correct\n'
-    errorMessage += '3. Ensure all required node parameters are provided\n'
-    errorMessage += '4. Check n8n server logs for additional details\n'
+    errorMessage += '1. Check browser console for full error details\n'
+    errorMessage += '2. Verify n8n is running and accessible\n'
+    errorMessage += '3. Ensure API credentials are configured correctly\n'
 
     post({ type: 'error', error: errorMessage } satisfies BackgroundMessage)
   }
 }
 
-async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void): Promise<void>
+async function handleChat(
+  msg: ChatRequest,
+  post: (m: BackgroundMessage) => void,
+  sessionId: string
+): Promise<void>
 {
-  const apiKey = await getOpenAiKey()
+  const [apiKey, n8nApiKey] = await Promise.all([getOpenAiKey(), getN8nApiKey()])
 
   if (!apiKey)
   {
@@ -248,7 +215,10 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
     return
   }
 
-  console.log('💬 Handling chat message:', { messageCount: msg.messages.length })
+  console.log('💬 Handling chat message:', { messageCount: msg.messages.length, sessionId })
+
+  // Get session-specific orchestrator
+  const orchestrator = getOrchestrator(sessionId)
 
   // First, check if we have enough information to generate a plan
   const readiness = await orchestrator.isReadyToPlan({
@@ -274,8 +244,19 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
   {
     console.log('✅ Ready to plan - generating workflow')
 
+    if (!n8nApiKey)
+    {
+      post({
+        type: 'error',
+        error: 'n8n API key not set. Configure it in Options to create workflows.'
+      } satisfies BackgroundMessage)
+      post({ type: 'done' } satisfies BackgroundMessage)
+      return
+    }
+
     try
     {
+      // Generate plan (runs until executor interrupt)
       const plan = await orchestrator.plan({
         apiKey,
         messages: (msg.messages as ChatMessage[]),
@@ -305,26 +286,39 @@ async function handleChat(msg: ChatRequest, post: (m: BackgroundMessage) => void
 chrome.runtime.onConnect.addListener((port) =>
 {
   if (port.name !== 'chat') return
+
+  // Generate session ID based on tab ID or use random ID
+  const sessionId = port.sender?.tab?.id?.toString() || crypto.randomUUID()
+  console.log('🔌 New chat connection:', { sessionId, tabId: port.sender?.tab?.id })
+
   const post = createSafePost(port)
+
   port.onMessage.addListener(async (msg: ChatRequest | ApplyPlanRequest) =>
   {
     try
     {
       if (msg?.type === 'apply_plan')
       {
-        await handleApplyPlan(msg, post)
+        await handleApplyPlan(msg, post, sessionId)
         return
       }
 
       if (msg?.type === 'chat')
       {
-        await handleChat(msg, post)
+        await handleChat(msg, post, sessionId)
       }
     }
     catch (err)
     {
       post({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
     }
+  })
+
+  // Clean up orchestrator when port disconnects
+  port.onDisconnect.addListener(() =>
+  {
+    console.log('🔌 Chat disconnected:', { sessionId })
+    cleanupOrchestrator(sessionId)
   })
 })
 
