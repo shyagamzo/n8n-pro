@@ -1,7 +1,9 @@
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
 
-export type ChatRequest = { type: 'chat'; messages: ChatMessage[] }
+export type ChatRequest = 
+  | { type: 'chat'; messages: ChatMessage[] }
+  | { type: 'resume_chat'; resumeValue: string; apiKey: string }
 
 export type BackgroundMessage =
   | { type: 'token'; token: string }
@@ -10,6 +12,7 @@ export type BackgroundMessage =
   | { type: 'plan'; plan: Plan }
   | { type: 'progress'; status: string; step: number; total: number }
   | { type: 'workflow_created'; workflowId: string; workflowUrl: string }
+  | { type: 'needs_input'; question: string; reason: string }
   | {
       type: 'agent_activity'
       agent: AgentType

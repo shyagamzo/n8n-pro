@@ -207,6 +207,42 @@ async function handleChat(
   sessionId: string
 ): Promise<void>
 {
+  // Handle resume from interrupt
+  if (msg.type === 'resume_chat')
+  {
+    console.log('▶️ Resuming from interrupt:', { sessionId, resumeValue: msg.resumeValue.substring(0, 50) })
+    
+    const orchestrator = getOrchestrator(sessionId)
+    
+    try
+    {
+      // Resume with the user's input
+      const reply = await orchestrator.handle(
+        null,  // null input = resume from checkpoint
+        (token) => post({ type: 'token', token } satisfies BackgroundMessage),
+        msg.resumeValue  // User's answer to the clarification question
+      )
+      
+      if (reply && reply.length > 0)
+      {
+        post({ type: 'token', token: reply } satisfies BackgroundMessage)
+      }
+      
+      post({ type: 'done' } satisfies BackgroundMessage)
+    }
+    catch (error)
+    {
+      console.error('❌ Resume failed:', error)
+      post({
+        type: 'error',
+        error: `Failed to continue: ${(error as Error).message}`
+      } satisfies BackgroundMessage)
+    }
+    
+    return
+  }
+  
+  // Handle normal chat message
   const [apiKey, n8nApiKey] = await Promise.all([getOpenAiKey(), getN8nApiKey()])
 
   if (!apiKey)
@@ -229,14 +265,44 @@ async function handleChat(
   console.log('🔍 Readiness check:', readiness)
 
   // Generate conversational response (this happens regardless)
-  const reply: string = await orchestrator.handle({
-    apiKey,
-    messages: (msg.messages as ChatMessage[]),
-  }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
-
-  if (reply && reply.length > 0)
+  try
   {
-    post({ type: 'token', token: reply } satisfies BackgroundMessage)
+    const reply: string = await orchestrator.handle({
+      apiKey,
+      messages: (msg.messages as ChatMessage[]),
+    }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
+
+    if (reply && reply.length > 0)
+    {
+      post({ type: 'token', token: reply } satisfies BackgroundMessage)
+    }
+  }
+  catch (error)
+  {
+    // Check if this is a GraphInterrupt (enrichment asking for clarification)
+    const err = error as any
+    if (err?.name === 'NodeInterrupt' || err?.name === 'GraphInterrupt')
+    {
+      console.log('⏸️ Graph interrupted for clarification:', err.interrupts)
+      
+      // Extract interrupt data
+      const interruptData = err.interrupts?.[0]?.value
+      if (interruptData?.question)
+      {
+        // Post the clarification question to UI
+        post({
+          type: 'needs_input',
+          question: interruptData.question,
+          reason: interruptData.reason || 'clarification'
+        } satisfies BackgroundMessage)
+        
+        // Don't send 'done' - waiting for user response
+        return
+      }
+    }
+    
+    // Not an interrupt, rethrow
+    throw error
   }
 
   // Only generate plan if we have enough information
@@ -303,7 +369,7 @@ chrome.runtime.onConnect.addListener((port) =>
         return
       }
 
-      if (msg?.type === 'chat')
+      if (msg?.type === 'chat' || msg?.type === 'resume_chat')
       {
         await handleChat(msg, post, sessionId)
       }

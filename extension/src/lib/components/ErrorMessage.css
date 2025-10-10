@@ -2,23 +2,23 @@
   border-radius: var(--border-radius-base, 8px);
   padding: var(--spacing-md, 1rem);
   margin: var(--spacing-sm, 0.5rem) 0;
-  background: var(--color-background-base, #fff);
+  background: var(--color-background-dark, #fff);
   border: 1px solid;
 }
 
 .error-message--error {
-  border-color: var(--color-error, #e53e3e);
-  background: var(--color-error-tint-2, #fee);
+  border-color: var(--color-danger, #e53e3e);
+  background: var(--color-background-light, #fee);
 }
 
 .error-message--warning {
   border-color: var(--color-warning, #d69e2e);
-  background: var(--color-warning-tint-2, #fef5e7);
+  background: var(--color-background-light, #fef5e7);
 }
 
 .error-message--info {
   border-color: var(--color-info, #3182ce);
-  background: var(--color-info-tint-2, #e6f2ff);
+  background: var(--color-background-light, #e6f2ff);
 }
 
 .error-message__header {
@@ -112,7 +112,7 @@
 
 .error-message__button--retry {
   background: var(--color-primary, #007bff);
-  color: var(--color-text-light, #fff);
+  color: var(--color-text-dark, #fff);
 }
 
 .error-message__button--retry:hover {

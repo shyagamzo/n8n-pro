@@ -1,4 +1,6 @@
 import { StateGraph, START, MemorySaver } from '@langchain/langgraph'
+import { AsyncLocalStorageProviderSingleton } from '@langchain/core/singletons'
+import { AsyncLocalStorage } from 'node:async_hooks'
 
 import { OrchestratorState } from './state'
 import {
@@ -9,6 +11,15 @@ import {
   executorNode,
   executorToolsNode
 } from './nodes'
+
+/**
+ * Initialize AsyncLocalStorage for browser environment.
+ * This is required for interrupt() to work properly in LangGraph nodes.
+ * 
+ * In Node.js, LangGraph auto-initializes this, but in browser environments
+ * we need to manually initialize it with our polyfilled AsyncLocalStorage.
+ */
+AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorage())
 
 /**
  * Build the unified LangGraph orchestrator.

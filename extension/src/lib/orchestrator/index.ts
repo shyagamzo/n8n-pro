@@ -1,4 +1,5 @@
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages'
+import { Command } from '@langchain/langgraph'
 
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
@@ -62,35 +63,48 @@ export class ChatOrchestrator
    * Supports interrupt() for clarification - if the enrichment agent needs
    * more information, it will pause and wait for user input.
    *
-   * @param input - API key and message history
+   * @param input - API key and message history. If null, resumes from previous interrupt.
    * @param onToken - Optional callback for token streaming
+   * @param resumeValue - Value to resume with if continuing from an interrupt
    * @returns Final AI response text
    */
   public async handle(
-    input: OrchestratorInput,
-    onToken?: StreamTokenHandler
+    input: OrchestratorInput | null,
+    onToken?: StreamTokenHandler,
+    resumeValue?: string
   ): Promise<string>
   {
+    const apiKey = input?.apiKey || ''
+    
     const config = {
       configurable: {
         thread_id: `chat-${this.threadId}`,
-        openai_api_key: input.apiKey,
+        openai_api_key: apiKey,
         model: 'gpt-4o-mini'
       },
       callbacks: onToken ? [new TokenStreamHandler(onToken)] : []
     }
 
-    // Convert ChatMessage[] to LangChain BaseMessage[]
-    const lcMessages = this.convertMessages(input.messages)
+    // Determine input based on whether this is a new message or resume
+    let graphInput: any
 
-    const result = await workflowGraph.invoke(
-      {
+    if (resumeValue !== undefined) {
+      // Resuming from interrupt with user's answer
+      graphInput = new Command({ resume: resumeValue })
+    } else if (input) {
+      // New message
+      const lcMessages = this.convertMessages(input.messages)
+      graphInput = {
         mode: 'chat' as const,
         messages: lcMessages,
         sessionId: this.threadId
-      },
-      config
-    )
+      }
+    } else {
+      // Resume from checkpoint without new input
+      graphInput = null
+    }
+
+    const result = await workflowGraph.invoke(graphInput, config)
 
     // Extract last message content
     const lastMessage = result.messages[result.messages.length - 1]
