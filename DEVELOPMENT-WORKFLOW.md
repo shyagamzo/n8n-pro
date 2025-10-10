@@ -84,25 +84,25 @@ yarn dev
 
 ### "Resources must be listed in web_accessible_resources"
 
-**Cause**: Extension not reloaded after build  
+**Cause**: Extension not reloaded after build
 **Fix**: Reload extension in chrome://extensions/
 
 ### "chrome-extension://invalid/"
 
-**Cause**: Extension ID changed or manifest corrupted  
-**Fix**: 
+**Cause**: Extension ID changed or manifest corrupted
+**Fix**:
 1. Remove extension from Chrome
 2. Rebuild: `yarn build`
 3. Load unpacked extension from `dist/` folder
 
 ### "Uncaught Error: Unable to preload CSS"
 
-**Cause**: Extension not reloaded, old assets cached  
+**Cause**: Extension not reloaded, old assets cached
 **Fix**: Hard reload extension (remove + re-add if necessary)
 
 ### Changes Not Appearing
 
-**Cause**: Browser cache or extension cache  
+**Cause**: Browser cache or extension cache
 **Fix**:
 1. Reload extension
 2. Hard refresh page (Ctrl+Shift+R)
