@@ -1,6 +1,6 @@
-import { Command, interrupt } from '@langchain/langgraph'
+import { Command } from '@langchain/langgraph'
 import { ChatOpenAI } from '@langchain/openai'
-import { SystemMessage, HumanMessage, AIMessage } from '@langchain/core/messages'
+import { SystemMessage, AIMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '../state'
@@ -9,17 +9,22 @@ import { debugAgentDecision, debugAgentHandoff } from '../../utils/debug'
 
 /**
  * Enrichment node handles conversational chat and requirement gathering.
- *
+ * 
  * Features:
- * - Uses interrupt() for clarification when needed (one question at a time)
+ * - State-based interruption for clarification (browser-compatible)
  * - Token streaming support via callbacks
  * - No tools - pure conversational LLM
  * - Returns Command for explicit routing control
- *
+ * 
  * Flow:
  * 1. LLM responds to user message
- * 2. If needs clarification: interrupt() → loop back to enrichment
- * 3. If ready or just chatting: return to END
+ * 2. If needs clarification: set state flag → return to END → UI handles prompt
+ * 3. If user provides answer: loop back to enrichment with answer
+ * 4. If ready or just chatting: return to END
+ * 
+ * Note: Uses state-based interruption instead of interrupt() function
+ * because interrupt() requires Node.js AsyncLocalStorage which doesn't
+ * work reliably in browser environments.
  */
 export async function enrichmentNode(
   state: OrchestratorStateType,
@@ -72,7 +77,7 @@ Ask ONE specific question at a time.
     { hasMarker: /\[(NEEDS_INPUT|READY|CHAT)\]/.test(content) }
   )
 
-  // Handle clarification interrupt
+  // Handle clarification using state-based interruption (browser-compatible)
   if (content.includes('[NEEDS_INPUT]'))
   {
     const cleanContent = content.replace('[NEEDS_INPUT]', '').trim()
@@ -80,34 +85,17 @@ Ask ONE specific question at a time.
     debugAgentDecision(
       'enrichment',
       'Needs clarification',
-      'Interrupting for user input',
+      'Setting clarification question in state',
       { question: cleanContent }
     )
 
-    // Typed interrupt: send question, receive string response
-    const userInput = interrupt<
-      { question: string; reason: 'clarification' },
-      string
-    >({
-      question: cleanContent,
-      reason: 'clarification'
-    })
-
-    debugAgentDecision(
-      'enrichment',
-      'User provided input',
-      'Continuing enrichment',
-      { inputLength: userInput.length }
-    )
-
-    // Loop back to enrichment with user's answer
+    // Set clarification question in state instead of using interrupt()
+    // The orchestrator will detect this and handle the user prompt
     return new Command({
-      goto: 'enrichment',
+      goto: 'END',
       update: {
-        messages: [
-          new AIMessage(cleanContent),
-          new HumanMessage(userInput)
-        ]
+        clarificationQuestion: cleanContent,
+        messages: [new AIMessage(cleanContent)]
       }
     })
   }

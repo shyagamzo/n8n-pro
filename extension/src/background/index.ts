@@ -207,34 +207,60 @@ async function handleChat(
   sessionId: string
 ): Promise<void>
 {
-  // Handle resume from interrupt
+  // Handle resume from clarification
   if (msg.type === 'resume_chat')
   {
-    console.log('▶️ Resuming from interrupt:', { sessionId, resumeValue: msg.resumeValue.substring(0, 50) })
-
+    console.log('▶️ Resuming from clarification:', { sessionId, resumeValue: msg.resumeValue.substring(0, 50) })
+    
     const orchestrator = getOrchestrator(sessionId)
-
-    try
+    const [apiKey, n8nApiKey] = await Promise.all([getOpenAiKey(), getN8nApiKey()])
+    
+    if (!apiKey)
     {
-      // Resume with the user's input
-      // Tokens are streamed via callback, don't post reply again
-      await orchestrator.handle(
-        null,  // null input = resume from checkpoint
-        (token) => post({ type: 'token', token } satisfies BackgroundMessage),
-        msg.resumeValue  // User's answer to the clarification question
-      )
-
-      post({ type: 'done' } satisfies BackgroundMessage)
+      post({ type: 'error', error: 'OpenAI API key not set.' } satisfies BackgroundMessage)
+      return
     }
-    catch (error)
+    
+    // Get the current message history and add the user's answer
+    const messagesWithAnswer: ChatMessage[] = [
+      ...msg.messages || [],
+      { id: crypto.randomUUID(), role: 'user' as const, text: msg.resumeValue }
+    ]
+    
+    // Continue the conversation with the answer
+    const result = await orchestrator.handle({
+      apiKey,
+      messages: messagesWithAnswer
+    }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
+    
+    // Check if another clarification is needed
+    if (result.needsClarification)
     {
-      console.error('❌ Resume failed:', error)
       post({
-        type: 'error',
-        error: `Failed to continue: ${(error as Error).message}`
+        type: 'needs_input',
+        question: result.needsClarification,
+        reason: 'clarification'
       } satisfies BackgroundMessage)
+      return
     }
-
+    
+    // Check readiness after user answered
+    const readiness = await orchestrator.isReadyToPlan({ apiKey, messages: messagesWithAnswer })
+    
+    if (readiness.ready && n8nApiKey)
+    {
+      try
+      {
+        const plan = await orchestrator.plan({ apiKey, messages: messagesWithAnswer }, post)
+        post({ type: 'plan', plan } satisfies BackgroundMessage)
+      }
+      catch (error)
+      {
+        post({ type: 'error', error: `Failed to generate plan: ${(error as Error).message}` } satisfies BackgroundMessage)
+      }
+    }
+    
+    post({ type: 'done' } satisfies BackgroundMessage)
     return
   }
 
@@ -260,42 +286,25 @@ async function handleChat(
 
   console.log('🔍 Readiness check:', readiness)
 
-  // Generate conversational response (this happens regardless)
-  try
+  // Generate conversational response
+  const result = await orchestrator.handle({
+    apiKey,
+    messages: (msg.messages as ChatMessage[]),
+  }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
+
+  // Check if enrichment needs clarification
+  if (result.needsClarification)
   {
-    // When using token streaming, don't post the full reply afterward
-    // (it's already been streamed token-by-token)
-    await orchestrator.handle({
-      apiKey,
-      messages: (msg.messages as ChatMessage[]),
-    }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
-  }
-  catch (error)
-  {
-    // Check if this is a GraphInterrupt (enrichment asking for clarification)
-    const err = error as any
-    if (err?.name === 'NodeInterrupt' || err?.name === 'GraphInterrupt')
-    {
-      console.log('⏸️ Graph interrupted for clarification:', err.interrupts)
-
-      // Extract interrupt data
-      const interruptData = err.interrupts?.[0]?.value
-      if (interruptData?.question)
-      {
-        // Post the clarification question to UI
-        post({
-          type: 'needs_input',
-          question: interruptData.question,
-          reason: interruptData.reason || 'clarification'
-        } satisfies BackgroundMessage)
-
-        // Don't send 'done' - waiting for user response
-        return
-      }
-    }
-
-    // Not an interrupt, rethrow
-    throw error
+    console.log('⏸️ Enrichment needs clarification:', result.needsClarification)
+    
+    // Post the clarification question to UI (don't send 'done' yet)
+    post({
+      type: 'needs_input',
+      question: result.needsClarification,
+      reason: 'clarification'
+    } satisfies BackgroundMessage)
+    
+    return  // Wait for user response via resume_chat
   }
 
   // Only generate plan if we have enough information

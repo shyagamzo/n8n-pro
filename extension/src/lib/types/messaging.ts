@@ -1,9 +1,9 @@
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
 
-export type ChatRequest =
+export type ChatRequest = 
   | { type: 'chat'; messages: ChatMessage[] }
-  | { type: 'resume_chat'; resumeValue: string; apiKey: string }
+  | { type: 'resume_chat'; resumeValue: string; messages: ChatMessage[] }
 
 export type BackgroundMessage =
   | { type: 'token'; token: string }

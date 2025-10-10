@@ -1,5 +1,4 @@
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages'
-import { Command } from '@langchain/langgraph'
 
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
@@ -60,55 +59,54 @@ export class ChatOrchestrator
   /**
    * Handle chat messages (enrichment mode).
    *
-   * Supports interrupt() for clarification - if the enrichment agent needs
-   * more information, it will pause and wait for user input.
+   * Uses state-based interruption for clarification (browser-compatible).
+   * When enrichment needs clarification, it sets clarificationQuestion in state.
    *
-   * @param input - API key and message history. If null, resumes from previous interrupt.
+   * @param input - API key and message history
    * @param onToken - Optional callback for token streaming
-   * @param resumeValue - Value to resume with if continuing from an interrupt
-   * @returns Final AI response text
+   * @returns Object with response and optional clarification question
    */
   public async handle(
-    input: OrchestratorInput | null,
-    onToken?: StreamTokenHandler,
-    resumeValue?: string
-  ): Promise<string>
+    input: OrchestratorInput,
+    onToken?: StreamTokenHandler
+  ): Promise<{ response: string; needsClarification?: string }>
   {
-    const apiKey = input?.apiKey || ''
-
     const config = {
       configurable: {
         thread_id: `chat-${this.threadId}`,
-        openai_api_key: apiKey,
+        openai_api_key: input.apiKey,
         model: 'gpt-4o-mini'
       },
       callbacks: onToken ? [new TokenStreamHandler(onToken)] : []
     }
 
-    // Determine input based on whether this is a new message or resume
-    let graphInput: any
+    // Convert ChatMessage[] to LangChain BaseMessage[]
+    const lcMessages = this.convertMessages(input.messages)
 
-    if (resumeValue !== undefined) {
-      // Resuming from interrupt with user's answer
-      graphInput = new Command({ resume: resumeValue })
-    } else if (input) {
-      // New message
-      const lcMessages = this.convertMessages(input.messages)
-      graphInput = {
+    const result = await workflowGraph.invoke(
+      {
         mode: 'chat' as const,
         messages: lcMessages,
-        sessionId: this.threadId
-      }
-    } else {
-      // Resume from checkpoint without new input
-      graphInput = null
-    }
+        sessionId: this.threadId,
+        clarificationQuestion: undefined  // Clear previous clarification
+      },
+      config
+    )
 
-    const result = await workflowGraph.invoke(graphInput, config)
+    // Check if enrichment set a clarification question
+    if (result.clarificationQuestion)
+    {
+      return {
+        response: result.clarificationQuestion,
+        needsClarification: result.clarificationQuestion
+      }
+    }
 
     // Extract last message content
     const lastMessage = result.messages[result.messages.length - 1]
-    return (lastMessage?.content as string) || ''
+    return {
+      response: (lastMessage?.content as string) || ''
+    }
   }
 
   /**

@@ -47,6 +47,13 @@ export const OrchestratorState = Annotation.Root({
     missing: Array<{ name: string; type: string }>;
     setupLinks: Array<{ name: string; url: string }>;
   } | undefined>(),
+
+  /**
+   * Clarification question from enrichment agent.
+   * When set, indicates the agent needs user input before continuing.
+   * This enables browser-compatible interruption without using interrupt() function.
+   */
+  clarificationQuestion: Annotation<string | undefined>(),
 })
 
 /**
