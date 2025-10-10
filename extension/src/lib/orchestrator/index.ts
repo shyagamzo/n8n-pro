@@ -71,12 +71,6 @@ export class ChatOrchestrator
     onToken?: StreamTokenHandler
   ): Promise<{ response: string; needsClarification?: string }>
   {
-    console.log('🎬 orchestrator.handle() CALLED', {
-      threadId: this.threadId,
-      messageCount: input.messages.length,
-      hasTokenCallback: !!onToken
-    })
-    
     const config = {
       configurable: {
         thread_id: `chat-${this.threadId}`,
@@ -85,14 +79,10 @@ export class ChatOrchestrator
       },
       callbacks: onToken ? [new TokenStreamHandler(onToken)] : []
     }
-    
-    console.log('📦 Callbacks array:', config.callbacks.length)
 
     // Convert ChatMessage[] to LangChain BaseMessage[]
     const lcMessages = this.convertMessages(input.messages)
 
-    console.log('📊 Invoking graph...')
-    
     const result = await workflowGraph.invoke(
       {
         mode: 'chat' as const,
@@ -103,15 +93,9 @@ export class ChatOrchestrator
       config
     )
 
-    console.log('✅ Graph invocation complete', {
-      hasClarification: !!result.clarificationQuestion,
-      messageCount: result.messages.length
-    })
-
     // Check if enrichment set a clarification question
     if (result.clarificationQuestion)
     {
-      console.log('⏸️ Needs clarification:', result.clarificationQuestion)
       return {
         response: result.clarificationQuestion,
         needsClarification: result.clarificationQuestion
@@ -120,7 +104,6 @@ export class ChatOrchestrator
 
     // Extract last message content
     const lastMessage = result.messages[result.messages.length - 1]
-    console.log('💬 Returning response')
     return {
       response: (lastMessage?.content as string) || ''
     }

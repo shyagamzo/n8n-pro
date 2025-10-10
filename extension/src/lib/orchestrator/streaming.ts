@@ -35,7 +35,6 @@ export class TokenStreamHandler extends BaseCallbackHandler
    */
   async handleLLMNewToken(token: string): Promise<void>
   {
-    console.log('🔤 TOKEN:', JSON.stringify(token))
     this.onToken(token)
   }
 }

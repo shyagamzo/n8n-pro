@@ -31,8 +31,6 @@ export async function enrichmentNode(
   config?: RunnableConfig
 ): Promise<Command>
 {
-  console.log('🎯 ENRICHMENT NODE CALLED', { messageCount: state.messages.length })
-  
   const apiKey = config?.configurable?.openai_api_key
   const modelName = config?.configurable?.model || 'gpt-4o-mini'
 
@@ -43,18 +41,13 @@ export async function enrichmentNode(
 
   debugAgentHandoff('orchestrator', 'enrichment', 'Conversational response and requirement gathering')
 
-  console.log('🤖 Creating ChatOpenAI model', {
-    model: modelName,
-    streaming: true,
-    hasCallbacks: !!config?.callbacks
-  })
-
   const model = new ChatOpenAI({
     apiKey,
     model: modelName,
     temperature: 0.7,
-    streaming: true,
-    callbacks: config?.callbacks
+    streaming: true
+    // Don't pass callbacks here - LangGraph propagates them automatically
+    // Passing them would result in duplicate token emissions
   })
 
   const systemPrompt = buildPrompt('enrichment', {
@@ -71,14 +64,10 @@ Use [NEEDS_INPUT] sparingly - only when you truly need critical information to p
 Ask ONE specific question at a time.
 `
 
-  console.log('📞 Calling model.invoke()...')
-  
   const response = await model.invoke([
     new SystemMessage(systemPrompt),
     ...state.messages
   ])
-
-  console.log('📬 Model response received', { length: (response.content as string).length })
 
   const content = response.content as string
 
