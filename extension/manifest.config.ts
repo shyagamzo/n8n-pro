@@ -26,7 +26,13 @@ const manifest: ManifestV3Export = {
     'http://127.0.0.1:5678/*',
     'https://127.0.0.1:5678/*'
   ],
-  permissions: ['storage', 'scripting']
+  permissions: ['storage', 'scripting'],
+  web_accessible_resources: [
+    {
+      resources: ['assets/*', 'src/*'],
+      matches: ['<all_urls>']
+    }
+  ]
 }
 
 export default manifest

@@ -223,7 +223,7 @@ async function handleChat(
         (token) => post({ type: 'token', token } satisfies BackgroundMessage),
         msg.resumeValue  // User's answer to the clarification question
       )
-      
+
       post({ type: 'done' } satisfies BackgroundMessage)
     }
     catch (error)

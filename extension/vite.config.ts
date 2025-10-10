@@ -7,12 +7,32 @@ import manifest from './manifest.config'
 export default defineConfig({
   // Ensure built asset URLs are relative to the extension, not the page origin
   base: '',
-  plugins: [react(), crx({ manifest })],
+  plugins: [
+    react(),
+    crx({
+      manifest,
+      // Enable content script HMR
+      contentScripts: {
+        injectCss: true
+      }
+    })
+  ],
   resolve: {
     alias: {
       // Stub out Node.js modules that LangGraph tries to use
       // These aren't needed for browser/extension environment
       'node:async_hooks': new URL('./src/lib/stubs/async_hooks.ts', import.meta.url).pathname,
+    },
+  },
+  build: {
+    // Prevent invalid chrome-extension:// URLs in production
+    rollupOptions: {
+      output: {
+        // Use relative paths for assets
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+      },
     },
   },
   server: {
