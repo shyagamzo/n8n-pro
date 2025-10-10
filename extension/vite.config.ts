@@ -8,6 +8,13 @@ export default defineConfig({
   // Ensure built asset URLs are relative to the extension, not the page origin
   base: '',
   plugins: [react(), crx({ manifest })],
+  resolve: {
+    alias: {
+      // Stub out Node.js modules that LangGraph tries to use
+      // These aren't needed for browser/extension environment
+      'node:async_hooks': new URL('./src/lib/stubs/async_hooks.ts', import.meta.url).pathname,
+    },
+  },
   server: {
     cors: { origin: '*' },
     headers: {
