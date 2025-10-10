@@ -211,22 +211,18 @@ async function handleChat(
   if (msg.type === 'resume_chat')
   {
     console.log('▶️ Resuming from interrupt:', { sessionId, resumeValue: msg.resumeValue.substring(0, 50) })
-    
+
     const orchestrator = getOrchestrator(sessionId)
-    
+
     try
     {
       // Resume with the user's input
-      const reply = await orchestrator.handle(
+      // Tokens are streamed via callback, don't post reply again
+      await orchestrator.handle(
         null,  // null input = resume from checkpoint
         (token) => post({ type: 'token', token } satisfies BackgroundMessage),
         msg.resumeValue  // User's answer to the clarification question
       )
-      
-      if (reply && reply.length > 0)
-      {
-        post({ type: 'token', token: reply } satisfies BackgroundMessage)
-      }
       
       post({ type: 'done' } satisfies BackgroundMessage)
     }
@@ -238,10 +234,10 @@ async function handleChat(
         error: `Failed to continue: ${(error as Error).message}`
       } satisfies BackgroundMessage)
     }
-    
+
     return
   }
-  
+
   // Handle normal chat message
   const [apiKey, n8nApiKey] = await Promise.all([getOpenAiKey(), getN8nApiKey()])
 
@@ -267,15 +263,12 @@ async function handleChat(
   // Generate conversational response (this happens regardless)
   try
   {
-    const reply: string = await orchestrator.handle({
+    // When using token streaming, don't post the full reply afterward
+    // (it's already been streamed token-by-token)
+    await orchestrator.handle({
       apiKey,
       messages: (msg.messages as ChatMessage[]),
     }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
-
-    if (reply && reply.length > 0)
-    {
-      post({ type: 'token', token: reply } satisfies BackgroundMessage)
-    }
   }
   catch (error)
   {
@@ -284,7 +277,7 @@ async function handleChat(
     if (err?.name === 'NodeInterrupt' || err?.name === 'GraphInterrupt')
     {
       console.log('⏸️ Graph interrupted for clarification:', err.interrupts)
-      
+
       // Extract interrupt data
       const interruptData = err.interrupts?.[0]?.value
       if (interruptData?.question)
@@ -295,12 +288,12 @@ async function handleChat(
           question: interruptData.question,
           reason: interruptData.reason || 'clarification'
         } satisfies BackgroundMessage)
-        
+
         // Don't send 'done' - waiting for user response
         return
       }
     }
-    
+
     // Not an interrupt, rethrow
     throw error
   }

@@ -1,10 +1,10 @@
 /**
  * Browser-compatible AsyncLocalStorage polyfill.
- * 
+ *
  * LangGraph requires AsyncLocalStorage to maintain execution context for features like interrupt().
  * This implementation provides a working polyfill for browser environments where Node.js's
  * async_hooks module is not available.
- * 
+ *
  * Limitations:
  * - Does not track context across async boundaries like native AsyncLocalStorage
  * - Works for LangGraph's synchronous context propagation within runnables
@@ -25,7 +25,7 @@ export class AsyncLocalStorage<T = any> {
   /**
    * Run a callback with a specific store value.
    * Sets the store for the duration of the callback execution.
-   * 
+   *
    * For async callbacks, the context is maintained through the promise chain.
    */
   run<R>(store: T, callback: () => R): R {
@@ -34,14 +34,14 @@ export class AsyncLocalStorage<T = any> {
 
     try {
       const result = callback()
-      
+
       // If callback returns a Promise, maintain context until it resolves
       if (result instanceof Promise) {
         return result.finally(() => {
           this.currentStore = previousStore
         }) as unknown as R
       }
-      
+
       // Synchronous execution - restore context immediately
       this.currentStore = previousStore
       return result

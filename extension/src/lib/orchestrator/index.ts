@@ -75,7 +75,7 @@ export class ChatOrchestrator
   ): Promise<string>
   {
     const apiKey = input?.apiKey || ''
-    
+
     const config = {
       configurable: {
         thread_id: `chat-${this.threadId}`,

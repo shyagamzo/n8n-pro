@@ -19,7 +19,7 @@ if (!config) {
 }
 ```
 
-**The issue**: 
+**The issue**:
 - In Node.js, LangGraph auto-initializes `AsyncLocalStorageProviderSingleton`
 - In browser, Node.js `async_hooks` module doesn't exist
 - We aliased it to a stub, but the stub wasn't properly initialized
@@ -52,14 +52,14 @@ export class AsyncLocalStorage<T = any> {
 
     try {
       const result = callback()
-      
+
       // Maintain context through Promise chain
       if (result instanceof Promise) {
         return result.finally(() => {
           this.currentStore = previousStore
         }) as unknown as R
       }
-      
+
       this.currentStore = previousStore
       return result
     } catch (error) {
@@ -97,11 +97,11 @@ try {
   const reply = await orchestrator.handle(...)
 } catch (error) {
   const err = error as any
-  
+
   // Check if this is an interrupt for clarification
   if (err?.name === 'NodeInterrupt' || err?.name === 'GraphInterrupt') {
     const interruptData = err.interrupts?.[0]?.value
-    
+
     if (interruptData?.question) {
       // Post clarification question to UI
       post({
@@ -112,7 +112,7 @@ try {
       return  // Don't send 'done' - waiting for user response
     }
   }
-  
+
   throw error  // Not an interrupt, rethrow
 }
 ```
@@ -154,7 +154,7 @@ public async handle(
 Added message types for interrupt handling:
 
 ```typescript
-export type ChatRequest = 
+export type ChatRequest =
   | { type: 'chat'; messages: ChatMessage[] }
   | { type: 'resume_chat'; resumeValue: string; apiKey: string }
 
@@ -170,18 +170,18 @@ async function handleChat(msg: ChatRequest, post, sessionId) {
   // Handle resume from interrupt
   if (msg.type === 'resume_chat') {
     const orchestrator = getOrchestrator(sessionId)
-    
+
     const reply = await orchestrator.handle(
       null,  // null input = resume
       (token) => post({ type: 'token', token }),
       msg.resumeValue  // User's answer
     )
-    
+
     post({ type: 'token', token: reply })
     post({ type: 'done' })
     return
   }
-  
+
   // Handle normal chat...
 }
 ```
