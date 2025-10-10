@@ -9,13 +9,13 @@ import { debugAgentDecision, debugAgentHandoff } from '../../utils/debug'
 
 /**
  * Enrichment node handles conversational chat and requirement gathering.
- * 
+ *
  * Features:
  * - Uses interrupt() for clarification when needed (one question at a time)
  * - Token streaming support via callbacks
  * - No tools - pure conversational LLM
  * - Returns Command for explicit routing control
- * 
+ *
  * Flow:
  * 1. LLM responds to user message
  * 2. If needs clarification: interrupt() → loop back to enrichment

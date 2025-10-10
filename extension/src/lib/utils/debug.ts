@@ -283,7 +283,8 @@ export class DebugSession
 /**
  * Agent-specific debug logging
  */
-export type AgentType = 'classifier' | 'enrichment' | 'planner' | 'validator' | 'narrator' | 'executor' | 'orchestrator'
+import type { AgentType } from '../types/messaging'
+export type { AgentType }
 
 /**
  * Log an agent decision

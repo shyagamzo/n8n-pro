@@ -9,13 +9,13 @@ import { executorTools } from '../tools/executor'
 
 /**
  * Executor node creates workflows in n8n via API tools.
- * 
+ *
  * Features:
  * - Bound tools: create_n8n_workflow, check_credentials
  * - Non-blocking credential checks (workflow created even with missing creds)
  * - Provides setup links for missing credentials
  * - Paused before execution via interruptBefore in graph config
- * 
+ *
  * Flow:
  * 1. (User approves via interrupt) → executor resumes
  * 2. LLM checks credentials and creates workflow using tools
@@ -36,7 +36,7 @@ export async function executorNode(
   const n8nApiKey = config?.configurable?.n8n_api_key
   const n8nBaseUrl = config?.configurable?.n8n_base_url || 'http://localhost:5678'
   const modelName = config?.configurable?.model || 'gpt-4o-mini'
-  const narrator = config?.metadata?.narrator
+  const narrator = config?.metadata?.narrator as any
   const session = config?.metadata?.session as DebugSession | undefined
 
   if (!apiKey)
@@ -141,7 +141,7 @@ First check credentials, then create the workflow. Respond to the user with the 
 /**
  * Extract workflow ID from tool results in message history.
  */
-function extractWorkflowId(content: string, messages: any[]): string | undefined
+function extractWorkflowId(_content: string, messages: any[]): string | undefined
 {
   // Look for workflow ID in recent tool messages
   for (let i = messages.length - 1; i >= Math.max(0, messages.length - 10); i--)
@@ -164,15 +164,15 @@ function extractWorkflowId(content: string, messages: any[]): string | undefined
     }
   }
 
-  // Fallback: try to extract from content
-  const idMatch = content.match(/workflow.*?['"]([\w-]+)['"]|id['"]\s*:\s*['"]([\w-]+)['"]/i)
+  // Fallback: try to extract from _content
+  const idMatch = _content.match(/workflow.*?['"]([\w-]+)['"]|id['"]\s*:\s*['"]([\w-]+)['"]/i)
   return idMatch?.[1] || idMatch?.[2]
 }
 
 /**
  * Extract credential guidance from tool results.
  */
-function extractCredentialGuidance(content: string): OrchestratorStateType['credentialGuidance']
+function extractCredentialGuidance(_content: string): OrchestratorStateType['credentialGuidance']
 {
   // This would be populated by the check_credentials tool result
   // For now, return undefined - the tool messages will have the data

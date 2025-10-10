@@ -8,10 +8,10 @@ import { debugAgentDecision } from '../../utils/debug'
 
 /**
  * Dedicated tool execution node for the planner agent.
- * 
+ *
  * Executes tools like fetch_n8n_node_types and get_node_docs,
  * then routes back to the planner with the tool results.
- * 
+ *
  * Flow:
  * Planner → Planner Tools (execute) → Planner (continue with results)
  */

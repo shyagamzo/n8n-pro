@@ -3,29 +3,31 @@ import type { DebugSession } from '../utils/debug'
 
 /**
  * Debug callback handler integrates LangChain execution with our debug infrastructure.
- * 
+ *
  * Captures chain/node execution, LLM calls, and tool executions to provide
  * comprehensive tracing for development and debugging.
- * 
+ *
  * Usage:
  * ```typescript
  * const session = new DebugSession('Orchestrator', 'plan')
  * const handler = new DebugCallbackHandler(session)
- * 
+ *
  * const result = await graph.invoke(input, {
  *   callbacks: [handler]
  * })
- * 
+ *
  * session.end(true)
  * ```
  */
 export class DebugCallbackHandler extends BaseCallbackHandler
 {
   name = 'debug_callback_handler'
+  private session: DebugSession
 
-  constructor(private session: DebugSession)
+  constructor(session: DebugSession)
   {
     super()
+    this.session = session
   }
 
   /**
@@ -65,7 +67,7 @@ export class DebugCallbackHandler extends BaseCallbackHandler
   /**
    * Called when an LLM call starts.
    */
-  async handleLLMStart(llm: any, prompts: string[]): Promise<void>
+  async handleLLMStart(_llm: any, prompts: string[]): Promise<void>
   {
     this.session.log('LLM call started', {
       promptCount: prompts.length,
@@ -76,7 +78,7 @@ export class DebugCallbackHandler extends BaseCallbackHandler
   /**
    * Called when an LLM call completes.
    */
-  async handleLLMEnd(llm: any, output: any): Promise<void>
+  async handleLLMEnd(_llm: any, output: any): Promise<void>
   {
     const responseText = output?.generations?.[0]?.[0]?.text || ''
     this.session.log('LLM call completed', {

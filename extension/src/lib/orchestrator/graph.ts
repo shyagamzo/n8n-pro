@@ -1,4 +1,4 @@
-import { StateGraph, START, END, MemorySaver } from '@langchain/langgraph'
+import { StateGraph, START, MemorySaver } from '@langchain/langgraph'
 
 import { OrchestratorState } from './state'
 import {
@@ -12,9 +12,9 @@ import {
 
 /**
  * Build the unified LangGraph orchestrator.
- * 
+ *
  * Graph Structure:
- * 
+ *
  * START → [mode routing]
  *   ├─→ 'chat' mode: enrichment → END
  *   │   └─→ (enrichment may loop via interrupt)
@@ -22,7 +22,7 @@ import {
  *   └─→ 'workflow' mode: planner → validator → executor → END
  *       ├─→ planner ↔ planner_tools (loop for tool execution)
  *       └─→ executor ↔ executor_tools (loop for tool execution)
- * 
+ *
  * Interrupts:
  * - enrichment: Uses interrupt() for clarification
  * - executor: Pauses before execution (interruptBefore config)
@@ -56,10 +56,6 @@ graph.addConditionalEdges(
     {
       throw new Error(`Invalid mode: ${state.mode}. Must be 'chat' or 'workflow'.`)
     }
-  },
-  {
-    enrichment: 'enrichment',
-    planner: 'planner'
   }
 )
 
@@ -68,18 +64,18 @@ graph.addConditionalEdges(
 
 // Planner ↔ Planner Tools loop
 // Planner node uses Command to route to planner_tools or validator
-graph.addEdge('planner_tools', 'planner')  // Tools always return to planner
+graph.addEdge('planner_tools' as any, 'planner' as any)  // Tools always return to planner
 
 // Validator → Executor
 // Validator node uses Command to route to executor
 
 // Executor ↔ Executor Tools loop
 // Executor node uses Command to route to executor_tools or END
-graph.addEdge('executor_tools', 'executor')  // Tools always return to executor
+graph.addEdge('executor_tools' as any, 'executor' as any)  // Tools always return to executor
 
 /**
  * Compile the graph with checkpointer and interrupt configuration.
- * 
+ *
  * Checkpointer: MemorySaver for in-memory session persistence
  * InterruptBefore: Pause before executor node for user approval
  */
@@ -87,6 +83,6 @@ const checkpointer = new MemorySaver()
 
 export const workflowGraph = graph.compile({
   checkpointer,
-  interruptBefore: ['executor']  // Pause before creating workflow in n8n
+  interruptBefore: ['executor' as any]  // Pause before creating workflow in n8n
 })
 

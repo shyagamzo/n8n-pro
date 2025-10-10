@@ -23,25 +23,25 @@ export type ActivityHandler = (message: BackgroundMessage) => void
 
 /**
  * ChatOrchestrator - LangGraph-based multi-agent orchestrator.
- * 
+ *
  * Manages conversation state across two modes:
  * - Chat mode: Enrichment agent for conversational interaction
  * - Workflow mode: Planner → Validator → Executor for workflow creation
- * 
+ *
  * Features:
  * - Session persistence via checkpointer and thread_id
  * - Token streaming for real-time UI updates
  * - Progress updates via narrator system
  * - Debug tracing via callback handlers
  * - Two interrupt points: enrichment (clarification) and executor (approval)
- * 
+ *
  * Usage:
  * ```typescript
  * const orchestrator = new ChatOrchestrator(sessionId)
- * 
+ *
  * // Chat mode
  * const response = await orchestrator.handle(input, onToken)
- * 
+ *
  * // Workflow mode
  * const plan = await orchestrator.plan(input, postHandler)
  * await orchestrator.applyWorkflow(input.apiKey, n8nApiKey)
@@ -58,10 +58,10 @@ export class ChatOrchestrator
 
   /**
    * Handle chat messages (enrichment mode).
-   * 
+   *
    * Supports interrupt() for clarification - if the enrichment agent needs
    * more information, it will pause and wait for user input.
-   * 
+   *
    * @param input - API key and message history
    * @param onToken - Optional callback for token streaming
    * @returns Final AI response text
@@ -99,10 +99,10 @@ export class ChatOrchestrator
 
   /**
    * Check if enrichment conversation is ready to transition to planning.
-   * 
+   *
    * Note: With the new architecture, this is less critical since enrichment
    * explicitly marks readiness with [READY]. Kept for backward compatibility.
-   * 
+   *
    * @param input - API key and message history
    * @returns Whether ready to plan and reason if not
    */
@@ -126,10 +126,10 @@ export class ChatOrchestrator
 
   /**
    * Create workflow plan (planner → validator → executor).
-   * 
+   *
    * Runs until executor interrupt - returns plan for UI preview.
    * Call applyWorkflow() to resume and create the workflow in n8n.
-   * 
+   *
    * @param input - API key and message history
    * @param postHandler - Optional handler for activity updates
    * @returns Generated and validated workflow plan
@@ -186,9 +186,9 @@ export class ChatOrchestrator
 
   /**
    * Apply workflow (resume from executor interrupt).
-   * 
+   *
    * Creates the workflow in n8n after user approval.
-   * 
+   *
    * @param openaiApiKey - OpenAI API key
    * @param n8nApiKey - n8n API key for workflow creation
    * @returns Workflow ID and optional credential guidance

@@ -13,13 +13,13 @@ import { plannerTools } from '../tools/planner'
 
 /**
  * Planner node generates structured workflow plans in Loom format.
- * 
+ *
  * Features:
  * - Bound tools: fetch_n8n_node_types, get_node_docs
  * - Uses Loom protocol for efficient agent communication
  * - Integrates with narrator for progress updates
  * - Integrates with debug session for tracing
- * 
+ *
  * Flow:
  * 1. LLM generates workflow plan OR calls tools
  * 2. If tool calls: goto planner_tools node
@@ -32,7 +32,7 @@ export async function plannerNode(
 {
   const apiKey = config?.configurable?.openai_api_key
   const modelName = config?.configurable?.model || 'gpt-4o-mini'
-  const narrator = config?.metadata?.narrator
+  const narrator = config?.metadata?.narrator as any
   const session = config?.metadata?.session as DebugSession | undefined
 
   if (!apiKey)

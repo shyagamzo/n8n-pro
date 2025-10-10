@@ -24,7 +24,7 @@ export type ApplyPlanRequest = { type: 'apply_plan'; plan: Plan }
 /**
  * Agent trace types for debugging multi-agent communication
  */
-export type AgentType = 'classifier' | 'enrichment' | 'planner' | 'validator' | 'narrator' | 'executor' | 'orchestrator'
+export type AgentType = 'classifier' | 'enrichment' | 'planner' | 'planner_tools' | 'validator' | 'narrator' | 'executor' | 'executor_tools' | 'orchestrator'
 
 export type AgentDecision = {
   agent: AgentType

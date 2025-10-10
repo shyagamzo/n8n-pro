@@ -2,17 +2,17 @@ import { BaseCallbackHandler } from '@langchain/core/callbacks/base'
 
 /**
  * Token streaming handler for letter-by-letter output in the UI.
- * 
+ *
  * Integrates with LangChain's callback system to capture token emissions
  * during LLM generation and forward them to the UI.
- * 
+ *
  * Usage:
  * ```typescript
  * const handler = new TokenStreamHandler((token) => {
  *   // Send token to UI
  *   post({ type: 'token', token })
  * })
- * 
+ *
  * const result = await graph.invoke(input, {
  *   callbacks: [handler]
  * })
@@ -21,10 +21,12 @@ import { BaseCallbackHandler } from '@langchain/core/callbacks/base'
 export class TokenStreamHandler extends BaseCallbackHandler
 {
   name = 'token_stream_handler'
+  private onToken: (token: string) => void
 
-  constructor(private onToken: (token: string) => void)
+  constructor(onToken: (token: string) => void)
   {
     super()
+    this.onToken = onToken
   }
 
   /**

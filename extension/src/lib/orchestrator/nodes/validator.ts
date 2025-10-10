@@ -1,6 +1,6 @@
 import { Command } from '@langchain/langgraph'
 import { ChatOpenAI } from '@langchain/openai'
-import { SystemMessage, HumanMessage, AIMessage } from '@langchain/core/messages'
+import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '../state'
@@ -13,16 +13,16 @@ import { debugAgentDecision, type DebugSession } from '../../utils/debug'
 
 /**
  * Validator node performs LLM-based validation of workflow plans.
- * 
+ *
  * No tools - relies on LLM's knowledge of n8n schemas and patterns.
  * This is intentional: LLMs are trained on n8n documentation and can validate
  * without needing custom validation code.
- * 
+ *
  * Features:
  * - Pure LLM validation using n8n knowledge
  * - Auto-fixes errors by extracting corrected Loom
  * - No structural validation code
- * 
+ *
  * Flow:
  * 1. LLM validates the plan
  * 2. If valid: goto executor
@@ -40,7 +40,7 @@ export async function validatorNode(
 
   const apiKey = config?.configurable?.openai_api_key
   const modelName = config?.configurable?.model || 'gpt-4o-mini'
-  const narrator = config?.metadata?.narrator
+  const narrator = config?.metadata?.narrator as any
   const session = config?.metadata?.session as DebugSession | undefined
 
   if (!apiKey)

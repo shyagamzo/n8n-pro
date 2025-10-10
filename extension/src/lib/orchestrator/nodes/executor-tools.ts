@@ -8,10 +8,10 @@ import { debugAgentDecision } from '../../utils/debug'
 
 /**
  * Dedicated tool execution node for the executor agent.
- * 
+ *
  * Executes tools like create_n8n_workflow and check_credentials,
  * then routes back to the executor with the tool results.
- * 
+ *
  * Flow:
  * Executor → Executor Tools (execute) → Executor (continue with results)
  */
