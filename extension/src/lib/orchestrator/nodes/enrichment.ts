@@ -9,19 +9,19 @@ import { debugAgentDecision, debugAgentHandoff } from '../../utils/debug'
 
 /**
  * Enrichment node handles conversational chat and requirement gathering.
- * 
+ *
  * Features:
  * - State-based interruption for clarification (browser-compatible)
  * - Token streaming support via callbacks
  * - No tools - pure conversational LLM
  * - Returns Command for explicit routing control
- * 
+ *
  * Flow:
  * 1. LLM responds to user message
  * 2. If needs clarification: set state flag → return to END → UI handles prompt
  * 3. If user provides answer: loop back to enrichment with answer
  * 4. If ready or just chatting: return to END
- * 
+ *
  * Note: Uses state-based interruption instead of interrupt() function
  * because interrupt() requires Node.js AsyncLocalStorage which doesn't
  * work reliably in browser environments.

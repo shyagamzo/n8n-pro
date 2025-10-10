@@ -25,7 +25,7 @@ export class AsyncLocalStorage<T = any> {
   /**
    * Run a callback with a specific store value.
    * Sets the store for the duration of the callback execution.
-   * 
+   *
    * For async callbacks, the context is maintained through the promise chain.
    */
   run<R>(store: T, callback: () => R): R {
@@ -34,7 +34,7 @@ export class AsyncLocalStorage<T = any> {
 
     try {
       const result = callback()
-      
+
       // If callback returns a Promise, chain cleanup to end of promise
       if (result instanceof Promise) {
         // Don't restore immediately - wait for promise to complete
@@ -49,7 +49,7 @@ export class AsyncLocalStorage<T = any> {
           }
         ) as R
       }
-      
+
       // Synchronous execution - restore context immediately
       this.currentStore = previousStore
       return result

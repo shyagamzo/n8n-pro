@@ -211,28 +211,28 @@ async function handleChat(
   if (msg.type === 'resume_chat')
   {
     console.log('▶️ Resuming from clarification:', { sessionId, resumeValue: msg.resumeValue.substring(0, 50) })
-    
+
     const orchestrator = getOrchestrator(sessionId)
     const [apiKey, n8nApiKey] = await Promise.all([getOpenAiKey(), getN8nApiKey()])
-    
+
     if (!apiKey)
     {
       post({ type: 'error', error: 'OpenAI API key not set.' } satisfies BackgroundMessage)
       return
     }
-    
+
     // Get the current message history and add the user's answer
     const messagesWithAnswer: ChatMessage[] = [
       ...msg.messages || [],
       { id: crypto.randomUUID(), role: 'user' as const, text: msg.resumeValue }
     ]
-    
+
     // Continue the conversation with the answer
     const result = await orchestrator.handle({
       apiKey,
       messages: messagesWithAnswer
     }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
-    
+
     // Check if another clarification is needed
     if (result.needsClarification)
     {
@@ -243,10 +243,10 @@ async function handleChat(
       } satisfies BackgroundMessage)
       return
     }
-    
+
     // Check readiness after user answered
     const readiness = await orchestrator.isReadyToPlan({ apiKey, messages: messagesWithAnswer })
-    
+
     if (readiness.ready && n8nApiKey)
     {
       try
@@ -259,7 +259,7 @@ async function handleChat(
         post({ type: 'error', error: `Failed to generate plan: ${(error as Error).message}` } satisfies BackgroundMessage)
       }
     }
-    
+
     post({ type: 'done' } satisfies BackgroundMessage)
     return
   }
@@ -296,14 +296,14 @@ async function handleChat(
   if (result.needsClarification)
   {
     console.log('⏸️ Enrichment needs clarification:', result.needsClarification)
-    
+
     // Post the clarification question to UI (don't send 'done' yet)
     post({
       type: 'needs_input',
       question: result.needsClarification,
       reason: 'clarification'
     } satisfies BackgroundMessage)
-    
+
     return  // Wait for user response via resume_chat
   }
 

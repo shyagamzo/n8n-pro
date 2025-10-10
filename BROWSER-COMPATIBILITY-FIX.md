@@ -150,13 +150,13 @@ if (msg.type === 'resume_chat') {
     ...msg.messages,
     { role: 'user', text: msg.resumeValue }
   ]
-  
+
   // Continue conversation normally
   const result = await orchestrator.handle({
     apiKey,
     messages: messagesWithAnswer
   }, onToken)
-  
+
   // Check if more clarification needed
   if (result.needsClarification) {
     // Ask another question
@@ -195,7 +195,7 @@ if (msg.type === 'resume_chat') {
 ### With interrupt() (Node.js Only)
 ```
 enrichment node
-  → calls interrupt() 
+  → calls interrupt()
   → throws GraphInterrupt
   → graph catches, waits for resume
   → call graph.invoke(Command({ resume: answer }))
@@ -248,11 +248,11 @@ localhost:5678
 
 ## What Should Work Now
 
-✅ **No "outside the context of a graph" error** - Doesn't use `interrupt()` anymore  
-✅ **No token duplication** - Fixed streaming logic  
-✅ **Clarification works** - State-based interruption  
-✅ **Session persistence** - Checkpointer still works  
-✅ **Same UX** - User sees no difference  
+✅ **No "outside the context of a graph" error** - Doesn't use `interrupt()` anymore
+✅ **No token duplication** - Fixed streaming logic
+✅ **Clarification works** - State-based interruption
+✅ **Session persistence** - Checkpointer still works
+✅ **Same UX** - User sees no difference
 
 ---
 
