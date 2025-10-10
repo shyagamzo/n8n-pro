@@ -1,18 +1,18 @@
+import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages'
+
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
 import type { BackgroundMessage } from '../types/messaging'
-import { parse as parseLoom } from '../loom'
-import { stripCodeFences } from '../utils/markdown'
-import { createAgentTracer } from '../ai/tracing'
-import { debugLLMResponse, debugLoomParsing, debugPlanGenerated, DebugSession, debugAgentDecision, debugAgentHandoff } from '../utils/debug'
-import { validateWorkflow, formatValidationResult } from '../validation/workflow'
-
-import { loomToPlan } from './plan-converter'
+import { workflowGraph } from './graph'
+import { TokenStreamHandler } from './streaming'
+import { DebugCallbackHandler } from './debug-handler'
+import { DebugSession } from '../utils/debug'
 import { createNarrationManager } from './narration'
-import { invokeEnrichmentForChat, checkReadinessToPlan } from './agents/enrichment'
-import { invokePlannerAgent } from './agents/planner'
-import { runDeepValidation } from './agents/validator-runner'
 
+/**
+ * Orchestrator input for chat and workflow operations.
+ * Maintained for backward compatibility with existing background script.
+ */
 export type OrchestratorInput = {
   apiKey: string
   messages: ChatMessage[]
@@ -21,129 +21,242 @@ export type OrchestratorInput = {
 export type StreamTokenHandler = (token: string) => void
 export type ActivityHandler = (message: BackgroundMessage) => void
 
-class Orchestrator
+/**
+ * ChatOrchestrator - LangGraph-based multi-agent orchestrator.
+ * 
+ * Manages conversation state across two modes:
+ * - Chat mode: Enrichment agent for conversational interaction
+ * - Workflow mode: Planner → Validator → Executor for workflow creation
+ * 
+ * Features:
+ * - Session persistence via checkpointer and thread_id
+ * - Token streaming for real-time UI updates
+ * - Progress updates via narrator system
+ * - Debug tracing via callback handlers
+ * - Two interrupt points: enrichment (clarification) and executor (approval)
+ * 
+ * Usage:
+ * ```typescript
+ * const orchestrator = new ChatOrchestrator(sessionId)
+ * 
+ * // Chat mode
+ * const response = await orchestrator.handle(input, onToken)
+ * 
+ * // Workflow mode
+ * const plan = await orchestrator.plan(input, postHandler)
+ * await orchestrator.applyWorkflow(input.apiKey, n8nApiKey)
+ * ```
+ */
+export class ChatOrchestrator
 {
+  private threadId: string
 
-  public async handle(input: OrchestratorInput, onToken?: StreamTokenHandler): Promise<string>
+  constructor(sessionId?: string)
   {
-    return invokeEnrichmentForChat(input.apiKey, input.messages, onToken)
+    this.threadId = sessionId || crypto.randomUUID()
   }
 
-  public async isReadyToPlan(input: OrchestratorInput): Promise<{ ready: boolean; reason?: string }>
+  /**
+   * Handle chat messages (enrichment mode).
+   * 
+   * Supports interrupt() for clarification - if the enrichment agent needs
+   * more information, it will pause and wait for user input.
+   * 
+   * @param input - API key and message history
+   * @param onToken - Optional callback for token streaming
+   * @returns Final AI response text
+   */
+  public async handle(
+    input: OrchestratorInput,
+    onToken?: StreamTokenHandler
+  ): Promise<string>
   {
-    return checkReadinessToPlan(input.apiKey, input.messages)
+    const config = {
+      configurable: {
+        thread_id: `chat-${this.threadId}`,
+        openai_api_key: input.apiKey,
+        model: 'gpt-4o-mini'
+      },
+      callbacks: onToken ? [new TokenStreamHandler(onToken)] : []
+    }
+
+    // Convert ChatMessage[] to LangChain BaseMessage[]
+    const lcMessages = this.convertMessages(input.messages)
+
+    const result = await workflowGraph.invoke(
+      {
+        mode: 'chat' as const,
+        messages: lcMessages,
+        sessionId: this.threadId
+      },
+      config
+    )
+
+    // Extract last message content
+    const lastMessage = result.messages[result.messages.length - 1]
+    return (lastMessage?.content as string) || ''
   }
 
-  public async plan(input: OrchestratorInput, postHandler?: ActivityHandler): Promise<Plan>
+  /**
+   * Check if enrichment conversation is ready to transition to planning.
+   * 
+   * Note: With the new architecture, this is less critical since enrichment
+   * explicitly marks readiness with [READY]. Kept for backward compatibility.
+   * 
+   * @param input - API key and message history
+   * @returns Whether ready to plan and reason if not
+   */
+  public async isReadyToPlan(
+    input: OrchestratorInput
+  ): Promise<{ ready: boolean; reason?: string }>
+  {
+    // In the new architecture, we check the last message for [READY] marker
+    const lastMessage = input.messages[input.messages.length - 1]
+
+    if (lastMessage?.text?.includes('[READY]'))
+    {
+      return { ready: true }
+    }
+
+    return {
+      ready: false,
+      reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!'
+    }
+  }
+
+  /**
+   * Create workflow plan (planner → validator → executor).
+   * 
+   * Runs until executor interrupt - returns plan for UI preview.
+   * Call applyWorkflow() to resume and create the workflow in n8n.
+   * 
+   * @param input - API key and message history
+   * @param postHandler - Optional handler for activity updates
+   * @returns Generated and validated workflow plan
+   */
+  public async plan(
+    input: OrchestratorInput,
+    postHandler?: ActivityHandler
+  ): Promise<Plan>
   {
     const session = new DebugSession('Orchestrator', 'plan')
     session.log('Starting plan generation', { messageCount: input.messages.length })
 
-    this.initializeTracing(session)
+    // Create narrator for progress updates
+    const narrator = postHandler
+      ? createNarrationManager(postHandler, input.apiKey)
+      : undefined
 
-    const narrator = postHandler ? createNarrationManager(postHandler, input.apiKey) : undefined
-    const userIntent = input.messages[input.messages.length - 1]?.text || 'workflow automation'
-
-    const onNarrate = (action: string, phase: 'started' | 'complete' | 'error') => narrator?.post('planner', action, phase, userIntent)
-
-    const loomResponse = await invokePlannerAgent(input.apiKey, input.messages, session, userIntent, onNarrate)
-    const plan = this.parsePlanFromLoom(loomResponse, session)
-
-    this.validatePlanStructure(plan, session)
-    onNarrate('workflow design complete', 'complete')
-
-    await runDeepValidation(plan, input.apiKey, session, (action, phase) => narrator?.post('validator', action, phase))
-
-    session.end(true)
-    return plan
-  }
-
-  private initializeTracing(session: DebugSession): void
-  {
-    const tracer = createAgentTracer(session.getSessionId())
-    tracer.setAgent('orchestrator')
-    tracer.logDecision('Starting plan generation', 'User requested workflow plan')
-
-    debugAgentHandoff('orchestrator', 'planner', 'Generate workflow plan from conversation')
-    tracer.logHandoff('planner', 'Generate structured workflow from user requirements')
-    tracer.setAgent('planner')
-  }
-
-  private parsePlanFromLoom(loomResponse: string, session: DebugSession): Plan
-  {
-    debugLLMResponse(loomResponse, '')
-    session.log('LLM response received', { responseLength: loomResponse.length })
-
-    const cleanedResponse = stripCodeFences(loomResponse)
-    const parsed = parseLoom(cleanedResponse)
-
-    if (!parsed.success || !parsed.data)
-    {
-      this.handleLoomParsingFailure(cleanedResponse, parsed, session)
+    const config = {
+      configurable: {
+        thread_id: `workflow-${this.threadId}`,
+        openai_api_key: input.apiKey,
+        n8n_api_key: '', // Will be provided in applyWorkflow
+        model: 'gpt-4o-mini'
+      },
+      callbacks: [new DebugCallbackHandler(session)],
+      metadata: {
+        narrator,
+        session
+      }
     }
 
-    debugLoomParsing(cleanedResponse, parsed.data, true)
-    session.log('Loom parsing succeeded')
+    // Convert ChatMessage[] to LangChain BaseMessage[]
+    const lcMessages = this.convertMessages(input.messages)
 
-    const plan = loomToPlan(parsed.data)
-
-    debugAgentDecision('planner', 'Plan generated successfully', 'Converted Loom to workflow plan', {
-      nodeCount: plan.workflow.nodes?.length || 0,
-      credentialsNeeded: plan.credentialsNeeded?.length || 0
-    })
-
-    return plan
-  }
-
-  private handleLoomParsingFailure(cleanedResponse: string, parsed: any, session: DebugSession): never
-  {
-    debugLoomParsing(cleanedResponse, parsed, false)
-    session.log('Loom parsing failed', { errors: parsed.errors })
-    session.end(false)
-
-    throw new Error(
-      'Failed to generate a valid workflow plan. ' +
-      'The AI response could not be parsed. ' +
-      'Please try rephrasing your request or providing more details. ' +
-      'Check console for full error details.'
+    // Run workflow mode (planner → validator → [pause] → executor)
+    const result = await workflowGraph.invoke(
+      {
+        mode: 'workflow' as const,
+        messages: lcMessages,
+        sessionId: this.threadId
+      },
+      config
     )
+
+    session.end(true)
+
+    if (!result.plan)
+    {
+      throw new Error('Failed to generate workflow plan')
+    }
+
+    return result.plan
   }
 
-  private validatePlanStructure(plan: Plan, session: DebugSession): void
+  /**
+   * Apply workflow (resume from executor interrupt).
+   * 
+   * Creates the workflow in n8n after user approval.
+   * 
+   * @param openaiApiKey - OpenAI API key
+   * @param n8nApiKey - n8n API key for workflow creation
+   * @returns Workflow ID and optional credential guidance
+   */
+  public async applyWorkflow(
+    openaiApiKey: string,
+    n8nApiKey: string
+  ): Promise<{
+    workflowId?: string
+    credentialGuidance?: {
+      missing: Array<{ name: string; type: string }>
+      setupLinks: Array<{ name: string; url: string }>
+    }
+  }>
   {
-    session.log('Validating workflow structure')
-    const validation = validateWorkflow(plan.workflow)
+    const config = {
+      configurable: {
+        thread_id: `workflow-${this.threadId}`,
+        openai_api_key: openaiApiKey,
+        n8n_api_key: n8nApiKey,
+        n8n_base_url: 'http://localhost:5678',
+        model: 'gpt-4o-mini'
+      }
+    }
 
-    debugPlanGenerated({ plan, validation, sessionId: session.getSessionId() })
+    // Resume from executor interrupt (null input = continue from checkpoint)
+    const result = await workflowGraph.invoke(null, config)
 
-    if (!validation.valid) this.logValidationErrors(validation, session)
-    else if (validation.warnings.length > 0) this.logValidationWarnings(validation, session)
-    else session.log('Workflow validation passed')
+    return {
+      workflowId: result.workflowId,
+      credentialGuidance: result.credentialGuidance
+    }
   }
 
-  private logValidationErrors(validation: ReturnType<typeof validateWorkflow>, session: DebugSession): void
+  /**
+   * Get the session ID for this orchestrator instance.
+   */
+  public getSessionId(): string
   {
-    session.log('Workflow validation failed', {
-      errorCount: validation.errors.length,
-      warningCount: validation.warnings.length
+    return this.threadId
+  }
+
+  /**
+   * Convert ChatMessage[] to LangChain BaseMessage[].
+   */
+  private convertMessages(messages: ChatMessage[]): Array<HumanMessage | AIMessage | SystemMessage>
+  {
+    return messages.map(msg =>
+    {
+      if (msg.role === 'system')
+      {
+        return new SystemMessage(msg.text)
+      }
+      else if (msg.role === 'assistant')
+      {
+        return new AIMessage(msg.text)
+      }
+      else
+      {
+        return new HumanMessage(msg.text)
+      }
     })
-    console.warn('⚠️ Workflow validation issues detected:', formatValidationResult(validation))
-
-    debugAgentDecision('planner', 'Validation failed', 'Workflow has structural issues', {
-      errors: validation.errors.length,
-      warnings: validation.warnings.length
-    })
   }
-
-  private logValidationWarnings(validation: ReturnType<typeof validateWorkflow>, session: DebugSession): void
-  {
-    session.log('Workflow has warnings', { warningCount: validation.warnings.length })
-    console.warn('⚠️ Workflow validation warnings:', formatValidationResult(validation))
-  }
-
-
 }
 
-export const orchestrator = new Orchestrator()
-
+/**
+ * Default orchestrator instance (singleton pattern).
+ * Maintained for backward compatibility.
+ */
+export const orchestrator = new ChatOrchestrator()
 
