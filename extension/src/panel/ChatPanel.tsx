@@ -41,7 +41,7 @@ export default function ChatPanel({
     if (!open) return null
     return (
         <Panel title="n8n Assistant" onClose={onClose} onNewSession={onNewSession} showConnectionStatus>
-            <div className="panel-body flex-column">
+            <div className="panel-body flex-column" style={{ position: 'relative' }}>
                 <MessagesList messages={messages} draft={draft} sending={sending} onSend={onSend} />
                 <AgentActivityPanel activities={activities} />
                 <ChatComposer sending={sending} onSend={(text) => onSend(text)} />

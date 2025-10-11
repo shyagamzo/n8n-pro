@@ -17,7 +17,7 @@ export default function TestButton({ onTest }: TestButtonProps): React.ReactElem
       onClick={onTest}
       title="Test workflow creation"
     >
-      🧪 Test Workflow
+      🧪
     </button>
   )
 }
