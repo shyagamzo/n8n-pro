@@ -5,7 +5,7 @@ import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '../state'
-import { debugAgentDecision, type DebugSession } from '../../utils/debug'
+import { type DebugSession } from '../../utils/debug'
 import { executorTools } from '../tools/executor'
 
 /**
@@ -50,13 +50,13 @@ export async function executorNode(
     throw new Error('n8n API key not provided in config.configurable')
   }
 
-  narrator?.post('executor', 'creating workflow', 'started')
-  session?.log('Executing workflow creation')
-
-  debugAgentDecision('executor', 'Starting workflow execution', 'Using ReAct agent with tools', {
+  session?.log('Executing workflow creation', {
     workflowName: state.plan.workflow.name,
     nodeCount: state.plan.workflow.nodes?.length || 0
   })
+  
+  // Agent lifecycle events automatically emitted by LangGraph bridge
+  // (on_chain_start → emitAgentStarted('executor', 'executing'))
 
   // Create ReAct agent with executor tools
   const systemPrompt = new SystemMessage(`You are the workflow executor for n8n. Your job is to:
@@ -112,12 +112,10 @@ First check credentials, then create the workflow. Respond to the user with the 
   const credentialGuidance = extractCredentialGuidance(content)
 
   session?.log('Workflow created successfully', { workflowId })
-  narrator?.post('executor', 'workflow created', 'complete')
-
-  debugAgentDecision('executor', 'Workflow created', `Created workflow with ID: ${workflowId}`, {
-    workflowId,
-    hasMissingCredentials: !!credentialGuidance
-  })
+  
+  // Agent completion event automatically emitted by LangGraph bridge
+  // (on_chain_end → emitAgentCompleted('executor'))
+  // Workflow created event emitted by background worker after applyWorkflow()
 
   return new Command({
     goto: END,
