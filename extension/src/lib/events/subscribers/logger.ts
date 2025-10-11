@@ -1,6 +1,6 @@
 /**
  * Logger Subscriber
- * 
+ *
  * Listens to ALL events and logs them to console.
  * Always active (not gated by isDevelopment) to ensure production logging.
  * Uses takeUntil() pattern for clean subscription management.
@@ -9,13 +9,13 @@
 import { Subject } from 'rxjs'
 import { takeUntil, tap, finalize } from 'rxjs/operators'
 import { systemEvents } from '../index'
-import type { 
-  SystemEvent, 
-  WorkflowEvent, 
-  AgentEvent, 
-  LLMEvent, 
-  ErrorEvent, 
-  StorageEvent 
+import type {
+  SystemEvent,
+  WorkflowEvent,
+  AgentEvent,
+  LLMEvent,
+  ErrorEvent,
+  StorageEvent
 } from '../types'
 
 const destroy$ = new Subject<void>()
@@ -30,6 +30,10 @@ function createLogGroup(title: string, color: string, collapsed: boolean): void 
   } else {
     console.group(`%c${title}`, style)
   }
+}
+
+function logCleanup(): void {
+  console.log('[logger] Subscription cleaned up')
 }
 
 function formatTitle(domain: string, type: string, details: string[], timestamp: number): string {
@@ -92,21 +96,21 @@ function logAgentEvent(event: AgentEvent): void {
 function logLLMEvent(event: LLMEvent): void {
   const details: string[] = []
   const p = event.payload
-  
+
   if (p.model) details.push(p.model)
   if (p.provider) details.push(`(${p.provider})`)
-  
+
   // Calculate total tokens from prompt + completion
   const totalTokens = (p.tokens?.prompt ?? 0) + (p.tokens?.completion ?? 0)
   if (totalTokens > 0) details.push(`${totalTokens} tokens`)
-  
+
   const title = formatTitle(event.domain, event.type, details, event.timestamp)
   createLogGroup(title, '#10b981', true)
-  
+
   if (event.payload && Object.keys(event.payload).length > 0) {
     console.log('Payload:', event.payload)
   }
-  
+
   console.groupEnd()
 }
 
@@ -191,7 +195,7 @@ export function setup(): void {
   logEvents$
     .pipe(
       takeUntil(destroy$),
-      finalize(() => console.log('[logger] Subscription cleaned up'))
+      finalize(logCleanup)
     )
     .subscribe()
 }
