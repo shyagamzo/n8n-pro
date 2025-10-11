@@ -6,6 +6,14 @@ import { workflowGraph } from './graph'
 import { TokenStreamHandler } from './streaming'
 import { DebugCallbackHandler } from './debug-handler'
 import { DebugSession } from '../utils/debug'
+import { 
+  systemEvents, 
+  emitAgentStarted, 
+  emitAgentCompleted, 
+  emitLLMStarted, 
+  emitLLMCompleted,
+  emitApiError
+} from '../events'
 
 /**
  * Orchestrator input for chat and workflow operations.
@@ -92,7 +100,7 @@ export class ChatOrchestrator
     for await (const event of eventStream) {
       // Emit to reactive system via bridge logic (inline to avoid double consumption)
       this.emitEventToReactiveSystem(event)
-      
+
       // Capture final state
       if (event.event === 'on_chain_end' && event.data?.output) {
         finalState = event.data.output
@@ -131,7 +139,7 @@ export class ChatOrchestrator
       }
 
       const lcMessages = this.convertMessages(input.messages)
-      
+
       // Use streamEvents for single execution
       const eventStream = workflowGraph.streamEvents(
         {
@@ -169,7 +177,6 @@ export class ChatOrchestrator
         reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!'
       }
     } catch (error) {
-      const { emitApiError } = require('../events')
       emitApiError(error as Error, 'readiness-check')
       return { ready: false, reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!' }
     }
@@ -321,18 +328,15 @@ export class ChatOrchestrator
   {
     const { event: eventType, name, data, metadata } = event
     
-    // Import emitters at top of file
-    const { systemEvents, emitAgentStarted, emitAgentCompleted, emitLLMStarted, emitLLMCompleted } = require('../events')
-    
     switch (eventType) {
       case 'on_llm_start':
         emitLLMStarted(metadata?.ls_model_name, metadata?.ls_provider, metadata?.run_id)
         break
-        
+
       case 'on_llm_end':
         emitLLMCompleted(data?.output?.usage_metadata, metadata?.run_id)
         break
-        
+
       case 'on_llm_error':
         systemEvents.emit({
           domain: 'error',
@@ -345,7 +349,7 @@ export class ChatOrchestrator
           timestamp: Date.now()
         })
         break
-        
+
       case 'on_tool_start':
         systemEvents.emit({
           domain: 'agent',
@@ -358,7 +362,7 @@ export class ChatOrchestrator
           timestamp: Date.now()
         })
         break
-        
+
       case 'on_tool_end':
         systemEvents.emit({
           domain: 'agent',
@@ -371,7 +375,7 @@ export class ChatOrchestrator
           timestamp: Date.now()
         })
         break
-        
+
       case 'on_chain_start':
         if (name?.toLowerCase().includes('planner')) {
           emitAgentStarted('planner', 'planning', metadata)
@@ -383,7 +387,7 @@ export class ChatOrchestrator
           emitAgentStarted('classifier', 'classifying', metadata)
         }
         break
-        
+
       case 'on_chain_end':
         if (name?.toLowerCase().includes('planner')) {
           emitAgentCompleted('planner', metadata)
