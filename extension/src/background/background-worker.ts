@@ -6,11 +6,11 @@ import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings
 import { debugWorkflowCreated, debugWorkflowError } from '../lib/utils/debug'
 
 // Reactive event system
-import { 
+import {
   systemEvents,
   emitUnhandledError,
   emitApiError,
-  emitWorkflowCreated, 
+  emitWorkflowCreated,
   emitWorkflowFailed
 } from '../lib/events'
 import * as logger from '../lib/events/subscribers/logger'

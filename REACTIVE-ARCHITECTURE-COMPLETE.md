@@ -35,7 +35,7 @@ async function createWorkflow(data) {
 
 // Subscribers handle the rest automatically:
 // → Logger logs it
-// → Tracing records it  
+// → Tracing records it
 // → Persistence saves it
 // → (Future) Chat displays it
 ```
@@ -255,8 +255,8 @@ You now have a **production-ready reactive architecture** that:
 
 ---
 
-**Branch:** `➕/events/reactive-architecture`  
-**Status:** ✅ **READY TO MERGE**  
+**Branch:** `➕/events/reactive-architecture`
+**Status:** ✅ **READY TO MERGE**
 **Recommendation:** Test manually, then merge to master
 
 
