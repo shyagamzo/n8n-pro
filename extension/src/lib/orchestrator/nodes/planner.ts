@@ -9,9 +9,10 @@ import { buildPrompt } from '../../prompts'
 import { parse as parseLoom } from '../../loom'
 import { stripCodeFences } from '../../utils/markdown'
 import { loomToPlan } from '../plan-converter'
-import { debugLLMResponse, debugLoomParsing, debugAgentDecision, type DebugSession } from '../../utils/debug'
+import { type DebugSession } from '../../utils/debug'
 import { plannerTools } from '../tools/planner'
 import { createValidatorTool } from '../tools/validator-tool'
+import { systemEvents } from '../../events'
 
 /**
  * Planner node generates structured workflow plans in Loom format.
@@ -42,12 +43,10 @@ export async function plannerNode(
     throw new Error('OpenAI API key not provided in config.configurable')
   }
 
-  narrator?.post('planner', 'designing workflow', 'started')
   session?.log('Starting plan generation', { messageCount: state.messages.length })
-
-  debugAgentDecision('planner', 'Starting workflow plan generation', 'Using ReAct agent with tools', {
-    messageCount: state.messages.length
-  })
+  
+  // Agent lifecycle events are automatically emitted by LangGraph bridge
+  // (on_chain_start → emitAgentStarted('planner', 'planning'))
 
   // Create ReAct agent with planner tools (including validator tool with API key from closure)
   const systemPrompt = buildPrompt('planner', {
@@ -91,7 +90,6 @@ Important: Always validate before finalizing. The validator will tell you what's
   const lastMessage = result.messages[result.messages.length - 1]
   const content = lastMessage.content as string
 
-  debugLLMResponse(content, session?.getSessionId() || '')
   session?.log('LLM response received', { responseLength: content.length })
 
   // Parse Loom response
@@ -100,9 +98,19 @@ Important: Always validate before finalizing. The validator will tell you what's
 
   if (!parsed.success || !parsed.data)
   {
-    debugLoomParsing(cleanedResponse, parsed, false)
     session?.log('Loom parsing failed', { errors: parsed.errors })
-    narrator?.post('planner', 'plan generation failed', 'error')
+    
+    // Emit validation error event
+    systemEvents.emit({
+      domain: 'error',
+      type: 'validation',
+      payload: {
+        error: new Error('Loom parsing failed'),
+        source: 'planner',
+        context: { response: cleanedResponse, errors: parsed.errors }
+      },
+      timestamp: Date.now()
+    })
 
     throw new Error(
       'Failed to generate a valid workflow plan. ' +
@@ -111,17 +119,16 @@ Important: Always validate before finalizing. The validator will tell you what's
     )
   }
 
-  debugLoomParsing(cleanedResponse, parsed.data, true)
   session?.log('Loom parsing succeeded')
 
   const plan = loomToPlan(parsed.data)
-
-  debugAgentDecision('planner', 'Plan generated successfully', 'Converted Loom to workflow plan', {
+  session?.log('Plan converted', {
     nodeCount: plan.workflow.nodes?.length || 0,
     credentialsNeeded: plan.credentialsNeeded?.length || 0
   })
-
-  narrator?.post('planner', 'workflow design complete', 'complete')
+  
+  // Agent completion event automatically emitted by LangGraph bridge
+  // (on_chain_end → emitAgentCompleted('planner'))
 
   // Planner now validates internally via tool, go directly to executor
   return new Command({
