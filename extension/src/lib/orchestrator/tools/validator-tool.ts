@@ -1,40 +1,43 @@
 import { tool } from '@langchain/core/tools'
 import { z } from 'zod'
+import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
 import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import { buildPrompt } from '../../prompts'
 import { stripCodeFences } from '../../utils/markdown'
 
 const validateWorkflowSchema = z.object({
-  loomWorkflow: z.string().describe('The workflow in Loom format to validate'),
-  apiKey: z.string().describe('OpenAI API key for validation'),
-  modelName: z.string().default('gpt-4o-mini').describe('Model to use for validation')
+  loomWorkflow: z.string().describe('The workflow in Loom format to validate')
 })
 
 /**
- * Tool for planner to validate workflow plans using LLM knowledge.
+ * Factory function to create a validator tool with API key from closure.
  * 
- * This tool encapsulates the validator agent as a tool that the planner can call.
- * It performs LLM-based validation of workflow plans using n8n knowledge.
- * 
- * Returns validation result with either [VALID] or [INVALID] + corrections.
+ * This ensures the API key is not passed as a tool parameter (security).
+ * The validator uses createReactAgent for consistency with other agents.
  */
-export const validateWorkflowTool = tool(
-  async (input) => {
-    const args = input as z.infer<typeof validateWorkflowSchema>
-    
-    const model = new ChatOpenAI({
-      apiKey: args.apiKey,
-      model: args.modelName,
-      temperature: 0.1  // Low temperature for consistent validation
-    })
+export function createValidatorTool(apiKey: string, modelName: string = 'gpt-4o-mini') {
+  return tool(
+    async (input) => {
+      const args = input as z.infer<typeof validateWorkflowSchema>
 
-    const systemPrompt = buildPrompt('validator', {
-      includeNodesReference: true,
-      includeConstraints: true
-    })
+      // Create ReAct agent for validation (consistent with other agents)
+      const systemPrompt = buildPrompt('validator', {
+        includeNodesReference: true,
+        includeConstraints: true
+      })
 
-    const validationPrompt = `Validate this n8n workflow plan for correctness.
+      const agent = createReactAgent({
+        llm: new ChatOpenAI({
+          apiKey,
+          model: modelName,
+          temperature: 0.1  // Low temperature for consistent validation
+        }),
+        tools: [],  // No tools needed for validation
+        messageModifier: new SystemMessage(systemPrompt)
+      })
+
+      const validationPrompt = new HumanMessage(`Validate this n8n workflow plan for correctness.
 
 Workflow Plan (Loom format):
 ${args.loomWorkflow}
@@ -49,48 +52,59 @@ Check for:
 Response format:
 - If the workflow is VALID, respond with: [VALID]
 - If there are ERRORS, respond with: [INVALID]
-  Then list each error clearly, and provide a CORRECTED version of the workflow in Loom format.`
+  Then list each error clearly, and provide a CORRECTED version of the workflow in Loom format.`)
 
-    const validationResponse = await model.invoke([
-      new SystemMessage(systemPrompt),
-      new HumanMessage(validationPrompt)
-    ])
-
-    const content = validationResponse.content as string
-
-    // Return validation result
-    if (content.includes('[VALID]')) {
-      return JSON.stringify({
-        valid: true,
-        message: 'Workflow validation passed. The workflow is n8n-compatible.'
+      // ReAct agent validates the workflow
+      const result = await agent.invoke({
+        messages: [validationPrompt]
       })
-    }
 
-    if (content.includes('[INVALID]')) {
-      // Extract corrected Loom from response
-      const correctedLoom = extractLoomFromResponse(content)
+      const lastMessage = result.messages[result.messages.length - 1]
+      const content = lastMessage.content as string
 
+      // Return validation result
+      if (content.includes('[VALID]')) {
+        return JSON.stringify({
+          valid: true,
+          message: 'Workflow validation passed. The workflow is n8n-compatible.'
+        })
+      }
+
+      if (content.includes('[INVALID]')) {
+        // Extract corrected Loom from response
+        const correctedLoom = extractLoomFromResponse(content)
+
+        if (!correctedLoom) {
+          return JSON.stringify({
+            valid: false,
+            errors: content,
+            correctedWorkflow: null,
+            message: 'Workflow validation failed. Could not extract corrected workflow from response. See errors for details.'
+          })
+        }
+
+        return JSON.stringify({
+          valid: false,
+          errors: content,
+          correctedWorkflow: correctedLoom,
+          message: 'Workflow validation failed. See errors and corrected workflow.'
+        })
+      }
+
+      // Unexpected response
       return JSON.stringify({
         valid: false,
-        errors: content,
-        correctedWorkflow: correctedLoom,
-        message: 'Workflow validation failed. See errors and corrected workflow.'
+        errors: 'Unexpected validation response - no [VALID] or [INVALID] marker found',
+        message: content
       })
+    },
+    {
+      name: 'validate_workflow',
+      description: 'Validate a workflow plan in Loom format using LLM knowledge of n8n schemas. Returns validation result with errors and corrections if invalid. Use this to check if your workflow design is correct before finalizing.',
+      schema: validateWorkflowSchema
     }
-
-    // Unexpected response
-    return JSON.stringify({
-      valid: false,
-      errors: 'Unexpected validation response',
-      message: content
-    })
-  },
-  {
-    name: 'validate_workflow',
-    description: 'Validate a workflow plan in Loom format using LLM knowledge of n8n schemas. Returns validation result with errors and corrections if invalid. Use this to check if your workflow design is correct before finalizing.',
-    schema: validateWorkflowSchema
-  }
-)
+  )
+}
 
 /**
  * Extract Loom format from validator response.

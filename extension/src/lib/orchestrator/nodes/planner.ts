@@ -11,6 +11,7 @@ import { stripCodeFences } from '../../utils/markdown'
 import { loomToPlan } from '../plan-converter'
 import { debugLLMResponse, debugLoomParsing, debugAgentDecision, type DebugSession } from '../../utils/debug'
 import { plannerTools } from '../tools/planner'
+import { createValidatorTool } from '../tools/validator-tool'
 
 /**
  * Planner node generates structured workflow plans in Loom format.
@@ -48,12 +49,15 @@ export async function plannerNode(
     messageCount: state.messages.length
   })
 
-  // Create ReAct agent with planner tools
+  // Create ReAct agent with planner tools (including validator tool with API key from closure)
   const systemPrompt = buildPrompt('planner', {
     includeNodesReference: true,
     includeWorkflowPatterns: true,
     includeConstraints: true
   })
+
+  // Create validator tool with API key from closure (secure, not passed as parameter)
+  const validatorTool = createValidatorTool(apiKey, modelName)
 
   const agent = createReactAgent({
     llm: new ChatOpenAI({
@@ -61,7 +65,7 @@ export async function plannerNode(
       model: modelName,
       temperature: 0.2
     }),
-    tools: plannerTools,
+    tools: [...plannerTools, validatorTool],
     messageModifier: systemPrompt
   })
 
@@ -70,11 +74,12 @@ export async function plannerNode(
 Process:
 1. If needed, use fetch_n8n_node_types to check available nodes
 2. Design the workflow in Loom format
-3. Use the validate_workflow tool to validate your design (pass apiKey: "${apiKey}", modelName: "${modelName}")
-4. If validation fails, fix the issues and validate again
-5. Once validated, return ONLY the final raw Loom format - no markdown code blocks, no explanatory text
+3. Use the validate_workflow tool to validate your design (pass only loomWorkflow parameter)
+4. If validation fails, read the errors and correctedWorkflow, then fix the issues
+5. Validate again until it passes
+6. Once validated, return ONLY the final raw Loom format - no markdown code blocks, no explanatory text
 
-Use the validation tool to ensure correctness before finalizing.`)
+Important: Always validate before finalizing. The validator will tell you what's wrong and provide corrections.`)
 
   // ReAct agent handles tool loop internally
   const result = await agent.invoke(
