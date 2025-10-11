@@ -26,7 +26,7 @@ Implement a complete LangGraph-based orchestrator with unified StateGraph, mode-
    - Generates workflow plans in Loom format
    - Tools: `fetch_n8n_node_types`, `get_node_docs`
    - Preserves Loom protocol for efficient communication
-   - Integrates with narrator for progress updates
+   - Events automatically captured by reactive event system
 
 3. **Planner Tools Node** (`nodes/planner-tools.ts`)
    - Dedicated tool execution for planner
@@ -59,8 +59,8 @@ Implement a complete LangGraph-based orchestrator with unified StateGraph, mode-
 
 ### Callback System
 - **TokenStreamHandler**: Letter-by-letter streaming for UI
-- **DebugCallbackHandler**: Integration with existing debug infrastructure
-- **Narrator**: Activity updates via metadata
+- **DebugCallbackHandler**: Integration with DebugSession for detailed tracing
+- **Reactive Event System**: Activity updates via SystemEvents and RxJS subscribers (see 0036-reactive-rxjs-architecture.mdc)
 
 ### Session Management
 - **OrchestratorManager**: Maps session IDs to orchestrator instances

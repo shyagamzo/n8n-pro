@@ -2,161 +2,146 @@
 
 ## Overview
 
-The n8n extension now includes comprehensive agent communication tracing using LangChain's built-in callback system. This allows you to see exactly when agents make decisions, hand off tasks to each other, and track the complete workflow through the multi-agent system.
+The n8n extension uses a **reactive event-driven architecture** with RxJS for comprehensive agent communication tracing. This allows you to see exactly when agents make decisions, hand off tasks to each other, and track the complete workflow through the multi-agent system.
 
 ## 🎯 What You Get
 
-### 1. **Automatic LLM Call Tracing**
-- **Location**: `extension/src/lib/ai/tracing.ts`
-- **Purpose**: Automatically captures all LLM calls via LangChain callbacks
-- **Integrated with**: LangChain's `BaseCallbackHandler`
+### 1. **Automatic Event Capture**
+- **Location**: `extension/src/lib/events/langchain-bridge.ts`
+- **Purpose**: Automatically captures all LangGraph events via `.streamEvents()`
+- **Integrated with**: LangGraph's streaming API
 
 **Captures:**
 - ✅ LLM start/end events
-- ✅ Token usage (prompt and completion tokens)
-- ✅ Response times
+- ✅ Tool executions
+- ✅ Agent lifecycle (started, completed)
+- ✅ Chain events
 - ✅ Error tracking
-- ✅ Agent context for each call
 
-### 2. **Agent Decision Logging**
-- **Location**: `extension/src/lib/utils/debug.ts` (agent-specific functions)
-- **Purpose**: Track when agents make decisions and why
+### 2. **Event-Based Logging**
+- **Location**: `extension/src/lib/events/subscribers/logger.ts`
+- **Purpose**: Centralized logging of all events
 
 **Features:**
-- Color-coded console output by agent type
-- Decision reasoning included
-- Metadata for context
-- Automatic timestamp tracking
+- Structured console output (domain/type/payload)
+- All events logged automatically
+- Powered by reactive event system
+- No scattered debug() calls
 
-### 3. **Agent Handoff Tracking**
-- **Purpose**: See when tasks are passed between agents
-- **Visualizes**: Agent flow diagrams in console
+### 3. **Tracing Subscriber**
+- **Location**: `extension/src/lib/events/subscribers/tracing.ts`
+- **Purpose**: Accumulates event history per session
+- **Uses**: RxJS `scan` operator
 
-**Example Output:**
-```
-🔄 [ORCHESTRATOR → PLANNER] Generate workflow plan from conversation
-🔄 [PLANNER → ORCHESTRATOR] Plan ready for user review
-```
-
-### 4. **Trace Summary**
-- **Purpose**: Complete overview of agent workflow
-- **Shows**:
-  - Total duration
-  - Number of decisions made
-  - Number of handoffs
-  - LLM call count and tokens used
-  - Agent flow visualization
+**Features:**
+- Complete event history available
+- Grouped by session ID
+- Access via: `tracing.getTrace(sessionId)`
+- Agent flow visualization from events
 
 ## 🚀 How to Use
 
-### Automatic Tracing (Already Integrated)
+### Automatic Event Capture (Already Active)
 
-The orchestrator now automatically creates traces for all operations:
+The reactive event system automatically captures all operations:
 
 ```typescript
-// In orchestrator.plan()
-const tracer = createAgentTracer(session.getSessionId())
-tracer.setAgent('orchestrator')
-tracer.logDecision('Starting plan generation', 'User requested workflow plan')
+// Events are automatically emitted by:
+// 1. LangGraph bridge (LLM, tools, agent lifecycle)
+// 2. Service code using emitter helpers
 
-// Handoff to planner
-tracer.logHandoff('planner', 'Generate structured workflow from user requirements')
-tracer.setAgent('planner')
+// Example: Creating a workflow
+async function createWorkflow(data) {
+  try {
+    const workflow = await n8n.create(data)
+    emitWorkflowCreated(workflow, workflow.id)  // ✅ Automatic logging!
+  } catch (error) {
+    emitApiError(error, 'createWorkflow')        // ✅ Automatic error logging!
+  }
+}
 
-// ... plan generation ...
-
-// Complete trace and show summary
-tracer.completeTrace()
+// All events automatically:
+// → Logger logs to console
+// → Tracing accumulates history
+// → Persistence saves important events
 ```
 
-### Manual Tracing (For New Agent Code)
+### Viewing Events (Console)
 
-```typescript
-import { createAgentTracer } from '../ai/tracing'
-import { createOpenAiChatModel } from '../ai/model'
+**All events are logged automatically:**
 
-// Create tracer
-const tracer = createAgentTracer()
-tracer.setAgent('classifier')
-
-// Log decisions
-tracer.logDecision(
-  'Classified as workflow creation request',
-  'User wants to create a new workflow',
-  { confidence: 0.95 }
-)
-
-// Log handoffs
-tracer.logHandoff('enrichment', 'Need more information about trigger')
-
-// Attach to LLM calls
-const model = createOpenAiChatModel({
-  apiKey: input.apiKey,
-  tracer  // LangChain will automatically call trace callbacks
-})
-
-// Complete trace
-tracer.completeTrace()
+```javascript
+// Console output format:
+[workflow] created - { workflowId: '123', workflow: {...} }
+[agent] started - { agent: 'planner', action: 'planning' }
+[llm] started - { model: 'gpt-4o-mini' }
+[llm] completed - { tokens: { prompt: 100, completion: 50 } }
+[agent] completed - { agent: 'planner' }
 ```
 
-### Simple Debug Functions
+### Accessing Event History
 
-For quick debugging without full trace context:
+Get complete trace for a session:
 
-```typescript
-import { debugAgentDecision, debugAgentHandoff } from '../utils/debug'
+```javascript
+// In console or debug code
+import { getTrace } from './events/subscribers/tracing'
 
-// Log a decision
-debugAgentDecision(
-  'planner',
-  'Using schedule trigger',
-  'User specified daily automation'
-)
-
-// Log a handoff
-debugAgentHandoff(
-  'enrichment',
-  'planner',
-  'Gathered all required information'
-)
+const trace = getTrace('session-id-123')
+// Returns: { sessionId, events: [...], startTime, endTime }
 ```
 
 ## 📊 Console Output Examples
 
-### Decision Output
-```
-🤖 [PLANNER] Decision
-   Generating workflow plan
-   Reasoning: Using LLM to convert conversation to Loom format
-```
-
-### Handoff Output
-```
-🔄 [ORCHESTRATOR → PLANNER] Generate workflow plan from conversation
-```
-
-### LLM Call Output
-```
-🧠 [PLANNER] LLM Start gpt-4o-mini
-✅ [PLANNER] LLM Complete 2341ms (1234→567 tokens)
+### Event Logs (Automatic)
+```javascript
+// All events logged with this structure:
+{
+  component: 'agent',              // Domain
+  action: 'started',                // Type
+  data: {                          // Payload
+    agent: 'planner',
+    action: 'planning',
+    sessionId: 'session-123'
+  },
+  timestamp: 1697123456789
+}
 ```
 
-### Trace Summary
+### Workflow Lifecycle
+```javascript
+[workflow] validated - { workflow: {...} }
+[workflow] created - { workflowId: '123', workflow: {...} }
+// or
+[workflow] failed - { workflow: {...}, error: Error(...) }
 ```
-📊 [TRACE] trace-1234567890
-   Duration: 3456ms
-   Decisions: 3
-   Handoffs: 2
-   LLM Calls: 1
-   Agent Flow:
-      ORCHESTRATOR → PLANNER → ORCHESTRATOR
-   Total Tokens: 1801
-   Total LLM Time: 2341ms
+
+### Agent Lifecycle  
+```javascript
+[agent] started - { agent: 'planner', action: 'planning' }
+[agent] tool_started - { agent: 'executor', tool: 'create_n8n_workflow' }
+[agent] tool_completed - { agent: 'executor', tool: 'create_n8n_workflow' }
+[agent] completed - { agent: 'planner' }
+```
+
+### LLM Events
+```javascript
+[llm] started - { model: 'gpt-4o-mini', provider: 'openai' }
+[llm] completed - { tokens: { prompt: 1234, completion: 567 } }
+```
+
+### Error Events
+```javascript
+[error] api - {
+  error: Error('n8n API failed'),
+  source: 'createWorkflow',
+  userMessage: 'API error in createWorkflow: ...'
+}
 ```
 
 ## 🔍 Current Agent Flow
 
-The extension currently implements this simplified flow (full LangGraph implementation coming):
+The extension uses LangGraph with reactive event system:
 
 ```
 User Request
