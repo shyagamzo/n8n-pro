@@ -1,0 +1,145 @@
+---
+description: Index and README file organization patterns - keep index files for exports only, keep READMEs as summaries
+alwaysApply: true
+---
+
+# Index and README File Patterns
+
+Keep `index.ts` files for exports only. Keep README files as summaries with links to detailed docs.
+
+## Core Principles
+
+1. **Discoverability**: Files should be findable by their descriptive names, not generic "index" names
+2. **Public API Boundary**: Index files define what's public, implementation files contain the code
+3. **Documentation Hierarchy**: READMEs provide overview, separate files contain details
+
+## Index Files
+
+**Rule: Index files should ONLY contain exports - never implementation code**
+
+### Pattern
+
+```typescript
+/**
+ * [Module Name] - Public API
+ * Brief description. See ./implementation.ts for details.
+ */
+
+export { MainClass, helperFunction } from './implementation'
+export type { PublicType, Options } from './implementation'
+```
+
+### Examples
+
+✅ **Good:**
+```typescript
+// lib/client/index.ts
+export { createClient, Client } from './client'
+export type { ClientConfig } from './client'
+```
+
+❌ **Bad:**
+```typescript
+// lib/client/index.ts
+export class Client {
+  // 200 lines of implementation...
+}
+```
+
+### Entry Points Exception
+
+Entry point index files may import for side effects:
+
+```typescript
+// content/index.ts
+import './content-script'  // ✅ Acceptable for entry points
+```
+
+## README Files
+
+**Rule: READMEs are summaries (< 100 lines) with links to detailed docs**
+
+### Pattern
+
+```markdown
+# Module Name
+
+Brief description (2-3 sentences max).
+
+## Quick Start
+
+```[language]
+// Minimal example
+```
+
+## Documentation
+
+- **[Topic](./topic.md)** - Description
+- **[Reference](./reference.md)** - Description
+
+## Key Features
+
+- Feature 1
+- Feature 2
+```
+
+### When to Extract Docs
+
+Split README when it exceeds ~100 lines or covers multiple topics:
+
+- **Specifications**: `protocol.md`, `specification.md`
+- **API Reference**: `api-reference.md`, `api.md`
+- **Guides**: `best-practices.md`, `guidelines.md`
+- **Architecture**: `structure.md`, `architecture.md`
+
+## File Naming
+
+Implementation files use descriptive names that indicate content:
+
+✅ **Good:**
+- `orchestrator.ts` - Orchestrator class
+- `prompt-loader.ts` - Prompt loading utilities
+- `client.ts` - API client
+
+❌ **Avoid:**
+- `utils.ts`, `helpers.ts` - Too generic
+- `main.ts`, `core.ts` - Not descriptive
+- `module/module-thing.ts` - Redundant directory prefix
+
+Documentation files use descriptive, prefixed names:
+
+✅ **Good:**
+- `loom-protocol.md`, `loom-api.md` - Clear context
+- `authoring-guidelines.md` - Descriptive
+
+❌ **Avoid:**
+- `api.md`, `docs.md` - Too generic
+- `AuthoringGuidelines.md` - Use kebab-case
+
+## Example
+
+**Before:**
+```
+lib/service/
+  └── index.ts (300 lines - implementation + exports)
+  └── README.md (250 lines - all documentation)
+```
+Problem: Can't find "service" in Ctrl+P, only "index"
+
+**After:**
+```
+lib/service/
+  ├── index.ts (8 lines - exports only)
+  ├── service.ts (292 lines - implementation)
+  ├── README.md (60 lines - summary + links)
+  ├── api-reference.md (100 lines)
+  └── best-practices.md (90 lines)
+```
+Result: Ctrl+P "service" finds `service.ts` immediately
+
+## Benefits
+
+- **Findable**: Ctrl+P searches find implementation files by name
+- **Navigable**: README provides quick overview without overwhelming detail
+- **Maintainable**: Separate concerns are easier to update
+- **Clear API**: Index exports define public interface
