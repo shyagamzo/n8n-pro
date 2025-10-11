@@ -2,63 +2,61 @@
 
 ## Overview
 
-Comprehensive debugging has been added to help troubleshoot workflow creation issues. You now have visibility into every stage of the workflow creation process.
+The n8n extension uses a **reactive event-driven architecture** with RxJS for comprehensive debugging. All workflow creation events are automatically captured and logged.
 
 ## 🎯 What You Get
 
-### 1. **Workflow Validation** (Pre-API Call)
-- **Location**: `/extension/src/lib/validation/workflow.ts`
-- **Purpose**: Catches structural issues before sending to n8n API
-- **Uses**: Loom schema validator (existing validation library)
+### 1. **Automatic Event Logging**
+- **Location**: `extension/src/lib/events/subscribers/logger.ts`
+- **Purpose**: All workflow operations emit events that are automatically logged
+- **Powered by**: RxJS event system + LangGraph bridge
 
-**Validates:**
-- ✅ Required fields (name, nodes array)
-- ✅ Node structure (name, type, parameters)
-- ✅ Node type format (should be `n8n-nodes-base.nodeName`)
-- ✅ Position arrays
-- ✅ Connections object structure
-- ⚠️ Warnings for missing optional fields
+**What's Captured:**
+- ✅ Workflow creation, validation, failures
+- ✅ Agent lifecycle (started, completed)
+- ✅ LLM calls (start, tokens, complete)
+- ✅ Tool executions
+- ✅ All errors with full context
 
 **Where to see it:**
-- Browser console shows validation results before API call
-- Chat UI shows validation errors if workflow is invalid
+- Browser console (automatic structured logs)
+- Event format: `[domain] type - { payload }`
 
-### 2. **Structured Debug Logging**
-- **Location**: `/extension/src/lib/utils/debug.ts`
-- **Purpose**: Organized, color-coded console logs with automatic secret sanitization
+### 2. **Event Types for Workflow Creation**
 
-**Features:**
-- Colored, grouped console output
-- Automatic API key masking
-- Session tracking with timing
-- Context-rich error logs
-
-**Log Types:**
-```typescript
-debugWorkflowCreation(workflow)    // Before sending to n8n
-debugWorkflowCreated(id, url)      // On success
-debugWorkflowError(error, workflow) // On failure
-debugLLMResponse(response)          // LLM raw output
-debugLoomParsing(text, parsed)      // Loom parsing results
-debugPlanGenerated(plan)            // Final plan with validation
-debugValidation(workflow, valid)    // Validation details
+**Workflow Events:**
+```javascript
+[workflow] validated - { workflow: {...} }
+[workflow] created - { workflowId: '123', workflow: {...} }
+[workflow] failed - { workflow: {...}, error: Error(...) }
 ```
 
-### 3. **Enhanced Orchestrator Logging**
-- **Location**: `/extension/src/lib/orchestrator/index.ts`
-- **Purpose**: Track plan generation from LLM to final plan
+**Agent Events:**
+```javascript
+[agent] started - { agent: 'planner', action: 'planning' }
+[agent] completed - { agent: 'planner' }
+[agent] tool_started - { tool: 'fetch_n8n_node_types' }
+[agent] tool_completed - { tool: 'fetch_n8n_node_types' }
+```
 
-**Logs:**
-- 📝 Prompt construction
-- 🤖 LLM response (with preview)
-- 🔍 Loom parsing (success/failure)
-- ✅ Workflow validation results
-- ⚠️ Validation warnings
+**Error Events:**
+```javascript
+[error] validation - { error: Error('Loom parsing failed'), source: 'planner' }
+[error] api - { error: Error('n8n API failed'), source: 'createWorkflow' }
+```
+
+### 3. **Detailed Debugging with DebugSession**
+- **Location**: `extension/src/lib/utils/debug.ts`
+- **Purpose**: Step-by-step debugging within functions
+- **Complements**: Event system (events = high-level, session = granular)
 
 **Session Tracking:**
 ```
 [Session] Orchestrator-plan-1234567890
   +0ms    Starting plan generation
+  +150ms  LLM response received
+  +180ms  Loom parsing succeeded
+  +200ms  Plan converted
   +50ms   Built planner prompt
   +100ms  Calling LLM for plan generation
   +2000ms LLM response received
@@ -373,3 +371,33 @@ You now have complete visibility into workflow creation with:
 
 Happy debugging! 🐛→🐞→✅
 
+
+---
+
+## 🆕 Reactive Event System
+
+**Note:** The debugging system has been upgraded to use reactive events!
+
+### New Approach
+
+All debugging now flows through the **reactive event system**:
+- Events automatically emitted by services and LangGraph
+- Logger subscriber centralizes all logging
+- Tracing subscriber accumulates event history
+- No manual debug() calls needed
+
+### See Documentation
+
+- **[Reactive Architecture Decision](/.cursor/rules/decisions/n8n-extension/architecture/0036-reactive-rxjs-architecture.mdc)** - Complete architecture
+- **[Event System README](/extension/src/lib/events/README.md)** - Usage guide
+- **[Testing Guide](/REACTIVE-TESTING-GUIDE.md)** - How to test events
+- **[Implementation Summary](/REACTIVE-FINAL-REPORT.md)** - What changed
+
+### Migration Note
+
+Old debug functions (`debugWorkflowCreated`, `debugLoomParsing`, etc.) have been replaced by:
+- Event emitters (`emitWorkflowCreated`, `emitValidationError`)
+- Logger subscriber (automatic logging of all events)
+- LangGraph bridge (automatic agent/LLM event capture)
+
+This guide shows historical debugging approaches. For current debugging, use the reactive event system.
