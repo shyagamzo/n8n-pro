@@ -5,7 +5,6 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { OrchestratorState } from './state'
 import {
   enrichmentNode,
-  enrichmentToolsNode,
   plannerNode,
   plannerToolsNode,
   validatorNode,
@@ -49,7 +48,6 @@ graph.addNode('validator', validatorNode)
 graph.addNode('executor', executorNode)
 
 // Add tool execution nodes
-graph.addNode('enrichment_tools', enrichmentToolsNode)
 graph.addNode('planner_tools', plannerToolsNode)
 graph.addNode('executor_tools', executorToolsNode)
 
@@ -72,19 +70,25 @@ graph.addConditionalEdges(
   }
 )
 
-// Enrichment ↔ Enrichment Tools loop
-// Enrichment node uses Command to route to enrichment_tools or END
-graph.addEdge('enrichment_tools' as any, 'enrichment' as any)  // Tools always return to enrichment
-
 // Orchestrator-based routing after enrichment
 graph.addConditionalEdges(
   'enrichment' as any,
   (state) => {
-    // Orchestrator decides based on enrichment agent's status report
-    if (state.hasAllRequiredInfo && state.confidence > 0.8) {
-      return 'planner'
+    // Orchestrator reads tool call arguments directly from the last message
+    const lastMessage = state.messages[state.messages.length - 1] as any
+    
+    if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
+      for (const toolCall of lastMessage.tool_calls) {
+        if (toolCall.name === 'reportRequirementsStatus') {
+          const args = toolCall.args as { hasAllRequiredInfo: boolean; confidence: number }
+          if (args.hasAllRequiredInfo && args.confidence > 0.8) {
+            return 'planner'
+          }
+        }
+      }
     }
-    return 'END' // Continue conversation (enrichment will be called again)
+    
+    return 'END' // Continue conversation
   }
 )
 

@@ -4,6 +4,9 @@ import { z } from 'zod'
 /**
  * Command tools for enrichment agent to signal system state changes.
  * These tools allow the LLM to communicate metadata without affecting user-facing content.
+ * 
+ * Note: These tools don't execute any actions - they're purely for schema validation.
+ * The orchestrator reads the tool call arguments directly from the message to make routing decisions.
  */
 
 const reportRequirementsStatusSchema = z.object({
@@ -13,11 +16,9 @@ const reportRequirementsStatusSchema = z.object({
 })
 
 export const reportRequirementsStatusTool = tool(
-  async (input) => {
-    const args = input as z.infer<typeof reportRequirementsStatusSchema>
-    // This tool doesn't perform an action directly, it reports agent status
-    // The orchestrator uses this information to make routing decisions
-    return `Requirements status: ${args.hasAllRequiredInfo ? 'Complete' : 'Incomplete'} (confidence: ${args.confidence})`
+  async () => {
+    // This tool doesn't execute anything - orchestrator reads args directly from message
+    return 'Status reported'
   },
   {
     name: 'reportRequirementsStatus',
@@ -32,9 +33,9 @@ const setConfidenceSchema = z.object({
 })
 
 export const setConfidenceTool = tool(
-  async (input) => {
-    const args = input as z.infer<typeof setConfidenceSchema>
-    return `Confidence set to ${args.confidence}: ${args.reasoning || 'No reasoning provided'}`
+  async () => {
+    // This tool doesn't execute anything - orchestrator reads args directly from message
+    return 'Confidence set'
   },
   {
     name: 'setConfidence',

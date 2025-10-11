@@ -71,36 +71,25 @@ export async function enrichmentNode(
 
   // Check if LLM called any command tools
   const toolCalls = (response as AIMessage).tool_calls
-  
+
   if (toolCalls && toolCalls.length > 0) {
     debugAgentDecision(
       'enrichment',
-      'Command tools called',
+      'Status reported via tools',
       `Found ${toolCalls.length} tool calls`,
       { toolCalls: toolCalls.map(tc => tc.name) }
     )
-    
-    // Route to tool processing node
-    return new Command({
-      goto: 'enrichment_tools',
-      update: {
-        messages: [response as AIMessage]
-      }
-    })
+  } else {
+    debugAgentDecision(
+      'enrichment',
+      'Chat response',
+      (response.content as string).substring(0, 100),
+      { contentLength: (response.content as string).length }
+    )
   }
 
-  // No tool calls - normal chat response
-  const content = response.content as string
-  debugAgentDecision(
-    'enrichment',
-    'Chat response',
-    content.substring(0, 100),
-    { contentLength: content.length }
-  )
-
-  // Let the orchestrator decide routing based on state
-  // Enrichment agent just reports its status via tools
-
+  // Orchestrator reads tool calls directly from message and makes routing decision
+  // No need for separate tool execution node
   return new Command({
     goto: 'END',
     update: {

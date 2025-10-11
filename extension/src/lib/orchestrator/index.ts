@@ -134,9 +134,17 @@ export class ChatOrchestrator
         config
       )
 
-      // Check if enrichment agent reported it has all required info
-      if (result.hasAllRequiredInfo && result.confidence > 0.8) {
-        return { ready: true }
+      // Check if enrichment agent reported it has all required info via tool calls
+      const lastMessage = result.messages[result.messages.length - 1] as any
+      if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
+        for (const toolCall of lastMessage.tool_calls) {
+          if (toolCall.name === 'reportRequirementsStatus') {
+            const args = toolCall.args as { hasAllRequiredInfo: boolean; confidence: number }
+            if (args.hasAllRequiredInfo && args.confidence > 0.8) {
+              return { ready: true }
+            }
+          }
+        }
       }
 
       return { 

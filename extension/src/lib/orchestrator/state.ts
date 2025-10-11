@@ -47,9 +47,6 @@ export const OrchestratorState = Annotation.Root({
     missing: Array<{ name: string; type: string }>;
     setupLinks: Array<{ name: string; url: string }>;
   } | undefined>(),
-  hasAllRequiredInfo: Annotation<boolean>(),
-  confidence: Annotation<number>(),
-  missingInfo: Annotation<string[]>(),
 
 })
 

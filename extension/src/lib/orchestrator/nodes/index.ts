@@ -4,7 +4,6 @@
  */
 
 export { enrichmentNode } from './enrichment'
-export { enrichmentToolsNode } from './enrichment-tools'
 export { plannerNode } from './planner'
 export { plannerToolsNode } from './planner-tools'
 export { validatorNode } from './validator'
