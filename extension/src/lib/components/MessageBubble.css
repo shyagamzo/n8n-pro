@@ -2,12 +2,16 @@
 .message-bubble {
   max-width: 80%;
   word-wrap: break-word;
-  animation: slideIn 0.3s ease-out;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Disable animation for streaming messages to prevent jump when completing */
-.message-bubble--streaming {
+/* Only animate user messages */
+.message-bubble--user {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Never animate assistant messages to prevent jump during streaming */
+.message-bubble--assistant {
   animation: none;
 }
 
@@ -88,3 +92,4 @@
 .message-bubble--assistant:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
+
