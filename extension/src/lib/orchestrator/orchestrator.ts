@@ -88,8 +88,10 @@ export async function runGraph(
   )
 
   let finalState: any = null
+
   for await (const event of eventStream) {
     emitLangGraphEvent(event)
+
     if (event.event === 'on_chain_end' && event.data?.output) {
       finalState = event.data.output
     }
