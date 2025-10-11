@@ -8,8 +8,15 @@ export default function Options(): React.ReactElement
   return (
     <ErrorBoundary>
       <div className="options-container">
-        <h1>n8n Pro Options</h1>
-        <ApiKeySection />
+        <div className="options-header">
+          <h1 className="options-title">n8n Pro Settings</h1>
+          <p className="options-subtitle">
+            Configure your API keys and connection settings to get started with n8n Pro
+          </p>
+        </div>
+        <div className="options-content">
+          <ApiKeySection />
+        </div>
       </div>
     </ErrorBoundary>
   )
