@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 import type { ChatMessage } from '../../lib/types/chat'
 import MessageBubble from '../../lib/components/MessageBubble'
-import ThinkingAnimation from '../../lib/components/ThinkingAnimation'
 import EmptyState from './EmptyState'
 import '../../lib/styles/utilities.css'
 import '../styles.css'
@@ -54,14 +53,6 @@ export default function MessagesList({ messages, draft, sending, onSend }: Messa
           <MessageBubble message={m} />
         </div>
       ))}
-      {/* Show thinking animation only when sending and no streaming message exists yet */}
-      {sending && !messages.some(m => m.streaming) ? (
-        <div className="message-wrapper flex w-full">
-          <div className="draft-bubble">
-            <ThinkingAnimation />
-          </div>
-        </div>
-      ) : null}
       <div ref={messagesEndRef} />
     </div>
   )

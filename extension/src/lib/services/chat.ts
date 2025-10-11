@@ -30,27 +30,15 @@ export class ChatService
 
   private handleToken(message: { type: 'token'; token: string }): void
   {
-    // If no streaming message exists yet, create one
-    if (!this.streamingMessageId)
+    // Update existing streaming message
+    if (!this.streamingMessageId) return
+    
+    const currentMessage = useChatStore.getState().messages.find(m => m.id === this.streamingMessageId)
+    if (currentMessage)
     {
-      this.streamingMessageId = generateId()
-      useChatStore.getState().addMessage({
-        id: this.streamingMessageId,
-        role: 'assistant',
-        text: message.token,
-        streaming: true
+      useChatStore.getState().updateMessage(this.streamingMessageId, {
+        text: currentMessage.text + message.token
       })
-    }
-    else
-    {
-      // Update existing streaming message
-      const currentMessage = useChatStore.getState().messages.find(m => m.id === this.streamingMessageId)
-      if (currentMessage)
-      {
-        useChatStore.getState().updateMessage(this.streamingMessageId, {
-          text: currentMessage.text + message.token
-        })
-      }
     }
   }
 
@@ -190,7 +178,16 @@ export class ChatService
   {
     const { addMessage, startSending } = useChatStore.getState()
     addMessage({ id: generateId(), role: 'user', text })
-    this.streamingMessageId = null // Reset streaming message ID
+    
+    // Create streaming message immediately to avoid animation reset
+    this.streamingMessageId = generateId()
+    addMessage({
+      id: this.streamingMessageId,
+      role: 'assistant',
+      text: '',
+      streaming: true
+    })
+    
     startSending()
 
     // Filter out streaming messages before sending to backend
