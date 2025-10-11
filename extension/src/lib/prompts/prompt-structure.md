@@ -11,8 +11,7 @@ prompts/
 │   ├── enrichment.md       # Requirement gathering
 │   ├── planner.md          # Workflow planning
 │   ├── validator.md        # Plan validation
-│   ├── executor.md         # Workflow execution
-│   └── narrator.md         # Progress narration
+│   └── executor.md         # Workflow execution
 ├── shared/           # Shared knowledge base
 │   ├── n8n-nodes-reference.md    # Available n8n nodes
 │   ├── workflow-patterns.md      # Common patterns
@@ -32,7 +31,8 @@ Each agent has a specific role in the multi-agent system:
 - **Planner**: Generates workflow plans
 - **Validator**: Validates plans before execution (now a tool)
 - **Executor**: Creates workflows in n8n
-- **Narrator**: Provides progress updates to users
+
+> **Note:** Progress updates are now provided by the reactive event system rather than a separate narrator agent.
 
 ### Format
 Agent prompts are written in Markdown for:

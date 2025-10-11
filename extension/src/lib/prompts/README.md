@@ -34,7 +34,8 @@ Each agent has a specific role:
 - **[Planner](./agents/planner.md)** - Generates workflow plans
 - **[Validator](./agents/validator.md)** - Validates plans (now a tool)
 - **[Executor](./agents/executor.md)** - Creates workflows in n8n
-- **[Narrator](./agents/narrator.md)** - Provides progress updates
+
+> **Note:** Progress updates are now handled by the reactive event system. See [Event System Documentation](../../events/README.md).
 
 ## Shared Knowledge
 
