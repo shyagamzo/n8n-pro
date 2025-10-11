@@ -26,6 +26,8 @@ Migrating from procedural architecture (services call UI/logging directly) to re
 - [x] Background worker: emit `emitWorkflowCreated()` and `emitWorkflowFailed()`
 - [x] Background worker: global unhandled error handler
 - [x] Background worker: cleanup on extension suspend
+- [x] Fix context issue: remove UI subscribers from background (wrong context)
+- [x] Create messaging subscriber for future event → message bridging
 
 ### Documentation
 - [x] Architecture decision document (0036-reactive-rxjs-architecture.mdc)
@@ -34,20 +36,27 @@ Migrating from procedural architecture (services call UI/logging directly) to re
 
 ### Current State
 
-**Dual System Active:**
-- ✅ Event system is running (subscribers active)
-- ⚠️ Old chrome.runtime messaging still active
-- ⚠️ Both systems update UI simultaneously (may cause duplicates)
+**Hybrid System Active:**
+- ✅ Event system running in background worker (logger, tracing, persistence)
+- ✅ Chrome.runtime messaging for background ↔ content communication
+- ✅ No duplicate messages (UI subscribers removed from background context)
 
 **What Works:**
-- Events are being emitted from background worker
-- Logger subscriber is logging events
-- Chat subscriber is adding messages (in addition to old system)
-- Activity subscriber is tracking (in addition to old system)
+- Events are being emitted from background worker (`emitWorkflowCreated`, `emitWorkflowFailed`)
+- Logger subscriber is logging all events in background
+- Tracing subscriber is accumulating event history
+- Chrome.runtime messaging still handles UI updates (no changes to content script yet)
 
-**Known Issue:**
-- Duplicate chat messages (one from event system, one from old messaging)
-- Duplicate activities (one from event system, one from old messaging)
+**Architecture:**
+```
+Background Context:
+  Events → Logger (logs to console)
+        → Tracing (accumulates history)
+        → Persistence (saves to storage)
+
+Background → chrome.runtime.postMessage → Content Script Context:
+  ChatService receives messages → Updates chatStore → React updates
+```
 
 ## 📋 Remaining Work (Phase 3)
 
