@@ -57,47 +57,47 @@ export function emitWorkflowFailed(workflow: any, error: Error): void {
  * Agent event emitters
  */
 
-export function emitAgentStarted(agent: AgentType, action: string, metadata?: unknown): void {
+export function emitAgentStarted(agent: AgentType, action: string, metadata?: unknown, sessionId?: string): void {
   systemEvents.emit({
     domain: 'agent',
     type: 'started',
-    payload: { agent, action, metadata },
+    payload: { agent, action, metadata, sessionId },
     timestamp: Date.now()
   })
 }
 
-export function emitAgentCompleted(agent: AgentType, metadata?: unknown): void {
+export function emitAgentCompleted(agent: AgentType, metadata?: unknown, sessionId?: string): void {
   systemEvents.emit({
     domain: 'agent',
     type: 'completed',
-    payload: { agent, metadata },
+    payload: { agent, metadata, sessionId },
     timestamp: Date.now()
   })
 }
 
-export function emitAgentHandoff(fromAgent: AgentType, toAgent: AgentType, reason: string): void {
+export function emitAgentHandoff(fromAgent: AgentType, toAgent: AgentType, reason: string, sessionId?: string): void {
   systemEvents.emit({
     domain: 'agent',
     type: 'handoff',
-    payload: { agent: fromAgent, action: `handoff to ${toAgent}: ${reason}` },
+    payload: { agent: fromAgent, action: `handoff to ${toAgent}: ${reason}`, sessionId },
     timestamp: Date.now()
   })
 }
 
-export function emitToolStarted(agent: AgentType, tool: string, metadata?: unknown): void {
+export function emitToolStarted(agent: AgentType, tool: string, metadata?: unknown, sessionId?: string): void {
   systemEvents.emit({
     domain: 'agent',
     type: 'tool_started',
-    payload: { agent, tool, metadata },
+    payload: { agent, tool, metadata, sessionId },
     timestamp: Date.now()
   })
 }
 
-export function emitToolCompleted(agent: AgentType, tool: string, metadata?: unknown): void {
+export function emitToolCompleted(agent: AgentType, tool: string, metadata?: unknown, sessionId?: string): void {
   systemEvents.emit({
     domain: 'agent',
     type: 'tool_completed',
-    payload: { agent, tool, metadata },
+    payload: { agent, tool, metadata, sessionId },
     timestamp: Date.now()
   })
 }
