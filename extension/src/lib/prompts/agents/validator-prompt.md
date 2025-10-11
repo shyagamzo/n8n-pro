@@ -49,7 +49,7 @@ validation:
               index: 0
 ```
 
-**Important**: 
+**Important**:
 - Use `status: valid` or `status: invalid` (no other values)
 - List each error as a separate array item under `errors:`
 - Put the corrected workflow as a nested object under `correctedWorkflow:` (no pipe character)
