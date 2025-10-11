@@ -22,6 +22,7 @@ Common export file patterns across languages:
 - Python: `__init__.py`
 - Rust: `mod.rs`, `lib.rs`
 - Go: package-level files
+- Sass/SCSS: `_index.scss` (with `@forward` directives)
 
 ### Pattern
 
@@ -44,19 +45,11 @@ export { createClient, Client } from './client'
 export type { ClientConfig } from './client'
 ```
 
-```python
-# lib/client/__init__.py
-from .client import Client, create_client
-from .types import ClientConfig
-
-__all__ = ['Client', 'create_client', 'ClientConfig']
-```
-
 ❌ **Bad - Implementation in export file:**
 ```typescript
 // lib/client/index.ts
 export class Client {
-  // 200 lines of implementation...
+  // implementation...
 }
 ```
 
@@ -67,12 +60,6 @@ Entry point export files may import for side effects:
 ```typescript
 // content/index.ts
 import './content-script'  // ✅ Acceptable for entry points
-```
-
-```python
-# __main__.py
-from .app import main
-main()  # ✅ Acceptable for entry points
 ```
 
 ## README Files
