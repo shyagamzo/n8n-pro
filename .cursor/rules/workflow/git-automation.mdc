@@ -66,6 +66,14 @@ These rules automate Git usage within Cursor when executing tasks. The assistant
 - On merge requests: fast-forward if possible; otherwise use a merge commit with a descriptive message.
 - Keep history clean; avoid committing generated artifacts unless required; never commit secrets.
 
+## Code Quality in Commits
+- **No trailing whitespace**: Never include trailing spaces in code, especially in JSDoc comments
+  - BAD: `/** \n *  \n */` (space after asterisk)
+  - GOOD: `/** \n *\n */` (no trailing space)
+- When using search_replace, ensure old_string and new_string have NO trailing spaces
+- Run `git diff` before committing to check for whitespace-only changes
+- Use consistent indentation (tabs vs spaces as per project config)
+
 ## Safety & Conflicts
 - On conflicts: stop and ask for guidance, showing a concise conflict summary.
 - Do not push secrets or credentials. Exclude lockfiles unless dependency updates are part of the task.
