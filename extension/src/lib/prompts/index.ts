@@ -1,6 +1,6 @@
 /**
  * Prompt Library - Public API
- * 
+ *
  * System prompts for AI agents with markdown-based storage.
  * See ./prompt-loader.ts for implementation.
  */

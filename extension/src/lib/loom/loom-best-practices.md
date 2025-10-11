@@ -144,11 +144,11 @@ Output ONLY valid Loom format. No additional text.
 async function getAgentResponse(prompt: string): Promise<LoomObject> {
   const response = await llm.invoke(prompt);
   const result = parse(response);
-  
+
   if (!result.success) {
     throw new Error(`Agent returned invalid Loom: ${result.errors[0]?.message}`);
   }
-  
+
   return result.data!;
 }
 ```
@@ -162,7 +162,7 @@ function parseAgentOutput(text: string): object {
   if (loomResult.success) {
     return loomResult.data!;
   }
-  
+
   // Try JSON as fallback
   try {
     return JSON.parse(text);
@@ -183,7 +183,7 @@ describe('Loom Agent Output', () => {
 intent: WORKFLOW_CREATE
 confidence: 0.95
     `.trim();
-    
+
     const result = parse(text);
     expect(result.success).toBe(true);
     expect(result.data?.intent).toBe('WORKFLOW_CREATE');
@@ -199,7 +199,7 @@ Test with real LLM outputs:
 it('should parse actual LLM response', async () => {
   const response = await agent.invoke('Classify: create a Slack workflow');
   const result = parse(response);
-  
+
   expect(result.success).toBe(true);
   expect(result.data?.intent).toBeDefined();
 });

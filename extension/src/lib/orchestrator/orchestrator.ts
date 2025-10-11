@@ -109,7 +109,7 @@ export class ChatOrchestrator
   {
     // In the new architecture, readiness is determined by tool calls from the enrichment agent
     // We need to run the enrichment agent to see if it calls markReady tool
-    
+
     if (!input.apiKey) {
       return { ready: false, reason: 'API key not provided' }
     }
@@ -147,9 +147,9 @@ export class ChatOrchestrator
         }
       }
 
-      return { 
-        ready: false, 
-        reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!' 
+      return {
+        ready: false,
+        reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!'
       }
     } catch (error) {
       console.error('❌ Readiness check failed:', error)

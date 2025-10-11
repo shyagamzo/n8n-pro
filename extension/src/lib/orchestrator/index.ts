@@ -1,6 +1,6 @@
 /**
  * ChatOrchestrator - Public API
- * 
+ *
  * Multi-agent orchestrator for n8n workflow creation.
  * See ./orchestrator.ts for implementation.
  */

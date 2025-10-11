@@ -1,4 +1,6 @@
-# Decision Record: Index and README File Patterns
+# Index and README File Patterns
+
+Universal guidelines for organizing code with index files and README documentation.
 
 ## Context
 
@@ -24,7 +26,7 @@ This violated the principle of "files should be discoverable by their name" and 
 ```typescript
 /**
  * [Module Name] - Public API
- * 
+ *
  * [Brief description of what this module provides]
  * See ./[implementation-file].ts for implementation.
  */
@@ -40,7 +42,7 @@ export type { PublicType, Options } from './implementation-file'
 // lib/orchestrator/index.ts
 /**
  * ChatOrchestrator - Public API
- * 
+ *
  * Multi-agent orchestrator for n8n workflow creation.
  * See ./orchestrator.ts for implementation.
  */
@@ -54,7 +56,7 @@ export type { OrchestratorInput, StreamTokenHandler } from './orchestrator'
 // content/index.ts
 /**
  * Content Script Entry Point
- * 
+ *
  * Injects the n8n Assistant trigger button and chat panel.
  * See ./content-script.ts for implementation.
  */
@@ -214,36 +216,46 @@ Implementation files should use descriptive names that indicate what they contai
 - **Import Statements**: No change - all imports go through index files as before
 - **Build Process**: No impact on build or runtime performance
 
-## Examples from Refactoring
+## Real-World Example
 
-### Before
+### Before Refactoring
 ```
 lib/orchestrator/
-  └── index.ts (296 lines - ChatOrchestrator class + types + exports)
+  └── index.ts (296 lines - class implementation + types + exports)
 
-lib/loom/
-  └── README.md (266 lines - everything about Loom protocol)
+lib/protocol/
+  └── README.md (266 lines - everything about protocol)
 ```
 
-### After
+**Problems:**
+- Can't find "orchestrator" - Ctrl+P shows only "index"
+- README is overwhelming and hard to navigate
+- No clear distinction between public API and implementation
+
+### After Refactoring
 ```
 lib/orchestrator/
   ├── index.ts (9 lines - exports only)
-  └── orchestrator.ts (288 lines - ChatOrchestrator implementation)
+  └── orchestrator.ts (288 lines - implementation)
 
-lib/loom/
+lib/protocol/
   ├── README.md (76 lines - summary + links)
-  ├── loom-protocol.md (155 lines - syntax, examples)
-  ├── loom-api.md (189 lines - API reference)
-  └── loom-best-practices.md (247 lines - guidelines)
+  ├── protocol-spec.md (155 lines - specification)
+  ├── api-reference.md (189 lines - API docs)
+  └── best-practices.md (247 lines - guidelines)
 ```
+
+**Benefits:**
+- Ctrl+P "orchestrator" finds `orchestrator.ts` immediately
+- README provides quick overview with links to details
+- Clear public API boundary via index exports
+- Focused documentation files
 
 ## References
 
 - Universal naming conventions rule
 - Code quality standards
-- Project architecture decision (0028)
-- [Refactoring commit history](../../../../../../.git/logs/refs/heads/♻️/codebase/index-and-readme-refactor)
+- Universal documentation standards
 
 ## Open Items
 

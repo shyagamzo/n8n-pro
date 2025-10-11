@@ -152,9 +152,9 @@ Context is formatted and appended to the base prompt:
 import { ChatOpenAI } from '@langchain/openai';
 import { getAgentPrompt } from '../prompts';
 
-const model = new ChatOpenAI({ 
+const model = new ChatOpenAI({
   modelName: 'gpt-4o-mini',
-  temperature: 0 
+  temperature: 0
 });
 
 const systemPrompt = getAgentPrompt('planner');
@@ -246,7 +246,7 @@ Test prompts with actual LLM calls:
 it('should generate valid output', async () => {
   const agent = createAgent('planner');
   const output = await agent.invoke('Create a daily Slack workflow');
-  
+
   const result = parse(output); // Validate Loom format
   expect(result.success).toBe(true);
 });
