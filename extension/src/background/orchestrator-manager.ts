@@ -25,7 +25,6 @@ export function getOrchestrator(sessionId: SessionId): ChatOrchestrator
   {
     orchestrator = new ChatOrchestrator(sessionId)
     orchestrators.set(sessionId, orchestrator)
-    console.log('🎯 Created new orchestrator for session:', sessionId)
   }
 
   return orchestrator
@@ -36,10 +35,7 @@ export function getOrchestrator(sessionId: SessionId): ChatOrchestrator
  */
 export function cleanupOrchestrator(sessionId: SessionId): void
 {
-  if (orchestrators.delete(sessionId))
-  {
-    console.log('🧹 Cleaned up orchestrator for session:', sessionId)
-  }
+  orchestrators.delete(sessionId)
 }
 
 /**

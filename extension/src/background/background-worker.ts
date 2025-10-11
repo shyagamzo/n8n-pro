@@ -3,7 +3,6 @@ import type { ChatMessage } from '../lib/types/chat'
 import { getOrchestrator, cleanupOrchestrator } from './orchestrator-manager'
 import { createN8nClient } from '../lib/n8n'
 import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
-import { debugWorkflowCreated, debugWorkflowError } from '../lib/utils/debug'
 
 // Reactive event system
 import {
@@ -59,8 +58,8 @@ function createSafePost(port: chrome.runtime.Port)
     }
     catch (error)
     {
-      // Port disconnected or content script unloaded
-      console.warn('Failed to send message to content script:', error)
+      // Port disconnected or content script unloaded - silently ignore
+      // This is expected when content script unloads mid-message
     }
   }
 }
@@ -149,24 +148,12 @@ async function handleApplyPlan(
   {
     const err = e as Error
     emitApiError(err, 'n8n-auth-check', { baseUrl, hasApiKey: !!n8nApiKey })
-    console.error('❌ n8n authorization failed:', {
-      baseUrl,
-      error: err.message,
-      hasApiKey: !!n8nApiKey
-    })
     post({ type: 'error', error: `n8n authorization failed. Check Base URL and API key. ${err.message}` } satisfies BackgroundMessage)
     return
   }
 
   // Get session-specific orchestrator
   const orchestrator = getOrchestrator(sessionId)
-
-  // Log workflow creation attempt
-  console.log('📤 Resuming workflow creation from executor interrupt:', {
-    workflowName: msg.plan.workflow.name,
-    nodeCount: msg.plan.workflow.nodes?.length || 0,
-    sessionId
-  })
 
   try
   {
@@ -181,12 +168,6 @@ async function handleApplyPlan(
 
     // Emit workflow created event (subscribers will handle logging and UI updates)
     emitWorkflowCreated(msg.plan.workflow, result.workflowId)
-
-    debugWorkflowCreated(result.workflowId, `${baseUrl}/workflow/${result.workflowId}`)
-    console.log('✅ Workflow created successfully:', {
-      workflowId: result.workflowId,
-      workflowName: msg.plan.workflow.name
-    })
 
     // Generate deep link to workflow
     const workflowUrl = `${baseUrl}/workflow/${result.workflowId}`
@@ -222,18 +203,8 @@ async function handleApplyPlan(
     const errorObj = error instanceof Error ? error : new Error(String(error))
     emitWorkflowFailed(msg.plan.workflow, errorObj)
 
-    debugWorkflowError(error, msg.plan.workflow)
-
-    // Enhanced error reporting
-    const err = error as { message?: string; status?: number; body?: unknown }
-
-    console.error('❌ Workflow creation failed:', {
-      error: err.message || String(error),
-      sessionId,
-      workflow: msg.plan.workflow
-    })
-
     // Build detailed error message
+    const err = error as { message?: string; status?: number; body?: unknown }
     let errorMessage = '❌ **Failed to create workflow**\n\n'
     errorMessage += `**Error:** ${err.message || String(error)}\n\n`
     errorMessage += '**Troubleshooting:**\n'
@@ -262,8 +233,6 @@ async function handleChat(
     return
   }
 
-  console.log('💬 Handling chat message:', { messageCount: msg.messages.length, sessionId })
-
   // Get session-specific orchestrator
   const orchestrator = getOrchestrator(sessionId)
 
@@ -272,8 +241,6 @@ async function handleChat(
     apiKey,
     messages: (msg.messages as ChatMessage[]),
   })
-
-  console.log('🔍 Readiness check:', readiness)
 
   // Generate conversational response
   await orchestrator.handle({
@@ -285,8 +252,6 @@ async function handleChat(
   // Only generate plan if we have enough information
   if (readiness.ready)
   {
-    console.log('✅ Ready to plan - generating workflow')
-
     if (!n8nApiKey)
     {
       post({
@@ -307,22 +272,15 @@ async function handleChat(
       })
 
       post({ type: 'plan', plan } satisfies BackgroundMessage)
-      console.log('📋 Plan generated and sent:', { title: plan.title })
     }
     catch (error)
     {
       emitApiError(error, 'plan-generation')
-      console.error('❌ Plan generation failed:', error)
       post({
         type: 'error',
         error: `Failed to generate workflow plan: ${(error as Error).message}`
       } satisfies BackgroundMessage)
     }
-  }
-  else
-  {
-    console.log('⏳ Not ready to plan yet:', readiness.reason)
-    // No plan sent - assistant is still gathering requirements
   }
 
   post({ type: 'done' } satisfies BackgroundMessage)
@@ -334,7 +292,6 @@ chrome.runtime.onConnect.addListener((port) =>
 
   // Generate session ID based on tab ID or use random ID
   const sessionId = port.sender?.tab?.id?.toString() || crypto.randomUUID()
-  console.log('🔌 New chat connection:', { sessionId, tabId: port.sender?.tab?.id })
 
   const post = createSafePost(port)
 
@@ -363,7 +320,6 @@ chrome.runtime.onConnect.addListener((port) =>
   // Clean up orchestrator when port disconnects
   port.onDisconnect.addListener(() =>
   {
-    console.log('🔌 Chat disconnected:', { sessionId })
     cleanupOrchestrator(sessionId)
   })
 })
@@ -380,28 +336,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
       const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
       const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
 
-      // Log workflow creation attempt
-      console.log('📤 Creating workflow from one-off message:', {
-        workflowName: msg.plan.workflow.name,
-        nodeCount: msg.plan.workflow.nodes?.length || 0
-      })
-
       // Normalize connections format for n8n API
       const normalizedWorkflow = {
         ...msg.plan.workflow,
         connections: normalizeConnections(msg.plan.workflow.connections)
       }
 
-      await n8n.createWorkflow(normalizedWorkflow)
-      console.log('✅ Workflow created successfully from one-off message')
+      const created = await n8n.createWorkflow(normalizedWorkflow)
+      emitWorkflowCreated(msg.plan.workflow, created.id)
     }
     catch (error)
     {
       // One-off message handler - errors are shown through chat flow in primary use case
-      console.error('❌ Failed to create workflow from one-off message:', {
-        error,
-        workflow: msg.plan.workflow
-      })
+      const errorObj = error instanceof Error ? error : new Error(String(error))
+      emitWorkflowFailed(msg.plan.workflow, errorObj)
     }
   })()
 
@@ -412,8 +360,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
   }
   catch (error)
   {
-    // Sender context may be invalidated
-    console.warn('Failed to send response:', error)
+    // Sender context may be invalidated - silently ignore
   }
 
   return true
