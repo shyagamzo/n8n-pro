@@ -25,11 +25,15 @@ import {
 import * as logger from '../lib/events/subscribers/logger'
 import * as persistence from '../lib/events/subscribers/persistence'
 import * as tracing from '../lib/events/subscribers/tracing'
+import * as messaging from '../lib/events/subscribers/messaging'
 
 // Initialize event subscribers (background context only)
+// Note: chat and activity subscribers run in content script (not here)
 logger.setup()
 persistence.setup()
 tracing.setup()
+
+// Messaging subscriber will be set up per-port connection (needs post function)
 
 // Global error handler
 if (typeof window !== 'undefined') {
@@ -77,6 +81,9 @@ chrome.runtime.onConnect.addListener((port) => {
   const sessionId = port.sender?.tab?.id?.toString() || crypto.randomUUID()
   const post = createSafePost(port)
 
+  // Set up messaging subscriber to bridge events to this content script
+  messaging.setup(post)
+
   port.onMessage.addListener(async (msg: ChatRequest | ApplyPlanRequest) => {
     try {
       // Get API keys from settings
@@ -108,14 +115,9 @@ chrome.runtime.onConnect.addListener((port) => {
         n8nBaseUrl: baseUrl
       }, (token) => post({ type: 'token', token }))
 
-      // Send results (graph validates everything)
+      // Send results (workflow_created sent automatically via messaging subscriber)
       if (result.plan) {
         post({ type: 'plan', plan: result.plan })
-      }
-
-      if (result.workflowId) {
-        const workflowUrl = `${baseUrl}/workflow/${result.workflowId}`
-        post({ type: 'workflow_created', workflowId: result.workflowId, workflowUrl })
       }
 
       post({ type: 'done' })
@@ -124,5 +126,10 @@ chrome.runtime.onConnect.addListener((port) => {
       post({ type: 'error', error: (err as Error).message })
       post({ type: 'done' })
     }
+  })
+
+  // Cleanup messaging subscriber when port disconnects
+  port.onDisconnect.addListener(() => {
+    messaging.cleanup()
   })
 })

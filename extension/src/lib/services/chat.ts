@@ -2,7 +2,7 @@ import { ChatPort } from './messaging'
 import { useChatStore } from '../state/chatStore'
 import { generateId } from '../utils/id'
 import type { ChatMessage, ErrorDetails } from '../types/chat'
-import type { BackgroundMessage, ApplyPlanRequest, AgentType } from '../types/messaging'
+import type { BackgroundMessage, ApplyPlanRequest } from '../types/messaging'
 import type { Plan } from '../types/plan'
 
 export class ChatService
@@ -13,11 +13,11 @@ export class ChatService
 
   private messageHandlers: Record<string, (msg: any) => void> = {
     token: (msg) => this.handleToken(msg),
-    workflow_created: (msg) => this.handleWorkflowCreated(msg),
-    agent_activity: (msg) => this.handleAgentActivity(msg),
+    workflow_created: (msg) => this.handleWorkflowCreated(msg),  // Toast notification
     done: () => this.handleDone(),
     error: (msg) => this.handleError(msg),
     plan: (msg) => this.handlePlan(msg),
+    // Note: agent_activity removed - handled by activity subscriber in content script (future)
   }
 
   public constructor()
@@ -44,6 +44,7 @@ export class ChatService
 
   private handleWorkflowCreated(message: { type: 'workflow_created'; workflowId: string; workflowUrl: string }): void
   {
+    // Show success toast (UI-only feedback, not business logic)
     useChatStore.getState().addToast({
       id: `workflow-${message.workflowId}`,
       type: 'success',
@@ -53,24 +54,6 @@ export class ChatService
         onClick: () => window.open(message.workflowUrl, '_blank')
       },
       duration: 7000
-    })
-  }
-
-  private handleAgentActivity(message: {
-    type: 'agent_activity'
-    agent: AgentType
-    activity: string
-    status: 'started' | 'working' | 'complete' | 'error'
-    id: string
-    timestamp: number
-  }): void
-  {
-    useChatStore.getState().addActivity({
-      id: message.id,
-      agent: message.agent,
-      activity: message.activity,
-      status: message.status,
-      timestamp: message.timestamp
     })
   }
 
