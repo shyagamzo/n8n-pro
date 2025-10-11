@@ -1,4 +1,4 @@
-import { createChatPort } from './messaging'
+import { ChatPort } from './messaging'
 import { useChatStore } from '../state/chatStore'
 import { generateId } from '../utils/id'
 import type { ChatMessage, ErrorDetails } from '../types/chat'
@@ -7,7 +7,7 @@ import type { Plan } from '../types/plan'
 
 export class ChatService
 {
-  private port = createChatPort()
+  private port = new ChatPort()
   private lastSentMessages: ChatMessage[] = []
   private streamingMessageId: string | null = null
 

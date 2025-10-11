@@ -1,88 +1,97 @@
 import type { ChatMessage } from '../types/chat'
 import type { ApplyPlanRequest, BackgroundMessage } from '../types/messaging'
 
-export type ChatPort = {
-  sendChat: (messages: ChatMessage[]) => void
-  applyPlan: (req: ApplyPlanRequest) => void
-  onMessage: (cb: (m: BackgroundMessage) => void) => void
-  disconnect: () => void
-}
+/**
+ * ChatPort - Manages chrome.runtime port connection for chat messaging.
+ *
+ * Handles connection lifecycle, reconnection, and safe message posting.
+ */
+export class ChatPort {
+  private port: chrome.runtime.Port
+  private disconnected = false
 
-export function createChatPort(): ChatPort
-{
-  let port = chrome.runtime.connect({ name: 'chat' })
-  let disconnected = false
-  port.onDisconnect.addListener(() => { disconnected = true })
+  constructor() {
+    this.port = this.connect()
+  }
 
-  const ensurePort = (): void =>
-  {
-    if (!disconnected) return
+  /**
+   * Create and setup port connection
+   */
+  private connect(): chrome.runtime.Port {
+    const port = chrome.runtime.connect({ name: 'chat' })
+    port.onDisconnect.addListener(() => {
+      this.disconnected = true
+    })
+    return port
+  }
 
-    try
-    {
-      port = chrome.runtime.connect({ name: 'chat' })
-      disconnected = false
-      port.onDisconnect.addListener(() => { disconnected = true })
-    }
-    catch (error)
-    {
+  /**
+   * Ensure port is connected, reconnect if needed
+   */
+  private ensureConnected(): void {
+    if (!this.disconnected) return
+
+    try {
+      this.port = this.connect()
+      this.disconnected = false
+    } catch (error) {
       // Extension context invalidated or background not available
       console.warn('Failed to reconnect chat port:', error)
     }
   }
 
-  const safePost = (data: Record<string, unknown>): void =>
-  {
-    try
-    {
-      port.postMessage(data)
-    }
-    catch (error)
-    {
+  /**
+   * Safely post message with auto-reconnect
+   */
+  private safePost(data: Record<string, unknown>): void {
+    try {
+      this.port.postMessage(data)
+    } catch (error) {
       // Reconnect once and retry
       console.warn('Port disconnected, attempting reconnect:', error)
-      ensurePort()
+      this.ensureConnected()
 
-      try
-      {
-        port.postMessage(data)
-      }
-      catch (retryError)
-      {
+      try {
+        this.port.postMessage(data)
+      } catch (retryError) {
         // Failed after retry - extension context likely invalidated
         console.error('Failed to send message after reconnect:', retryError)
       }
     }
   }
 
-  return {
-    sendChat(messages: ChatMessage[])
-    {
-      ensurePort()
-      safePost({ type: 'chat', messages })
-    },
-    applyPlan(req: ApplyPlanRequest)
-    {
-      ensurePort()
-      safePost(req)
-    },
-    onMessage(cb)
-    {
-      port.onMessage.addListener((m: BackgroundMessage) => cb(m))
-    },
-    disconnect()
-    {
-      try
-      {
-        port.disconnect()
-      }
-      catch (error)
-      {
-        // Port already disconnected or extension context invalidated
-        console.warn('Failed to disconnect port:', error)
-      }
+  /**
+   * Send chat message to background worker
+   */
+  public sendChat(messages: ChatMessage[]): void {
+    this.ensureConnected()
+    this.safePost({ type: 'chat', messages })
+  }
+
+  /**
+   * Send apply plan request to background worker
+   */
+  public applyPlan(req: ApplyPlanRequest): void {
+    this.ensureConnected()
+    this.safePost(req)
+  }
+
+  /**
+   * Register callback for incoming messages
+   */
+  public onMessage(callback: (message: BackgroundMessage) => void): void {
+    this.port.onMessage.addListener((m: BackgroundMessage) => callback(m))
+  }
+
+  /**
+   * Disconnect port
+   */
+  public disconnect(): void {
+    try {
+      this.port.disconnect()
+    } catch (error) {
+      // Port already disconnected or extension context invalidated
+      console.warn('Failed to disconnect port:', error)
     }
   }
 }
-
-
