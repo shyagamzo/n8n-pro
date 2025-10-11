@@ -5,9 +5,42 @@ import { createN8nClient } from '../lib/n8n'
 import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
 import { debugWorkflowCreated, debugWorkflowError } from '../lib/utils/debug'
 
+// Reactive event system
+import { systemEvents } from '../lib/events'
+import { emitUnhandledError } from '../lib/events/emitters'
+import * as logger from '../lib/events/subscribers/logger'
+import * as chat from '../lib/events/subscribers/chat'
+import * as activity from '../lib/events/subscribers/activity'
+import * as persistence from '../lib/events/subscribers/persistence'
+import * as tracing from '../lib/events/subscribers/tracing'
+
+// Initialize event subscribers
+logger.setup()
+chat.setup()
+activity.setup()
+persistence.setup()
+tracing.setup()
+
+// Global error handler
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    emitUnhandledError(event.reason, 'unhandledrejection')
+  })
+}
+
 chrome.runtime.onInstalled.addListener(() =>
 {
   console.info('n8n Pro Extension installed')
+})
+
+// Cleanup on extension suspend
+chrome.runtime.onSuspend.addListener(() => {
+  logger.cleanup()
+  chat.cleanup()
+  activity.cleanup()
+  persistence.cleanup()
+  tracing.cleanup()
+  systemEvents.destroy()
 })
 
 function createSafePost(port: chrome.runtime.Port)
