@@ -8,7 +8,8 @@ import { debugWorkflowCreated, debugWorkflowError } from '../lib/utils/debug'
 // Reactive event system
 import { 
   systemEvents,
-  emitUnhandledError, 
+  emitUnhandledError,
+  emitApiError,
   emitWorkflowCreated, 
   emitWorkflowFailed
 } from '../lib/events'
@@ -124,12 +125,14 @@ async function handleApplyPlan(
 
   if (!openaiApiKey)
   {
+    emitApiError(new Error('OpenAI API key not set'), 'handleApplyPlan')
     post({ type: 'error', error: 'OpenAI API key not set.' } satisfies BackgroundMessage)
     return
   }
 
   if (!n8nApiKey)
   {
+    emitApiError(new Error('n8n API key not set'), 'handleApplyPlan')
     post({ type: 'error', error: 'n8n API key not set. Configure it in Options.' } satisfies BackgroundMessage)
     return
   }
@@ -145,6 +148,7 @@ async function handleApplyPlan(
   catch (e)
   {
     const err = e as Error
+    emitApiError(err, 'n8n-auth-check', { baseUrl, hasApiKey: !!n8nApiKey })
     console.error('❌ n8n authorization failed:', {
       baseUrl,
       error: err.message,
@@ -177,7 +181,7 @@ async function handleApplyPlan(
 
     // Emit workflow created event (subscribers will handle logging and UI updates)
     emitWorkflowCreated(msg.plan.workflow, result.workflowId)
-    
+
     debugWorkflowCreated(result.workflowId, `${baseUrl}/workflow/${result.workflowId}`)
     console.log('✅ Workflow created successfully:', {
       workflowId: result.workflowId,
@@ -217,7 +221,7 @@ async function handleApplyPlan(
     // Emit workflow failed event (subscribers will handle logging and UI updates)
     const errorObj = error instanceof Error ? error : new Error(String(error))
     emitWorkflowFailed(msg.plan.workflow, errorObj)
-    
+
     debugWorkflowError(error, msg.plan.workflow)
 
     // Enhanced error reporting
@@ -253,6 +257,7 @@ async function handleChat(
 
   if (!apiKey)
   {
+    emitApiError(new Error('OpenAI API key not set'), 'handleChat')
     post({ type: 'error', error: 'OpenAI API key not set. Configure it in Options.' } satisfies BackgroundMessage)
     return
   }
@@ -306,6 +311,7 @@ async function handleChat(
     }
     catch (error)
     {
+      emitApiError(error, 'plan-generation')
       console.error('❌ Plan generation failed:', error)
       post({
         type: 'error',
@@ -349,6 +355,7 @@ chrome.runtime.onConnect.addListener((port) =>
     }
     catch (err)
     {
+      emitUnhandledError(err, 'port-message-handler')
       post({ type: 'error', error: (err as Error).message } satisfies BackgroundMessage)
     }
   })
