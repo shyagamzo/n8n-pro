@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 import type { ChatMessage } from '../../lib/types/chat'
 import MessageBubble from '../../lib/components/MessageBubble'
-import Markdown from '../../lib/components/Markdown'
 import ThinkingAnimation from '../../lib/components/ThinkingAnimation'
 import EmptyState from './EmptyState'
 import '../../lib/styles/utilities.css'
@@ -52,13 +51,7 @@ export default function MessagesList({ messages, draft, sending, onSend }: Messa
       {!hasMessages && <EmptyState onExampleClick={onSend} />}
       {messages.map((m) => (
         <div key={m.id} className={`message-wrapper flex w-full ${m.role === 'user' ? 'flex-justify-end' : ''}`}>
-          {m.streaming ? (
-            <div className="draft-bubble">
-              <Markdown content={m.text} />
-            </div>
-          ) : (
-            <MessageBubble message={m} />
-          )}
+          <MessageBubble message={m} />
         </div>
       ))}
       {sending && messages.every(m => !m.streaming) ? (

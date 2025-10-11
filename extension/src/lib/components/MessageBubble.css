@@ -6,6 +6,11 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Disable animation for streaming messages to prevent jump when completing */
+.message-bubble--streaming {
+  animation: none;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
