@@ -4,8 +4,6 @@ import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
 import { workflowGraph } from './graph'
 import { TokenStreamHandler } from './streaming'
-import { DebugCallbackHandler } from './debug-handler'
-import { DebugSession } from '../utils/debug'
 import { emitLangGraphEvent } from '../events/langchain-bridge'
 
 /**
@@ -20,29 +18,30 @@ export type OrchestratorInput = {
 export type StreamTokenHandler = (token: string) => void
 
 /**
- * ChatOrchestrator - LangGraph-based multi-agent orchestrator.
+ * ChatOrchestrator - Thin wrapper around LangGraph workflow graph.
  *
- * Manages conversation state across two modes:
- * - Chat mode: Enrichment agent for conversational interaction
- * - Workflow mode: Planner → Validator → Executor for workflow creation
+ * The graph is self-contained with orchestrator node handling all routing.
+ * This class only manages session IDs and provides a clean API.
+ *
+ * Graph Flow (Automatic):
+ * START → orchestrator → enrichment ⟲ orchestrator → planner → executor → END
  *
  * Features:
  * - Session persistence via checkpointer and thread_id
  * - Token streaming for real-time UI updates
  * - Reactive event system (automatic via LangGraph bridge)
- * - Debug tracing via callback handlers and DebugSession
- * - Two interrupt points: enrichment (clarification) and executor (approval)
+ * - Orchestrator node routes based on enrichment's tool calls
+ * - Interrupt before executor for user approval
  *
  * Usage:
  * ```typescript
  * const orchestrator = new ChatOrchestrator(sessionId)
  *
- * // Chat mode
- * const response = await orchestrator.handle(input, onToken)
+ * // Single execution - graph handles chat → workflow transition automatically
+ * const result = await orchestrator.run(input, onToken)
  *
- * // Workflow mode
- * const plan = await orchestrator.plan(input)
- * await orchestrator.applyWorkflow(input.apiKey, n8nApiKey)
+ * // If paused at executor interrupt, resume workflow creation
+ * await orchestrator.applyWorkflow(apiKey, n8nApiKey)
  * ```
  */
 export class ChatOrchestrator
@@ -55,20 +54,25 @@ export class ChatOrchestrator
   }
 
   /**
-   * Handle chat messages (enrichment mode).
+   * Run graph - handles both chat and workflow automatically.
+   * Graph's orchestrator node routes based on conversation state.
    *
    * @param input - API key and message history
    * @param onToken - Optional callback for token streaming
-   * @returns Response string and readiness status
+   * @returns Final state with response, plan (if ready), and status
    */
-  public async handle(
+  public async run(
     input: OrchestratorInput,
     onToken?: StreamTokenHandler
-  ): Promise<{ response: string; ready: boolean }>
+  ): Promise<{
+    response: string
+    plan?: Plan
+    paused: boolean  // True if paused at executor interrupt
+  }>
   {
     const config = {
       configurable: {
-        thread_id: `chat-${this.threadId}`,
+        thread_id: this.threadId,
         openai_api_key: input.apiKey,
         model: 'gpt-4o-mini'
       },
@@ -79,15 +83,10 @@ export class ChatOrchestrator
 
     // Stream events and collect final state
     const eventStream = workflowGraph.streamEvents(
-      {
-        mode: 'chat' as const,
-        messages: lcMessages,
-        sessionId: this.threadId
-      },
+      { messages: lcMessages, sessionId: this.threadId },
       { ...config, version: 'v2' }
     )
 
-    // Process events: emit to reactive system and collect final state
     let finalState: any = null
     for await (const event of eventStream) {
       emitLangGraphEvent(event)
@@ -98,82 +97,41 @@ export class ChatOrchestrator
 
     const lastMessage = finalState?.messages?.[finalState.messages.length - 1]
     const response = (lastMessage?.content as string) || ''
-    
-    // Check if enrichment reported readiness via tool calls
-    let ready = false
-    if (lastMessage?.tool_calls && lastMessage.tool_calls.length > 0) {
-      for (const toolCall of lastMessage.tool_calls) {
-        if (toolCall.name === 'reportRequirementsStatus') {
-          const args = toolCall.args as { hasAllRequiredInfo: boolean; confidence: number }
-          if (args.hasAllRequiredInfo && args.confidence > 0.8) {
-            ready = true
-            break
-          }
-        }
-      }
+
+    return {
+      response,
+      plan: finalState?.plan,
+      paused: !!finalState?.plan && !finalState?.workflowId  // Has plan but no workflow = paused
     }
-    
-    return { response, ready }
   }
 
   /**
-   * Create workflow plan (planner → validator → executor).
-   *
-   * Runs until executor interrupt - returns plan for UI preview.
-   * Call applyWorkflow() to resume and create the workflow in n8n.
-   *
-   * @param input - API key and message history
-   * @returns Generated and validated workflow plan
+   * Legacy method for backwards compatibility
+   * @deprecated Use run() instead
    */
-  public async plan(
-    input: OrchestratorInput
-  ): Promise<Plan>
+  public async handle(
+    input: OrchestratorInput,
+    onToken?: StreamTokenHandler
+  ): Promise<{ response: string; ready: boolean }>
   {
-    const session = new DebugSession('Orchestrator', 'plan')
-    session.log('Starting plan generation', { messageCount: input.messages.length })
-
-    const config = {
-      configurable: {
-        thread_id: `workflow-${this.threadId}`,
-        openai_api_key: input.apiKey,
-        n8n_api_key: '', // Will be provided in applyWorkflow
-        model: 'gpt-4o-mini'
-      },
-      callbacks: [new DebugCallbackHandler(session)],
-      metadata: {
-        session
-      }
+    const result = await this.run(input, onToken)
+    return {
+      response: result.response,
+      ready: !!result.plan  // Has plan = ready
     }
+  }
 
-    const lcMessages = this.convertMessages(input.messages)
-
-    // Stream events and collect final state
-    const eventStream = workflowGraph.streamEvents(
-      {
-        mode: 'workflow' as const,
-        messages: lcMessages,
-        sessionId: this.threadId
-      },
-      { ...config, version: 'v2' }
-    )
-
-    // Process events and collect final state
-    let finalState: any = null
-    for await (const event of eventStream) {
-      emitLangGraphEvent(event)
-      if (event.event === 'on_chain_end' && event.data?.output) {
-        finalState = event.data.output
-      }
+  /**
+   * Legacy method for backwards compatibility
+   * @deprecated Graph now handles this automatically via run()
+   */
+  public async plan(input: OrchestratorInput): Promise<Plan>
+  {
+    const result = await this.run(input)
+    if (!result.plan) {
+      throw new Error('Graph did not generate a plan')
     }
-
-    session.end(true)
-
-    if (!finalState?.plan)
-    {
-      throw new Error('Failed to generate workflow plan')
-    }
-
-    return finalState.plan
+    return result.plan
   }
 
   /**
@@ -198,7 +156,7 @@ export class ChatOrchestrator
   {
     const config = {
       configurable: {
-        thread_id: `workflow-${this.threadId}`,
+        thread_id: this.threadId,  // Same thread as chat
         openai_api_key: openaiApiKey,
         n8n_api_key: n8nApiKey,
         n8n_base_url: 'http://localhost:5678',
@@ -206,10 +164,9 @@ export class ChatOrchestrator
       }
     }
 
-    // Stream events and collect final state (null input = resume from checkpoint)
+    // Resume from checkpoint (null input = continue from where we paused)
     const eventStream = workflowGraph.streamEvents(null, { ...config, version: 'v2' })
 
-    // Process events and collect final state
     let finalState: any = null
     for await (const event of eventStream) {
       emitLangGraphEvent(event)

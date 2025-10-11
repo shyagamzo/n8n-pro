@@ -4,6 +4,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 
 import { OrchestratorState } from './state'
 import {
+  orchestratorNode,
   enrichmentNode,
   plannerNode,
   executorNode
@@ -21,22 +22,26 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorag
 /**
  * Build the unified LangGraph orchestrator.
  *
- * Graph Structure:
+ * Graph Structure (Self-Contained):
  *
- * START → [mode routing]
- *   ├─→ 'chat' mode: enrichment → END
- *   │   (enrichment gathers requirements via tools: reportRequirementsStatus, setConfidence)
- *   │   (readiness check happens OUTSIDE graph in background-worker.ts)
- *   │
- *   └─→ 'workflow' mode: planner → executor → END
- *       (planner uses validator tool internally)
- *       (executor paused via interruptBefore for user approval)
+ * START → orchestrator (pure routing function)
+ *   ├─→ enrichment (gather requirements) → orchestrator (loop)
+ *   ├─→ planner (create plan) → executor → END
+ *   └─→ END (conversation complete)
  *
- * Mode Transitions:
- * - Chat mode runs independently (handle() method)
- * - After chat completes, background-worker checks readiness
- * - If ready, workflow mode runs separately (plan() method)
- * - Two separate graph executions, not a single flow
+ * Orchestrator Node Routing Rules:
+ * - No tool calls yet → enrichment (initial state)
+ * - enrichment called reportRequirementsStatus(ready=false) → enrichment (more info needed)
+ * - enrichment called reportRequirementsStatus(ready=true, conf>0.8) → planner (ready!)
+ * - Otherwise → END (fallback)
+ *
+ * All routing happens INSIDE the graph via orchestrator node.
+ * No external orchestration in background-worker needed!
+ *
+ * Agent Tools:
+ * - Enrichment: reportRequirementsStatus, setConfidence
+ * - Planner: validateWorkflow (validator as tool)
+ * - Executor: (none - creates workflow in n8n)
  *
  * Interrupts:
  * - executor: Pauses before execution (interruptBefore config)
@@ -44,47 +49,19 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorag
 
 const graph = new StateGraph(OrchestratorState)
 
-// Add all agent nodes (all use createReactAgent)
-// Note: Validator is now a tool used by the planner, not a separate node
-graph.addNode('enrichment', enrichmentNode)
-graph.addNode('planner', plannerNode)
-graph.addNode('executor', executorNode)
+// Add nodes
+graph.addNode('orchestrator', orchestratorNode)  // Pure routing function (no LLM)
+graph.addNode('enrichment', enrichmentNode)      // LLM agent with tools
+graph.addNode('planner', plannerNode)            // LLM agent with tools
+graph.addNode('executor', executorNode)          // LLM agent
 
-// Entry routing based on mode
-graph.addConditionalEdges(
-  START,
-  (state) => {
-    if (state.mode === 'chat')
-    {
-      return 'enrichment'
-    }
-    else if (state.mode === 'workflow')
-    {
-      return 'planner'
-    }
-    else
-    {
-      throw new Error(`Invalid mode: ${state.mode}. Must be 'chat' or 'workflow'.`)
-    }
-  }
-)
+// Routing edges
+graph.addEdge(START, 'orchestrator' as any)             // Always start at orchestrator
+graph.addEdge('enrichment' as any, 'orchestrator' as any)  // Enrichment loops back for re-evaluation
 
-// Enrichment always ends (chat mode is separate from workflow mode)
-// Readiness determination happens outside the graph in background-worker.ts
-graph.addEdge('enrichment' as any, '__end__')
-
-// All agents now use createReactAgent which handles tool loops internally
-// No need for separate tool execution nodes
-// Validator is now a tool within the planner
-
-// Actual Flow:
-// 1. Chat Mode:    START → enrichment → END (separate execution)
-// 2. Workflow Mode: START → planner → [interrupt] → executor → END (separate execution)
-//
-// Transition between modes happens in background-worker.ts:
-// - handle() runs chat mode
-// - isReadyToPlan() checks if enrichment called reportRequirementsStatus(true)
-// - plan() runs workflow mode if ready
+// Orchestrator routes via Command return value (goto: enrichment/planner/END)
+// Planner → executor transition handled by Command in planner node
+// Executor → END transition handled by Command in executor node
 
 /**
  * Compile the graph with checkpointer and interrupt configuration.
