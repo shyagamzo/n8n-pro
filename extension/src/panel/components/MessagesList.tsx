@@ -52,17 +52,19 @@ export default function MessagesList({ messages, draft, sending, onSend }: Messa
       {!hasMessages && <EmptyState onExampleClick={onSend} />}
       {messages.map((m) => (
         <div key={m.id} className={`message-wrapper flex w-full ${m.role === 'user' ? 'flex-justify-end' : ''}`}>
-          <MessageBubble message={m} />
+          {m.streaming ? (
+            <div className="draft-bubble">
+              <Markdown content={m.text} />
+            </div>
+          ) : (
+            <MessageBubble message={m} />
+          )}
         </div>
       ))}
-      {sending || draft ? (
+      {sending && messages.every(m => !m.streaming) ? (
         <div className="message-wrapper flex w-full">
           <div className="draft-bubble">
-            {draft ? (
-              <Markdown content={draft} />
-            ) : (
-              <ThinkingAnimation />
-            )}
+            <ThinkingAnimation />
           </div>
         </div>
       ) : null}

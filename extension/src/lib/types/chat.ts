@@ -15,6 +15,7 @@ export type ChatMessage = {
   text: string
   plan?: import('./plan').Plan
   error?: ErrorDetails
+  streaming?: boolean // Indicates message is still being streamed
 }
 
 export type ChatStreamMessage =
