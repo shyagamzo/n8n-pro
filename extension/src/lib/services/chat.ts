@@ -32,7 +32,7 @@ export class ChatService
   {
     // Update existing streaming message
     if (!this.streamingMessageId) return
-    
+
     const currentMessage = useChatStore.getState().messages.find(m => m.id === this.streamingMessageId)
     if (currentMessage)
     {
@@ -178,7 +178,7 @@ export class ChatService
   {
     const { addMessage, startSending } = useChatStore.getState()
     addMessage({ id: generateId(), role: 'user', text })
-    
+
     // Create streaming message immediately to avoid animation reset
     this.streamingMessageId = generateId()
     addMessage({
@@ -187,7 +187,7 @@ export class ChatService
       text: '',
       streaming: true
     })
-    
+
     startSending()
 
     // Filter out streaming messages before sending to backend
