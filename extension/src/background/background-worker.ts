@@ -13,15 +13,13 @@ import {
   emitWorkflowFailed
 } from '../lib/events/emitters'
 import * as logger from '../lib/events/subscribers/logger'
-import * as chat from '../lib/events/subscribers/chat'
-import * as activity from '../lib/events/subscribers/activity'
 import * as persistence from '../lib/events/subscribers/persistence'
 import * as tracing from '../lib/events/subscribers/tracing'
 
-// Initialize event subscribers
+// Initialize event subscribers (background context only)
+// Note: chat and activity subscribers would run in wrong context (background vs content script)
+// UI updates still use chrome.runtime messaging to reach content script's chatStore
 logger.setup()
-chat.setup()
-activity.setup()
 persistence.setup()
 tracing.setup()
 
@@ -40,8 +38,6 @@ chrome.runtime.onInstalled.addListener(() =>
 // Cleanup on extension suspend
 chrome.runtime.onSuspend.addListener(() => {
   logger.cleanup()
-  chat.cleanup()
-  activity.cleanup()
   persistence.cleanup()
   tracing.cleanup()
   systemEvents.destroy()
