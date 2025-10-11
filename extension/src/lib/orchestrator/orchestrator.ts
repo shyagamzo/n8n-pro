@@ -2,12 +2,11 @@ import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages
 
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
-import type { BackgroundMessage } from '../types/messaging'
 import { workflowGraph } from './graph'
 import { TokenStreamHandler } from './streaming'
 import { DebugCallbackHandler } from './debug-handler'
 import { DebugSession } from '../utils/debug'
-import { createNarrationManager } from './narration'
+import { bridgeLangGraphEvents } from '../events/langchain-bridge'
 
 /**
  * Orchestrator input for chat and workflow operations.
@@ -19,7 +18,6 @@ export type OrchestratorInput = {
 }
 
 export type StreamTokenHandler = (token: string) => void
-export type ActivityHandler = (message: BackgroundMessage) => void
 
 /**
  * ChatOrchestrator - LangGraph-based multi-agent orchestrator.
@@ -31,8 +29,8 @@ export type ActivityHandler = (message: BackgroundMessage) => void
  * Features:
  * - Session persistence via checkpointer and thread_id
  * - Token streaming for real-time UI updates
- * - Progress updates via narrator system
- * - Debug tracing via callback handlers
+ * - Reactive event system (automatic via LangGraph bridge)
+ * - Debug tracing via callback handlers and DebugSession
  * - Two interrupt points: enrichment (clarification) and executor (approval)
  *
  * Usage:
@@ -43,7 +41,7 @@ export type ActivityHandler = (message: BackgroundMessage) => void
  * const response = await orchestrator.handle(input, onToken)
  *
  * // Workflow mode
- * const plan = await orchestrator.plan(input, postHandler)
+ * const plan = await orchestrator.plan(input)
  * await orchestrator.applyWorkflow(input.apiKey, n8nApiKey)
  * ```
  */
@@ -80,6 +78,18 @@ export class ChatOrchestrator
     // Convert ChatMessage[] to LangChain BaseMessage[]
     const lcMessages = this.convertMessages(input.messages)
 
+    // Stream events for chat mode
+    const eventStream = workflowGraph.streamEvents(
+      {
+        mode: 'chat' as const,
+        messages: lcMessages,
+        sessionId: this.threadId
+      },
+      { ...config, version: 'v2' }
+    )
+    
+    const eventSubscription = bridgeLangGraphEvents(eventStream).subscribe()
+
     const result = await workflowGraph.invoke(
       {
         mode: 'chat' as const,
@@ -88,6 +98,8 @@ export class ChatOrchestrator
       },
       config
     )
+
+    eventSubscription.unsubscribe()
 
     // Extract last message content
     const lastMessage = result.messages[result.messages.length - 1]
@@ -164,21 +176,14 @@ export class ChatOrchestrator
    * Call applyWorkflow() to resume and create the workflow in n8n.
    *
    * @param input - API key and message history
-   * @param postHandler - Optional handler for activity updates
    * @returns Generated and validated workflow plan
    */
   public async plan(
-    input: OrchestratorInput,
-    postHandler?: ActivityHandler
+    input: OrchestratorInput
   ): Promise<Plan>
   {
     const session = new DebugSession('Orchestrator', 'plan')
     session.log('Starting plan generation', { messageCount: input.messages.length })
-
-    // Create narrator for progress updates
-    const narrator = postHandler
-      ? createNarrationManager(postHandler, input.apiKey)
-      : undefined
 
     const config = {
       configurable: {
@@ -189,13 +194,27 @@ export class ChatOrchestrator
       },
       callbacks: [new DebugCallbackHandler(session)],
       metadata: {
-        narrator,
         session
       }
     }
 
     // Convert ChatMessage[] to LangChain BaseMessage[]
     const lcMessages = this.convertMessages(input.messages)
+
+    // Stream events in parallel with graph execution
+    // Note: We use streamEvents() to capture events, then invoke() for actual execution
+    // This allows us to maintain interrupt-based flow while capturing events
+    const eventStream = workflowGraph.streamEvents(
+      {
+        mode: 'workflow' as const,
+        messages: lcMessages,
+        sessionId: this.threadId
+      },
+      { ...config, version: 'v2' }
+    )
+    
+    // Bridge LangGraph events to our RxJS system (runs in background)
+    const eventSubscription = bridgeLangGraphEvents(eventStream).subscribe()
 
     // Run workflow mode (planner → validator → [pause] → executor)
     const result = await workflowGraph.invoke(
@@ -207,6 +226,8 @@ export class ChatOrchestrator
       config
     )
 
+    // Cleanup event streaming
+    eventSubscription.unsubscribe()
     session.end(true)
 
     if (!result.plan)
@@ -247,8 +268,14 @@ export class ChatOrchestrator
       }
     }
 
+    // Stream events during workflow application
+    const eventStream = workflowGraph.streamEvents(null, { ...config, version: 'v2' })
+    const eventSubscription = bridgeLangGraphEvents(eventStream).subscribe()
+
     // Resume from executor interrupt (null input = continue from checkpoint)
     const result = await workflowGraph.invoke(null, config)
+
+    eventSubscription.unsubscribe()
 
     return {
       workflowId: result.workflowId,

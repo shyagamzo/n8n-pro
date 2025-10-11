@@ -6,5 +6,5 @@
  */
 
 export { ChatOrchestrator, orchestrator } from './orchestrator'
-export type { OrchestratorInput, StreamTokenHandler, ActivityHandler } from './orchestrator'
+export type { OrchestratorInput, StreamTokenHandler } from './orchestrator'
 
