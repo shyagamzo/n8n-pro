@@ -21,8 +21,8 @@ import { systemEvents } from '../../events'
  * - Bound tools: fetch_n8n_node_types, get_node_docs
  * - ReAct agent handles tool calls internally (no separate tool node needed)
  * - Uses Loom protocol for efficient agent communication
- * - Integrates with narrator for progress updates
- * - Integrates with debug session for tracing
+ * - Events automatically emitted by LangGraph bridge (agent lifecycle, LLM calls)
+ * - Integrates with debug session for detailed tracing
  *
  * Flow:
  * 1. ReAct agent generates workflow plan (calls tools as needed internally)
