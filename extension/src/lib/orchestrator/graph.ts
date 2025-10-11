@@ -25,14 +25,20 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorag
  *
  * START → [mode routing]
  *   ├─→ 'chat' mode: enrichment → END
- *   │   └─→ (enrichment may loop via interrupt)
+ *   │   (enrichment gathers requirements via tools: reportRequirementsStatus, setConfidence)
+ *   │   (readiness check happens OUTSIDE graph in background-worker.ts)
  *   │
- *   └─→ 'workflow' mode: planner → validator → executor → END
- *       ├─→ planner ↔ planner_tools (loop for tool execution)
- *       └─→ executor ↔ executor_tools (loop for tool execution)
+ *   └─→ 'workflow' mode: planner → executor → END
+ *       (planner uses validator tool internally)
+ *       (executor paused via interruptBefore for user approval)
+ *
+ * Mode Transitions:
+ * - Chat mode runs independently (handle() method)
+ * - After chat completes, background-worker checks readiness
+ * - If ready, workflow mode runs separately (plan() method)
+ * - Two separate graph executions, not a single flow
  *
  * Interrupts:
- * - enrichment: Uses interrupt() for clarification
  * - executor: Pauses before execution (interruptBefore config)
  */
 
@@ -63,37 +69,22 @@ graph.addConditionalEdges(
   }
 )
 
-// Orchestrator-based routing after enrichment
-// Enrichment agent uses createReactAgent which handles tools internally
-graph.addConditionalEdges(
-  'enrichment' as any,
-  (state) => {
-    // Orchestrator reads tool call arguments directly from the last message
-    const lastMessage = state.messages[state.messages.length - 1] as any
-
-    if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
-      for (const toolCall of lastMessage.tool_calls) {
-        if (toolCall.name === 'reportRequirementsStatus') {
-          const args = toolCall.args as { hasAllRequiredInfo: boolean; confidence: number }
-          if (args.hasAllRequiredInfo && args.confidence > 0.8) {
-            return 'planner'
-          }
-        }
-      }
-    }
-
-    return 'END' // Continue conversation
-  }
-)
+// Enrichment always ends (chat mode is separate from workflow mode)
+// Readiness determination happens outside the graph in background-worker.ts
+graph.addEdge('enrichment' as any, '__end__')
 
 // All agents now use createReactAgent which handles tool loops internally
 // No need for separate tool execution nodes
 // Validator is now a tool within the planner
 
-// Flow:
-// Enrichment → Planner (via orchestrator routing)
-// Planner (with validator tool) → Executor (via Command in planner node)
-// Executor → END (via Command in executor node)
+// Actual Flow:
+// 1. Chat Mode:    START → enrichment → END (separate execution)
+// 2. Workflow Mode: START → planner → [interrupt] → executor → END (separate execution)
+//
+// Transition between modes happens in background-worker.ts:
+// - handle() runs chat mode
+// - isReadyToPlan() checks if enrichment called reportRequirementsStatus(true)
+// - plan() runs workflow mode if ready
 
 /**
  * Compile the graph with checkpointer and interrupt configuration.
