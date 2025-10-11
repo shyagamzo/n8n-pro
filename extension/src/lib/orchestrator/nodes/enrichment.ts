@@ -6,6 +6,7 @@ import type { RunnableConfig } from '@langchain/core/runnables'
 import type { OrchestratorStateType } from '../state'
 import { buildPrompt } from '../../prompts'
 import { debugAgentDecision, debugAgentHandoff } from '../../utils/debug'
+import { enrichmentCommandTools } from '../tools/enrichment-commands'
 
 /**
  * Enrichment node handles conversational chat and requirement gathering.
@@ -49,7 +50,7 @@ export async function enrichmentNode(
     temperature: 0.7,
     streaming: true
     // Don't pass callbacks here - LangGraph propagates them automatically
-  })
+  }).bindTools(enrichmentCommandTools)
 
   const systemPrompt = buildPrompt('enrichment', {
     includeNodesReference: true,
@@ -68,9 +69,28 @@ export async function enrichmentNode(
     { hasToolCalls: !!(response as AIMessage).tool_calls?.length }
   )
 
-  // Always return the response as a normal chat message
-  const content = response.content as string
+  // Check if LLM called any command tools
+  const toolCalls = (response as AIMessage).tool_calls
+  
+  if (toolCalls && toolCalls.length > 0) {
+    debugAgentDecision(
+      'enrichment',
+      'Command tools called',
+      `Found ${toolCalls.length} tool calls`,
+      { toolCalls: toolCalls.map(tc => tc.name) }
+    )
+    
+    // Route to tool processing node
+    return new Command({
+      goto: 'enrichment_tools',
+      update: {
+        messages: [response as AIMessage]
+      }
+    })
+  }
 
+  // No tool calls - normal chat response
+  const content = response.content as string
   debugAgentDecision(
     'enrichment',
     'Chat response',
@@ -78,7 +98,9 @@ export async function enrichmentNode(
     { contentLength: content.length }
   )
 
-  // Return response - let the LLM handle clarification naturally in chat
+  // Let the orchestrator decide routing based on state
+  // Enrichment agent just reports its status via tools
+
   return new Command({
     goto: 'END',
     update: {
