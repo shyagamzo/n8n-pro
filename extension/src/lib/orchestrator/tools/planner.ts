@@ -63,7 +63,7 @@ export const getNodeDocsTool = tool(
 
 /**
  * All tools available to the planner agent.
- * 
+ *
  * Note: Validator tool is created dynamically in planner node with API key from closure.
  */
 export const plannerTools = [fetchNodeTypesTool, getNodeDocsTool]

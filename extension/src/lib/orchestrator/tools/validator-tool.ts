@@ -12,7 +12,7 @@ const validateWorkflowSchema = z.object({
 
 /**
  * Factory function to create a validator tool with API key from closure.
- * 
+ *
  * This ensures the API key is not passed as a tool parameter (security).
  * The validator uses createReactAgent for consistency with other agents.
  */
@@ -62,12 +62,11 @@ Response format:
       const lastMessage = result.messages[result.messages.length - 1]
       const content = lastMessage.content as string
 
-      // Return validation result
+      // Return validation result in natural language format (easier for LLM to understand)
       if (content.includes('[VALID]')) {
-        return JSON.stringify({
-          valid: true,
-          message: 'Workflow validation passed. The workflow is n8n-compatible.'
-        })
+        return `✅ VALIDATION PASSED
+
+The workflow is valid and n8n-compatible. You can proceed with the final output.`
       }
 
       if (content.includes('[INVALID]')) {
@@ -75,28 +74,37 @@ Response format:
         const correctedLoom = extractLoomFromResponse(content)
 
         if (!correctedLoom) {
-          return JSON.stringify({
-            valid: false,
-            errors: content,
-            correctedWorkflow: null,
-            message: 'Workflow validation failed. Could not extract corrected workflow from response. See errors for details.'
-          })
+          return `❌ VALIDATION FAILED
+
+${content}
+
+Note: Could not automatically extract a corrected workflow. Please review the errors above and fix them manually.`
         }
 
-        return JSON.stringify({
-          valid: false,
-          errors: content,
-          correctedWorkflow: correctedLoom,
-          message: 'Workflow validation failed. See errors and corrected workflow.'
-        })
+        return `❌ VALIDATION FAILED
+
+Errors Found:
+${content}
+
+---
+
+CORRECTED WORKFLOW (use this):
+${correctedLoom}
+
+---
+
+Next Step: Review the corrected workflow above and use it for your final output.`
       }
 
       // Unexpected response
-      return JSON.stringify({
-        valid: false,
-        errors: 'Unexpected validation response - no [VALID] or [INVALID] marker found',
-        message: content
-      })
+      return `⚠️ VALIDATION ERROR
+
+Unexpected validation response (no [VALID] or [INVALID] marker found).
+
+Response:
+${content}
+
+Please review and try validating again.`
     },
     {
       name: 'validate_workflow',
