@@ -10,7 +10,8 @@ import { parse as parseLoom } from '../../loom'
 import { stripCodeFences } from '../../utils/markdown'
 import { loomToPlan } from '../plan-converter'
 import { format as formatLoom } from '../../loom'
-import { debugAgentDecision, type DebugSession } from '../../utils/debug'
+import { type DebugSession } from '../../utils/debug'
+import { emitWorkflowValidated, emitValidationError } from '../../events/emitters'
 
 /**
  * Validator node performs LLM-based validation of workflow plans.
@@ -51,12 +52,11 @@ export async function validatorNode(
     throw new Error('OpenAI API key not provided in config.configurable')
   }
 
-  narrator?.post('validator', 'validating workflow', 'started')
-  session?.log('Starting workflow validation')
-
-  debugAgentDecision('validator', 'Validating workflow plan', 'Using ReAct agent with LLM n8n knowledge', {
+  session?.log('Starting workflow validation', {
     nodeCount: state.plan.workflow.nodes?.length || 0
   })
+  
+  // Agent lifecycle events automatically emitted by LangGraph bridge
 
   // Create ReAct agent (no tools, pure LLM validation)
   const systemPrompt = buildPrompt('validator', {
@@ -107,9 +107,7 @@ Response format:
   if (content.includes('[VALID]'))
   {
     session?.log('Workflow validation passed')
-    narrator?.post('validator', 'validation complete', 'complete')
-
-    debugAgentDecision('validator', 'Validation passed', 'Workflow is n8n-compatible')
+    emitWorkflowValidated(state.plan.workflow)
 
     return new Command({
       goto: 'executor',
@@ -121,10 +119,13 @@ Response format:
   if (content.includes('[INVALID]'))
   {
     session?.log('Workflow validation failed, attempting auto-fix')
-
-    debugAgentDecision('validator', 'Validation failed', 'Extracting corrected plan from LLM response', {
-      responseLength: content.length
-    })
+    
+    // Emit validation error event
+    emitValidationError(
+      new Error('Workflow validation failed'),
+      'validator',
+      { originalPlan: state.plan }
+    )
 
     // Extract corrected Loom from response
     const correctedLoom = extractLoomFromResponse(content)
@@ -137,13 +138,12 @@ Response format:
       {
         const correctedPlan = loomToPlan(parsed.data)
 
-        session?.log('Validation auto-fix successful')
-        narrator?.post('validator', 'workflow corrected', 'complete')
-
-        debugAgentDecision('validator', 'Auto-fixed validation errors', 'Applied LLM corrections', {
+        session?.log('Validation auto-fix successful', {
           originalNodeCount: state.plan.workflow.nodes?.length || 0,
           correctedNodeCount: correctedPlan.workflow.nodes?.length || 0
         })
+        
+        emitWorkflowValidated(correctedPlan.workflow)
 
         // Proceed with corrected plan
         return new Command({
@@ -155,7 +155,12 @@ Response format:
 
     // If we can't parse the corrected version, fail
     session?.log('Validation auto-fix failed')
-    narrator?.post('validator', 'validation failed', 'error')
+    
+    emitValidationError(
+      new Error('Auto-fix failed'),
+      'validator',
+      { response: content }
+    )
 
     throw new Error('Workflow validation failed and could not be automatically corrected.\n\n' + content)
   }
