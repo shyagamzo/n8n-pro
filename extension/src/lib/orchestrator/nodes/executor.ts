@@ -1,12 +1,13 @@
 import { Command, END } from '@langchain/langgraph'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
-import { SystemMessage, HumanMessage } from '@langchain/core/messages'
+import { HumanMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '../state'
 import { type DebugSession } from '../../utils/debug'
 import { executorTools } from '../tools/executor'
+import { buildPrompt } from '../../prompts'
 
 /**
  * Executor node creates workflows in n8n via API tools.
@@ -53,27 +54,12 @@ export async function executorNode(
     workflowName: state.plan.workflow.name,
     nodeCount: state.plan.workflow.nodes?.length || 0
   })
-  
+
   // Agent lifecycle events automatically emitted by LangGraph bridge
   // (on_chain_start → emitAgentStarted('executor', 'executing'))
 
   // Create ReAct agent with executor tools
-  const systemPrompt = new SystemMessage(`You are the workflow executor for n8n. Your job is to:
-
-1. Check if required credentials exist using the check_credentials tool
-2. Create the workflow using the create_n8n_workflow tool
-3. Report back with the workflow URL and any missing credentials
-
-Important:
-- Create the workflow EVEN IF some credentials are missing (users can set them up later)
-- Provide clear setup links for any missing credentials
-- Be concise in your response to the user
-
-You have access to these tools:
-- check_credentials: Check which credentials exist and which are missing
-- create_n8n_workflow: Create the workflow in n8n
-
-Use the tools to complete the task.`)
+  const systemPrompt = buildPrompt('executor')
 
   const agent = createReactAgent({
     llm: new ChatOpenAI({
@@ -85,7 +71,9 @@ Use the tools to complete the task.`)
     messageModifier: systemPrompt
   })
 
-  const executionRequest = new HumanMessage(`Execute this workflow plan:
+  // TODO: Move this request template to executor.md prompt file
+  const executionRequest = new HumanMessage(
+    `Execute this workflow plan:
 
 Workflow: ${state.plan.workflow.name}
 Nodes: ${state.plan.workflow.nodes?.length || 0}
@@ -94,7 +82,8 @@ Required Credentials: ${state.plan.credentialsNeeded?.map(c => c.type).join(', '
 n8n API Key: ${n8nApiKey}
 n8n Base URL: ${n8nBaseUrl}
 
-First check credentials, then create the workflow. Respond to the user with the result.`)
+First check credentials, then create the workflow. Respond to the user with the result.`
+  )
 
   // ReAct agent handles tool loop internally
   const result = await agent.invoke(
@@ -111,7 +100,7 @@ First check credentials, then create the workflow. Respond to the user with the 
   const credentialGuidance = extractCredentialGuidance(content)
 
   session?.log('Workflow created successfully', { workflowId })
-  
+
   // Agent completion event automatically emitted by LangGraph bridge
   // (on_chain_end → emitAgentCompleted('executor'))
   // Workflow created event emitted by background worker after applyWorkflow()
