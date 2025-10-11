@@ -1,0 +1,235 @@
+---
+alwaysApply: false
+description: Reactive event-driven architecture using RxJS—event bus, subscribers, emitter helpers, and LangGraph integration.
+---
+
+# Decision Record: Reactive RxJS Architecture
+
+## Context
+
+The extension had procedural code where services directly called logging, UI updates, and error handling. This created tight coupling and scattered concerns across the codebase.
+
+## Decision
+
+Implement a reactive, event-driven architecture using **RxJS 7.8.2** as the foundation.
+
+## Architecture
+
+### Core Components
+
+1. **SystemEvents** (Event Bus)
+   - Central RxJS `Subject` that all events flow through
+   - Pre-filtered observables by domain (`workflow$`, `agent$`, `error$`, `llm$`)
+   - Uses `shareReplay()` to prevent duplicate executions
+   - Singleton instance used throughout extension
+
+2. **Event Types** (`types.ts`)
+   - Strongly-typed event definitions
+   - Each event has: `domain`, `type`, `payload`, `timestamp`
+   - Union type `SystemEvent` for type safety
+
+3. **Emitter Helpers** (`emitters.ts`)
+   - Helper functions that encapsulate event creation logic
+   - Examples: `emitWorkflowCreated()`, `emitApiError()`, `emitUnhandledError()`
+   - Handle error normalization (unknown → Error)
+   - Generate timestamps and fixed strings
+   - Provide clean API for modules
+
+4. **Subscribers** (modules in `subscribers/`)
+   - Self-contained modules that react to events
+   - Each has `setup()` and `cleanup()` functions
+   - Use `takeUntil()` pattern with destroy$ Subject for cleanup
+   - Use `finalize()` operator for cleanup logging
+   - Handle their own errors with RxJS `catchError` operator
+
+5. **LangGraph Bridge** (`langchain-bridge.ts`)
+   - Converts LangGraph's `.streamEvents()` into SystemEvents
+   - Automatic event emission for LLM, tool, and chain operations
+   - Eliminates manual event emission in orchestrator nodes
+
+## Subscriber Pattern
+
+Each subscriber follows this structure:
+
+```typescript
+import { Subject } from 'rxjs'
+import { takeUntil, finalize } from 'rxjs/operators'
+import { systemEvents } from '../index'
+
+const destroy$ = new Subject<void>()
+
+// Define observable pipelines (pure, testable)
+const myEvents$ = systemEvents.workflow$.pipe(
+  map(...),
+  catchError(...)
+)
+
+export function setup(): void {
+  myEvents$
+    .pipe(
+      takeUntil(destroy$),
+      finalize(() => console.log('[subscriber] Cleaned up'))
+    )
+    .subscribe(...)
+}
+
+export function cleanup(): void {
+  destroy$.next()
+  destroy$.complete()
+}
+```
+
+## Current Subscribers
+
+1. **Logger** - Logs all events using debug utility
+2. **Chat** - Transforms workflow/error events → chat messages
+3. **Activity** - Tracks agent/LLM activities with debouncing
+4. **Persistence** - Auto-saves (placeholder for now)
+5. **Tracing** - Accumulates events into traces using `scan` operator
+
+## Error Handling Strategy
+
+### Module-Level (Has Context)
+
+Modules catch errors where they have context and emit error events:
+
+```typescript
+try {
+  const workflow = await n8n.createWorkflow(data)
+  emitWorkflowCreated(workflow, workflowId)
+} catch (error) {
+  emitWorkflowFailed(workflow, error)
+}
+```
+
+### Subscriber-Level (React to Errors)
+
+Subscribers use RxJS operators to handle their own errors:
+
+```typescript
+const messages$ = systemEvents.error$.pipe(
+  map(e => createErrorMessage(e)),
+  catchError(err => {
+    emitSubscriberError(err, 'chat-subscriber')
+    return EMPTY
+  })
+)
+```
+
+### Global Unhandled Errors
+
+```typescript
+window.addEventListener('unhandledrejection', (event) => {
+  emitUnhandledError(event.reason, 'unhandledrejection')
+})
+```
+
+## Benefits
+
+1. **Decoupled Concerns** - Services don't know about UI/logging
+2. **Centralized Logic** - All logging in one file, all chat updates in one file
+3. **Testable** - Subscribers are independent and pure
+4. **Extensible** - Add features by creating new subscribers
+5. **Composable** - RxJS operators enable powerful transformations
+6. **Reduced Code** - Remove repetitive logging/UI patterns
+7. **Better Debugging** - Full event history available via tracing
+
+## RxJS Operators Used
+
+- **`shareReplay()`** - Share single execution across subscribers
+- **`takeUntil()`** - Clean subscription management with destroy signal
+- **`switchMap()`** - Handle async operations in streams
+- **`merge()`** - Combine multiple event streams
+- **`debounceTime()`** - Throttle rapid events
+- **`delay()`** - Delayed operations
+- **`scan()`** - Accumulate state over time
+- **`catchError()`** - Handle errors in streams
+- **`finalize()`** - Cleanup when stream completes
+
+## Migration Strategy
+
+### Phase 1: Infrastructure
+- ✅ Create event system core
+- ✅ Create emitter helpers
+- ✅ Create subscribers
+- ✅ Integrate into background worker
+
+### Phase 2: Gradual Refactoring
+- Run both systems in parallel (old messaging + new events)
+- Gradually replace direct calls with emitter functions
+- Remove old code once new system is proven
+
+### Phase 3: Complete Migration
+- Remove all chrome.runtime messaging for internal events
+- Use messaging only for background ↔ content communication
+- All internal coordination via event system
+
+## Integration Points
+
+### Background Worker
+```typescript
+import * as logger from '../lib/events/subscribers/logger'
+import * as chat from '../lib/events/subscribers/chat'
+
+// Initialize
+logger.setup()
+chat.setup()
+
+// Cleanup
+chrome.runtime.onSuspend.addListener(() => {
+  logger.cleanup()
+  chat.cleanup()
+  systemEvents.destroy()
+})
+```
+
+### Services
+```typescript
+import { emitWorkflowCreated, emitApiError } from '../events/emitters'
+
+async function createWorkflow(data) {
+  try {
+    const workflow = await api.create(data)
+    emitWorkflowCreated(workflow, workflow.id)
+  } catch (error) {
+    emitApiError(error, 'createWorkflow', { data })
+  }
+}
+```
+
+## Testing
+
+Use RxJS TestScheduler for marble testing:
+
+```typescript
+import { TestScheduler } from 'rxjs/testing'
+
+it('should debounce events', () => {
+  scheduler.run(({ cold, expectObservable }) => {
+    const events$ = cold('a-b-c|', { a: event1, b: event2, c: event3 })
+    const debounced$ = events$.pipe(debounceTime(100))
+    expectObservable(debounced$).toBe('----c|')
+  })
+})
+```
+
+## Performance Considerations
+
+- `shareReplay()` prevents duplicate work when multiple subscribers listen
+- `debounceTime()` reduces event processing for rapid events
+- `takeUntil()` ensures proper cleanup (no memory leaks)
+- Event objects are lightweight (just data structures)
+
+## Open Items
+
+- Complete migration of all debug() calls to event system
+- Remove old chrome.runtime messaging once migration complete
+- Add metrics subscriber for analytics
+- Add undo/redo subscriber based on event history
+- Performance testing with high event volume
+
+## References
+
+- RxJS Documentation: https://rxjs.dev/
+- LangGraph Streaming: https://langchain-ai.github.io/langgraphjs/
+- Zustand State Management: /decisions/n8n-extension/state-management/0020-state-management.mdc
