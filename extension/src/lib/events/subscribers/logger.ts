@@ -1,6 +1,6 @@
 /**
  * Logger Subscriber
- *
+ * 
  * Listens to ALL events and logs them to console.
  * Always active (not gated by isDevelopment) to ensure production logging.
  * Uses takeUntil() pattern for clean subscription management.
@@ -9,6 +9,14 @@
 import { Subject } from 'rxjs'
 import { takeUntil, tap, finalize } from 'rxjs/operators'
 import { systemEvents } from '../index'
+import type { 
+  SystemEvent, 
+  WorkflowEvent, 
+  AgentEvent, 
+  LLMEvent, 
+  ErrorEvent, 
+  StorageEvent 
+} from '../types'
 
 const destroy$ = new Subject<void>()
 
@@ -40,7 +48,7 @@ function formatTitle(domain: string, type: string, details: string[], timestamp:
 /**
  * Log workflow events (created, updated, validated, failed)
  */
-function logWorkflowEvent(event: any): void {
+function logWorkflowEvent(event: WorkflowEvent): void {
   const details: string[] = []
   const p = event.payload
 
@@ -60,7 +68,7 @@ function logWorkflowEvent(event: any): void {
 /**
  * Log agent events (started, completed, tool_started, tool_completed)
  */
-function logAgentEvent(event: any): void {
+function logAgentEvent(event: AgentEvent): void {
   const details: string[] = []
   const p = event.payload
 
@@ -81,21 +89,24 @@ function logAgentEvent(event: any): void {
 /**
  * Log LLM events (started, completed, streaming)
  */
-function logLLMEvent(event: any): void {
+function logLLMEvent(event: LLMEvent): void {
   const details: string[] = []
   const p = event.payload
-
+  
   if (p.model) details.push(p.model)
   if (p.provider) details.push(`(${p.provider})`)
-  if (p.usage?.total_tokens) details.push(`${p.usage.total_tokens} tokens`)
-
+  
+  // Calculate total tokens from prompt + completion
+  const totalTokens = (p.tokens?.prompt ?? 0) + (p.tokens?.completion ?? 0)
+  if (totalTokens > 0) details.push(`${totalTokens} tokens`)
+  
   const title = formatTitle(event.domain, event.type, details, event.timestamp)
   createLogGroup(title, '#10b981', true)
-
+  
   if (event.payload && Object.keys(event.payload).length > 0) {
     console.log('Payload:', event.payload)
   }
-
+  
   console.groupEnd()
 }
 
@@ -103,7 +114,7 @@ function logLLMEvent(event: any): void {
  * Log error events (validation, api, llm, subscriber, unhandled)
  * Always expanded (not collapsed) for visibility
  */
-function logErrorEvent(event: any): void {
+function logErrorEvent(event: ErrorEvent): void {
   const details: string[] = []
   const p = event.payload
 
@@ -129,7 +140,7 @@ function logErrorEvent(event: any): void {
 /**
  * Log storage events (saved, loaded, deleted)
  */
-function logStorageEvent(event: any): void {
+function logStorageEvent(event: StorageEvent): void {
   const details: string[] = []
   const p = event.payload
 
@@ -148,7 +159,7 @@ function logStorageEvent(event: any): void {
 /**
  * Route events to appropriate logging function
  */
-function logEvent(event: any): void {
+function logEvent(event: SystemEvent): void {
   switch (event.domain) {
     case 'workflow':
       logWorkflowEvent(event)
@@ -165,12 +176,6 @@ function logEvent(event: any): void {
     case 'storage':
       logStorageEvent(event)
       break
-    default:
-      // Fallback for unknown domains
-      const title = formatTitle(event.domain, event.type, [], event.timestamp)
-      createLogGroup(title, '#6b7280', true)
-      console.log('Payload:', event.payload)
-      console.groupEnd()
   }
 }
 
