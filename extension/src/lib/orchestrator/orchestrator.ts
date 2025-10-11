@@ -6,11 +6,11 @@ import { workflowGraph } from './graph'
 import { TokenStreamHandler } from './streaming'
 import { DebugCallbackHandler } from './debug-handler'
 import { DebugSession } from '../utils/debug'
-import { 
-  systemEvents, 
-  emitAgentStarted, 
-  emitAgentCompleted, 
-  emitLLMStarted, 
+import {
+  systemEvents,
+  emitAgentStarted,
+  emitAgentCompleted,
+  emitLLMStarted,
   emitLLMCompleted,
   emitApiError
 } from '../events'
@@ -133,14 +133,14 @@ export class ChatOrchestrator
     try {
       const config = {
         configurable: {
-          thread_id: `readiness-check-${this.threadId}`,
+          thread_id: `chat-${this.threadId}`,  // Must match handle() thread to check same state!
           openai_api_key: input.apiKey,
           model: 'gpt-4o-mini'
         }
       }
 
       const lcMessages = this.convertMessages(input.messages)
-
+      
       // Use streamEvents for single execution
       const eventStream = workflowGraph.streamEvents(
         {
@@ -329,7 +329,7 @@ export class ChatOrchestrator
   private emitEventToReactiveSystem(event: any): void
   {
     const { event: eventType, name, data, metadata } = event
-    
+
     switch (eventType) {
       case 'on_llm_start':
         emitLLMStarted(metadata?.ls_model_name, metadata?.ls_provider, metadata?.run_id)
