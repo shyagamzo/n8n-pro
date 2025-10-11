@@ -66,9 +66,15 @@ export async function plannerNode(
   })
 
   const planRequest = new HumanMessage(`Generate a workflow plan based on our conversation.
-Return ONLY raw Loom format - no markdown code blocks, no explanatory text, just the pure Loom structure.
 
-If you need to check what node types are available, use the fetch_n8n_node_types tool first.`)
+Process:
+1. If needed, use fetch_n8n_node_types to check available nodes
+2. Design the workflow in Loom format
+3. Use the validate_workflow tool to validate your design (pass apiKey: "${apiKey}", modelName: "${modelName}")
+4. If validation fails, fix the issues and validate again
+5. Once validated, return ONLY the final raw Loom format - no markdown code blocks, no explanatory text
+
+Use the validation tool to ensure correctness before finalizing.`)
 
   // ReAct agent handles tool loop internally
   const result = await agent.invoke(
@@ -112,8 +118,9 @@ If you need to check what node types are available, use the fetch_n8n_node_types
 
   narrator?.post('planner', 'workflow design complete', 'complete')
 
+  // Planner now validates internally via tool, go directly to executor
   return new Command({
-    goto: 'validator',
+    goto: 'executor',
     update: {
       plan,
       messages: result.messages

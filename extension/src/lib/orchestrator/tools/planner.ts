@@ -61,8 +61,12 @@ export const getNodeDocsTool = tool(
   }
 )
 
+import { validateWorkflowTool } from './validator-tool'
+
 /**
  * All tools available to the planner agent.
+ * 
+ * Includes validator tool for integrated validation during planning.
  */
-export const plannerTools = [fetchNodeTypesTool, getNodeDocsTool]
+export const plannerTools = [fetchNodeTypesTool, getNodeDocsTool, validateWorkflowTool]
 

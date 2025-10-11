@@ -6,7 +6,6 @@ import { OrchestratorState } from './state'
 import {
   enrichmentNode,
   plannerNode,
-  validatorNode,
   executorNode
 } from './nodes'
 
@@ -40,9 +39,9 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorag
 const graph = new StateGraph(OrchestratorState)
 
 // Add all agent nodes (all use createReactAgent)
+// Note: Validator is now a tool used by the planner, not a separate node
 graph.addNode('enrichment', enrichmentNode)
 graph.addNode('planner', plannerNode)
-graph.addNode('validator', validatorNode)
 graph.addNode('executor', executorNode)
 
 // Entry routing based on mode
@@ -71,7 +70,7 @@ graph.addConditionalEdges(
   (state) => {
     // Orchestrator reads tool call arguments directly from the last message
     const lastMessage = state.messages[state.messages.length - 1] as any
-    
+
     if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
       for (const toolCall of lastMessage.tool_calls) {
         if (toolCall.name === 'reportRequirementsStatus') {
@@ -82,16 +81,18 @@ graph.addConditionalEdges(
         }
       }
     }
-    
+
     return 'END' // Continue conversation
   }
 )
 
 // All agents now use createReactAgent which handles tool loops internally
 // No need for separate tool execution nodes
+// Validator is now a tool within the planner
 
-// Planner → Validator (via Command in planner node)
-// Validator → Executor (via Command in validator node)
+// Flow:
+// Enrichment → Planner (via orchestrator routing)
+// Planner (with validator tool) → Executor (via Command in planner node)
 // Executor → END (via Command in executor node)
 
 /**
