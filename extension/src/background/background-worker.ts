@@ -1,9 +1,9 @@
 /**
  * Background Service Worker
- * 
+ *
  * Pure message router - receives messages from content script and pipes to graph.
  * All business logic (routing, planning, execution) happens in graph nodes/tools.
- * 
+ *
  * Responsibilities:
  * - Initialize reactive event subscribers
  * - Route messages to runGraph()
@@ -95,31 +95,21 @@ chrome.runtime.onConnect.addListener((port) => {
       }
 
       // Extract messages based on message type
-      const messages = msg.type === 'chat' 
+      const messages = msg.type === 'chat'
         ? (msg.messages as ChatMessage[])
         : []  // apply_plan uses empty messages (resumes from checkpoint)
 
-      // Run graph - it handles EVERYTHING (routing, planning, execution)
+      // Run graph - it handles EVERYTHING (routing, planning, execution, validation)
       const result = await runGraph({
         sessionId,
         apiKey,
         messages,
-        n8nApiKey: n8nApiKey || undefined,
-        n8nBaseUrl: baseUrl || undefined
+        n8nApiKey,
+        n8nBaseUrl: baseUrl
       }, (token) => post({ type: 'token', token }))
 
-      // Send results
+      // Send results (graph validates everything)
       if (result.plan) {
-        // Check n8n API key before showing plan
-        if (!n8nApiKey) {
-          post({ 
-            type: 'error', 
-            error: 'n8n API key not set. Configure it in Options to create workflows.' 
-          })
-          post({ type: 'done' })
-          return
-        }
-        
         post({ type: 'plan', plan: result.plan })
       }
 
