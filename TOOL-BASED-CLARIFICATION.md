@@ -310,3 +310,5 @@ After reloading extension, you should see:
 
 No more markers, no more duplication, fully browser-compatible.
 
+
+

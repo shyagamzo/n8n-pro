@@ -1,4 +1,5 @@
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages'
+import { ChatOpenAI } from '@langchain/openai'
 
 import type { ChatMessage } from '../types/chat'
 import type { Plan } from '../types/plan'
@@ -97,8 +98,8 @@ export class ChatOrchestrator
   /**
    * Check if enrichment conversation is ready to transition to planning.
    *
-   * Note: With the new architecture, this is less critical since enrichment
-   * explicitly marks readiness with [READY]. Kept for backward compatibility.
+   * Uses LLM-based analysis to determine if enough information has been gathered
+   * for workflow creation.
    *
    * @param input - API key and message history
    * @returns Whether ready to plan and reason if not
@@ -107,17 +108,56 @@ export class ChatOrchestrator
     input: OrchestratorInput
   ): Promise<{ ready: boolean; reason?: string }>
   {
-    // In the new architecture, we check the last message for [READY] marker
-    const lastMessage = input.messages[input.messages.length - 1]
-
-    if (lastMessage?.text?.includes('[READY]'))
-    {
-      return { ready: true }
+    if (!input.apiKey) {
+      return { ready: false, reason: 'API key not provided' }
     }
 
-    return {
-      ready: false,
-      reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!'
+    // Use LLM to analyze the conversation and determine readiness
+    const model = new ChatOpenAI({
+      apiKey: input.apiKey,
+      model: 'gpt-4o-mini',
+      temperature: 0.1 // Low temperature for consistent analysis
+    })
+
+    const readinessPrompt = `Analyze this conversation between a user and an AI assistant about creating an n8n workflow.
+
+CONVERSATION:
+${input.messages.map(m => `${m.role}: ${m.text}`).join('\n')}
+
+Determine if the conversation contains enough information to create a complete n8n workflow.
+
+REQUIRED INFORMATION for workflow creation:
+1. **Trigger type**: How the workflow should start (manual, schedule, webhook, etc.)
+2. **Main action**: What the workflow should do (send email, post to Slack, process data, etc.)
+3. **Services/APIs**: Which external services are involved (Gmail, Slack, HTTP endpoints, etc.)
+4. **Basic parameters**: Key details like recipient, message content, schedule timing, etc.
+
+RESPOND WITH ONLY:
+- "READY" if all required information is present
+- "NOT_READY: [reason]" if information is missing
+
+Examples:
+- "READY" (if trigger, action, and services are clear)
+- "NOT_READY: Missing trigger type - need to know if workflow should run on schedule, webhook, or manually"
+- "NOT_READY: Need to specify which email service to use (Gmail, Outlook, etc.)"`
+
+    try {
+      const response = await model.invoke([new SystemMessage(readinessPrompt)])
+      const analysis = (response.content as string).trim()
+
+      if (analysis === 'READY') {
+        return { ready: true }
+      } else if (analysis.startsWith('NOT_READY:')) {
+        const reason = analysis.replace('NOT_READY:', '').trim()
+        return { ready: false, reason }
+      } else {
+        // Fallback if LLM response is unexpected
+        return { ready: false, reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!' }
+      }
+    } catch (error) {
+      console.error('❌ Readiness check failed:', error)
+      // Fallback to conservative approach
+      return { ready: false, reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!' }
     }
   }
 
