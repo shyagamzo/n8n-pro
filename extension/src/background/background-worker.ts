@@ -236,48 +236,38 @@ async function handleChat(
   // Get session-specific orchestrator
   const orchestrator = getOrchestrator(sessionId)
 
-  // Generate conversational response (enrichment agent runs here and reports readiness)
-  // Response is streamed via onToken callback, we only need the ready status
-  const { ready } = await orchestrator.handle({
-    apiKey,
-    messages: (msg.messages as ChatMessage[]),
-  }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
+  try {
+    // Run graph - automatically handles: enrichment → orchestrator → planner (if ready)
+    // Response is streamed via onToken, plan returned if orchestrator routed to planner
+    const result = await orchestrator.run({
+      apiKey,
+      messages: (msg.messages as ChatMessage[]),
+    }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
 
-  // Generate plan if enrichment reported ready
-  if (ready)
-  {
-    if (!n8nApiKey)
-    {
-      post({
-        type: 'error',
-        error: 'n8n API key not set. Configure it in Options to create workflows.'
-      } satisfies BackgroundMessage)
-      post({ type: 'done' } satisfies BackgroundMessage)
-      return
+    // If graph generated a plan (orchestrator routed to planner)
+    if (result.plan) {
+      if (!n8nApiKey) {
+        post({
+          type: 'error',
+          error: 'n8n API key not set. Configure it in Options to create workflows.'
+        } satisfies BackgroundMessage)
+        post({ type: 'done' } satisfies BackgroundMessage)
+        return
+      }
+
+      // Send plan for user approval
+      post({ type: 'plan', plan: result.plan } satisfies BackgroundMessage)
     }
 
-    try
-    {
-      // Generate plan (runs until executor interrupt)
-      // Events (agent lifecycle, LLM calls) automatically emitted by LangGraph bridge
-      const plan = await orchestrator.plan({
-        apiKey,
-        messages: (msg.messages as ChatMessage[]),
-      })
-
-      post({ type: 'plan', plan } satisfies BackgroundMessage)
-    }
-    catch (error)
-    {
-      emitApiError(error, 'plan-generation')
-      post({
-        type: 'error',
-        error: `Failed to generate workflow plan: ${(error as Error).message}`
-      } satisfies BackgroundMessage)
-    }
+    post({ type: 'done' } satisfies BackgroundMessage)
+  } catch (error) {
+    emitApiError(error, 'chat-orchestration')
+    post({
+      type: 'error',
+      error: `Chat failed: ${(error as Error).message}`
+    } satisfies BackgroundMessage)
+    post({ type: 'done' } satisfies BackgroundMessage)
   }
-
-  post({ type: 'done' } satisfies BackgroundMessage)
 }
 
 chrome.runtime.onConnect.addListener((port) =>
