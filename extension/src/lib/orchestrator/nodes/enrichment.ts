@@ -6,7 +6,6 @@ import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '../state'
 import { buildPrompt } from '../../prompts'
-import { debugAgentDecision, debugAgentHandoff } from '../../utils/debug'
 import { enrichmentCommandTools } from '../tools/enrichment-commands'
 
 /**
@@ -42,8 +41,9 @@ export async function enrichmentNode(
     throw new Error('OpenAI API key not provided in config.configurable')
   }
 
-  debugAgentHandoff('orchestrator', 'enrichment', 'Conversational response and requirement gathering')
-
+  // Agent lifecycle events automatically emitted by LangGraph bridge
+  // (on_chain_start → emitAgentStarted('enrichment', 'enriching'))
+  
   // Create ReAct agent with enrichment tools
   const systemPrompt = buildPrompt('enrichment', {
     includeNodesReference: true,
@@ -69,35 +69,7 @@ export async function enrichmentNode(
 
   const lastMessage = result.messages[result.messages.length - 1]
 
-  debugAgentDecision(
-    'enrichment',
-    'Generated response',
-    `Response length: ${(lastMessage.content as string).length}`,
-    { hasToolCalls: !!(lastMessage as any).tool_calls?.length }
-  )
-
-  // Check if LLM called any command tools
-  const toolCalls = (lastMessage as any).tool_calls
-
-  if (toolCalls && toolCalls.length > 0)
-  {
-    debugAgentDecision(
-      'enrichment',
-      'Status reported via tools',
-      `Found ${toolCalls.length} tool calls`,
-      { toolCalls: toolCalls.map((tc: any) => tc.name) }
-    )
-  }
-  else
-  {
-    debugAgentDecision(
-      'enrichment',
-      'Chat response',
-      (lastMessage.content as string).substring(0, 100),
-      { contentLength: (lastMessage.content as string).length }
-    )
-  }
-
+  // Agent events (response, tool calls) automatically captured by LangGraph bridge
   // Let the conditional edge handle routing based on tool calls
   return new Command({
     update: {
