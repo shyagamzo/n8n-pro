@@ -124,7 +124,7 @@ export function emitLLMCompleted(tokens?: { prompt?: number; completion?: number
   })
 }
 
-export function emitLLMToken(token: string, runId?: string): void {
+export function emitLLMToken(runId?: string): void {
   systemEvents.emit({
     domain: 'llm',
     type: 'token',

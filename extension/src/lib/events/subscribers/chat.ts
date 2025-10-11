@@ -37,7 +37,8 @@ const errorMessages$ = systemEvents.error$.pipe(
     text: e.payload.userMessage || `❌ ${e.payload.error.message}`,
     error: {
       title: 'Error',
-      details: e.payload.error.message
+      details: e.payload.error.message,
+      retryable: e.payload.source !== 'subscriber' // Subscriber errors aren't retryable
     }
   })),
   catchError(err => {

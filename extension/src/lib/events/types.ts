@@ -4,8 +4,6 @@
  * All events flow through the SystemEvents bus and are typed using these definitions.
  */
 
-import type { Workflow } from '../types/workflow'
-
 export type AgentType = 'planner' | 'executor' | 'enrichment' | 'classifier' | 'orchestrator'
 
 export type SystemEvent = 
@@ -20,7 +18,7 @@ export type WorkflowEvent = {
   type: 'created' | 'updated' | 'validated' | 'failed'
   payload: {
     workflowId?: string
-    workflow: Workflow
+    workflow: any // n8n workflow object
     error?: Error
   }
   timestamp: number

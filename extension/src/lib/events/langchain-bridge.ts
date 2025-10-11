@@ -29,7 +29,7 @@ type StreamEvent = {
  * @param eventStream - AsyncGenerator from workflowGraph.streamEvents()
  * @returns Observable that emits SystemEvents
  */
-export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>): Observable<void> {
+export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>): Observable<StreamEvent> {
   return from(eventStream).pipe(
     filter(({ event }) => 
       event === 'on_llm_start' || 
@@ -122,9 +122,7 @@ export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>):
           }
           break
       }
-    }),
-    // Map to void since we're emitting side effects
-    tap(() => {})
-  ) as Observable<void>
+    })
+  )
 }
 

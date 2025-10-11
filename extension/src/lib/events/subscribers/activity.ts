@@ -19,7 +19,7 @@ const destroy$ = new Subject<void>()
 const activityUpdates$ = merge(systemEvents.agent$, systemEvents.llm$).pipe(
   map(e => ({
     id: `${e.domain}-${e.timestamp}`,
-    agent: e.payload.agent || 'system',
+    agent: ('agent' in e.payload ? e.payload.agent : 'llm') || 'system',
     activity: e.type,
     status: (e.type === 'started' ? 'started' : 
              e.type === 'completed' ? 'complete' : 

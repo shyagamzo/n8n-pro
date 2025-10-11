@@ -10,8 +10,7 @@ import { systemEvents } from '../lib/events'
 import { 
   emitUnhandledError, 
   emitWorkflowCreated, 
-  emitWorkflowFailed,
-  emitApiError 
+  emitWorkflowFailed
 } from '../lib/events/emitters'
 import * as logger from '../lib/events/subscribers/logger'
 import * as chat from '../lib/events/subscribers/chat'
