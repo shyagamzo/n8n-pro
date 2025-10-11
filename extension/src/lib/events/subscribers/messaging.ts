@@ -9,8 +9,9 @@
  */
 
 import { Subject } from 'rxjs'
-import { filter, map, takeUntil, finalize } from 'rxjs/operators'
+import { filter, takeUntil, finalize, switchMap } from 'rxjs/operators'
 import { systemEvents } from '../index'
+import { getBaseUrl } from '../../services/settings'
 import type { BackgroundMessage } from '../../types/messaging'
 
 const destroy$ = new Subject<void>()
@@ -24,11 +25,14 @@ export function setup(post: (msg: BackgroundMessage) => void): void {
   systemEvents.workflow$
     .pipe(
       filter(e => e.type === 'created'),
-      map(e => ({
-        type: 'workflow_created' as const,
-        workflowId: e.payload.workflowId!,
-        workflowUrl: `http://localhost:5678/workflow/${e.payload.workflowId}`
-      })),
+      switchMap(async e => {
+        const baseUrl = await getBaseUrl()
+        return {
+          type: 'workflow_created' as const,
+          workflowId: e.payload.workflowId!,
+          workflowUrl: `${baseUrl || 'http://localhost:5678'}/workflow/${e.payload.workflowId}`
+        }
+      }),
       takeUntil(destroy$),
       finalize(() => console.log('[messaging-workflow] Cleaned up'))
     )
