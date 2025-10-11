@@ -14,6 +14,7 @@ import {
   emitLLMCompleted,
   emitApiError
 } from '../events'
+import { sanitizeMetadata, extractAgentFromMetadata } from '../events/langchain-bridge'
 
 /**
  * Orchestrator input for chat and workflow operations.
@@ -323,6 +324,7 @@ export class ChatOrchestrator
   /**
    * Emit LangGraph events to reactive system (inline bridge logic).
    * This avoids double-consumption of the async generator.
+   * Uses shared sanitization and agent extraction to prevent API key leaks.
    */
   private emitEventToReactiveSystem(event: any): void
   {
@@ -344,7 +346,7 @@ export class ChatOrchestrator
           payload: {
             error: data?.error || new Error('LLM error'),
             source: 'langchain',
-            context: { name, metadata }
+            context: { name, metadata: sanitizeMetadata(metadata) }
           },
           timestamp: Date.now()
         })
@@ -355,9 +357,9 @@ export class ChatOrchestrator
           domain: 'agent',
           type: 'tool_started',
           payload: {
-            agent: 'executor',
+            agent: extractAgentFromMetadata(metadata) as any,
             tool: name || 'unknown',
-            metadata: { input: data?.input, ...metadata }
+            metadata: { input: data?.input, ...sanitizeMetadata(metadata) }
           },
           timestamp: Date.now()
         })
@@ -368,35 +370,41 @@ export class ChatOrchestrator
           domain: 'agent',
           type: 'tool_completed',
           payload: {
-            agent: 'executor',
+            agent: extractAgentFromMetadata(metadata) as any,
             tool: name || 'unknown',
-            metadata: { output: data?.output, ...metadata }
+            metadata: { output: data?.output, ...sanitizeMetadata(metadata) }
           },
           timestamp: Date.now()
         })
         break
 
       case 'on_chain_start':
-        if (name?.toLowerCase().includes('planner')) {
-          emitAgentStarted('planner', 'planning', metadata)
-        } else if (name?.toLowerCase().includes('executor')) {
-          emitAgentStarted('executor', 'executing', metadata)
-        } else if (name?.toLowerCase().includes('enrichment')) {
-          emitAgentStarted('enrichment', 'enriching', metadata)
-        } else if (name?.toLowerCase().includes('classifier')) {
-          emitAgentStarted('classifier', 'classifying', metadata)
+        {
+          const sanitized = sanitizeMetadata(metadata)
+          if (name?.toLowerCase().includes('planner')) {
+            emitAgentStarted('planner', 'planning', sanitized)
+          } else if (name?.toLowerCase().includes('executor')) {
+            emitAgentStarted('executor', 'executing', sanitized)
+          } else if (name?.toLowerCase().includes('enrichment')) {
+            emitAgentStarted('enrichment', 'enriching', sanitized)
+          } else if (name?.toLowerCase().includes('classifier')) {
+            emitAgentStarted('classifier', 'classifying', sanitized)
+          }
         }
         break
 
       case 'on_chain_end':
-        if (name?.toLowerCase().includes('planner')) {
-          emitAgentCompleted('planner', metadata)
-        } else if (name?.toLowerCase().includes('executor')) {
-          emitAgentCompleted('executor', metadata)
-        } else if (name?.toLowerCase().includes('enrichment')) {
-          emitAgentCompleted('enrichment', metadata)
-        } else if (name?.toLowerCase().includes('classifier')) {
-          emitAgentCompleted('classifier', metadata)
+        {
+          const sanitized = sanitizeMetadata(metadata)
+          if (name?.toLowerCase().includes('planner')) {
+            emitAgentCompleted('planner', sanitized)
+          } else if (name?.toLowerCase().includes('executor')) {
+            emitAgentCompleted('executor', sanitized)
+          } else if (name?.toLowerCase().includes('enrichment')) {
+            emitAgentCompleted('enrichment', sanitized)
+          } else if (name?.toLowerCase().includes('classifier')) {
+            emitAgentCompleted('classifier', sanitized)
+          }
         }
         break
     }

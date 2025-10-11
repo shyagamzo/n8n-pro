@@ -24,6 +24,52 @@ type StreamEvent = {
 }
 
 /**
+ * Sanitize metadata by removing sensitive information
+ * CRITICAL: Prevents API keys from appearing in logs
+ */
+export function sanitizeMetadata(metadata?: Record<string, any>): Record<string, any> | undefined {
+  if (!metadata) return undefined
+  
+  const sanitized = { ...metadata }
+  
+  // Remove API keys and sensitive data
+  delete sanitized.openai_api_key
+  delete sanitized.n8n_api_key
+  delete sanitized.api_key
+  
+  return sanitized
+}
+
+/**
+ * Extract agent name from LangGraph metadata
+ * Uses langgraph_node or checkpoint_ns to determine which agent is executing
+ */
+export function extractAgentFromMetadata(metadata?: Record<string, any>): string {
+  if (!metadata) return 'unknown'
+  
+  // Try langgraph_node first (most reliable)
+  const node = metadata.langgraph_node
+  if (node && typeof node === 'string') {
+    // Handle tool nodes by looking at checkpoint_ns
+    if (node === 'tools' && metadata.checkpoint_ns) {
+      const ns = metadata.checkpoint_ns as string
+      if (ns.includes('enrichment')) return 'enrichment'
+      if (ns.includes('planner')) return 'planner'
+      if (ns.includes('executor')) return 'executor'
+      if (ns.includes('classifier')) return 'classifier'
+    }
+    
+    // Direct node name
+    if (node.includes('enrichment')) return 'enrichment'
+    if (node.includes('planner')) return 'planner'
+    if (node.includes('executor')) return 'executor'
+    if (node.includes('classifier')) return 'classifier'
+  }
+  
+  return 'unknown'
+}
+
+/**
  * Bridge LangGraph's event stream to our RxJS system
  * 
  * @param eventStream - AsyncGenerator from workflowGraph.streamEvents()
@@ -64,7 +110,7 @@ export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>):
             payload: {
               error: data?.error || new Error('LLM error'),
               source: 'langchain',
-              context: { name, metadata }
+              context: { name, metadata: sanitizeMetadata(metadata) }
             },
             timestamp: Date.now()
           })
@@ -75,9 +121,9 @@ export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>):
             domain: 'agent',
             type: 'tool_started',
             payload: {
-              agent: 'executor', // Tools are typically called by executor
+              agent: extractAgentFromMetadata(metadata) as any,
               tool: name || 'unknown',
-              metadata: { input: data?.input, ...metadata }
+              metadata: { input: data?.input, ...sanitizeMetadata(metadata) }
             },
             timestamp: Date.now()
           })
@@ -88,37 +134,39 @@ export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>):
             domain: 'agent',
             type: 'tool_completed',
             payload: {
-              agent: 'executor',
+              agent: extractAgentFromMetadata(metadata) as any,
               tool: name || 'unknown',
-              metadata: { output: data?.output, ...metadata }
+              metadata: { output: data?.output, ...sanitizeMetadata(metadata) }
             },
             timestamp: Date.now()
           })
           break
           
         case 'on_chain_start':
-          // Map chain names to agent types
+          // Map chain names to agent types (sanitize metadata to remove API keys)
+          const sanitizedStartMetadata = sanitizeMetadata(metadata)
           if (name?.toLowerCase().includes('planner')) {
-            emitAgentStarted('planner', 'planning', metadata)
+            emitAgentStarted('planner', 'planning', sanitizedStartMetadata)
           } else if (name?.toLowerCase().includes('executor')) {
-            emitAgentStarted('executor', 'executing', metadata)
+            emitAgentStarted('executor', 'executing', sanitizedStartMetadata)
           } else if (name?.toLowerCase().includes('enrichment')) {
-            emitAgentStarted('enrichment', 'enriching', metadata)
+            emitAgentStarted('enrichment', 'enriching', sanitizedStartMetadata)
           } else if (name?.toLowerCase().includes('classifier')) {
-            emitAgentStarted('classifier', 'classifying', metadata)
+            emitAgentStarted('classifier', 'classifying', sanitizedStartMetadata)
           }
           break
           
         case 'on_chain_end':
-          // Map chain names to agent types
+          // Map chain names to agent types (sanitize metadata to remove API keys)
+          const sanitizedEndMetadata = sanitizeMetadata(metadata)
           if (name?.toLowerCase().includes('planner')) {
-            emitAgentCompleted('planner', metadata)
+            emitAgentCompleted('planner', sanitizedEndMetadata)
           } else if (name?.toLowerCase().includes('executor')) {
-            emitAgentCompleted('executor', metadata)
+            emitAgentCompleted('executor', sanitizedEndMetadata)
           } else if (name?.toLowerCase().includes('enrichment')) {
-            emitAgentCompleted('enrichment', metadata)
+            emitAgentCompleted('enrichment', sanitizedEndMetadata)
           } else if (name?.toLowerCase().includes('classifier')) {
-            emitAgentCompleted('classifier', metadata)
+            emitAgentCompleted('classifier', sanitizedEndMetadata)
           }
           break
       }
