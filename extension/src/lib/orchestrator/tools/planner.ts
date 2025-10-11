@@ -1,9 +1,10 @@
 import { tool } from '@langchain/core/tools'
 import { z } from 'zod'
 import { fetchNodeTypes } from '../../n8n/node-types'
+import { DEFAULTS } from '../../constants'
 
 const fetchNodeTypesSchema = z.object({
-  baseUrl: z.string().default('http://localhost:5678').describe('n8n base URL')
+  baseUrl: z.string().default(DEFAULTS.N8N_BASE_URL).describe('n8n base URL')
 })
 
 /**

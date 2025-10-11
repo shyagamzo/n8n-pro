@@ -1,4 +1,4 @@
-import { STORAGE_KEYS } from '../constants'
+import { STORAGE_KEYS, DEFAULTS } from '../constants'
 import { storageGetString, storageSet, storageRemove } from '../utils/storage'
 
 export async function getOpenAiKey(): Promise<string>
@@ -34,6 +34,15 @@ export async function clearN8nApiKey(): Promise<void>
 export async function getBaseUrl(): Promise<string>
 {
   return storageGetString(STORAGE_KEYS.N8N_BASE_URL)
+}
+
+/**
+ * Get base URL with default fallback
+ */
+export async function getBaseUrlOrDefault(): Promise<string>
+{
+  const url = await storageGetString(STORAGE_KEYS.N8N_BASE_URL)
+  return url || DEFAULTS.N8N_BASE_URL
 }
 
 export async function setBaseUrl(url: string): Promise<void>

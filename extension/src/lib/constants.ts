@@ -17,9 +17,12 @@ export const STORAGE_KEYS = {
 
 /**
  * Default values for configuration
+ * 
+ * N8N_BASE_URL: Default n8n instance URL
+ * Use getBaseUrlOrDefault() from services/settings for async retrieval
  */
 export const DEFAULTS = {
-  N8N_BASE_URL: 'http://127.0.0.1:5678',
+  N8N_BASE_URL: 'http://localhost:5678',
   OPENAI_MODEL: 'gpt-4o-mini',
   OPENAI_TIMEOUT_MS: 60000,
   API_TIMEOUT_MS: 10000,

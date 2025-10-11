@@ -73,7 +73,7 @@ export async function runGraph(
       thread_id: input.sessionId,
       openai_api_key: input.apiKey,
       n8n_api_key: input.n8nApiKey || '',
-      n8n_base_url: input.n8nBaseUrl || 'http://localhost:5678',
+      n8n_base_url: input.n8nBaseUrl,  // Already defaulted by background-worker
       model: 'gpt-4o-mini'
     },
     callbacks: onToken ? [new TokenStreamHandler(onToken)] : []

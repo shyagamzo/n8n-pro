@@ -11,7 +11,7 @@
 import { Subject } from 'rxjs'
 import { filter, takeUntil, finalize, switchMap } from 'rxjs/operators'
 import { systemEvents } from '../index'
-import { getBaseUrl } from '../../services/settings'
+import { getBaseUrlOrDefault } from '../../services/settings'
 import type { BackgroundMessage } from '../../types/messaging'
 
 const destroy$ = new Subject<void>()
@@ -26,11 +26,11 @@ export function setup(post: (msg: BackgroundMessage) => void): void {
     .pipe(
       filter(e => e.type === 'created'),
       switchMap(async e => {
-        const baseUrl = await getBaseUrl()
+        const baseUrl = await getBaseUrlOrDefault()
         return {
           type: 'workflow_created' as const,
           workflowId: e.payload.workflowId!,
-          workflowUrl: `${baseUrl || 'http://localhost:5678'}/workflow/${e.payload.workflowId}`
+          workflowUrl: `${baseUrl}/workflow/${e.payload.workflowId}`
         }
       }),
       takeUntil(destroy$),

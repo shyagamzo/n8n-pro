@@ -14,7 +14,7 @@
 import type { ChatRequest, BackgroundMessage, ApplyPlanRequest } from '../lib/types/messaging'
 import type { ChatMessage } from '../lib/types/chat'
 import { runGraph } from '../lib/orchestrator'
-import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
+import { getOpenAiKey, getN8nApiKey, getBaseUrlOrDefault } from '../lib/services/settings'
 
 // Reactive event system
 import {
@@ -86,11 +86,11 @@ chrome.runtime.onConnect.addListener((port) => {
 
   port.onMessage.addListener(async (msg: ChatRequest | ApplyPlanRequest) => {
     try {
-      // Get API keys from settings
+      // Get API keys from settings (with defaults applied)
       const [apiKey, n8nApiKey, baseUrl] = await Promise.all([
         getOpenAiKey(),
         getN8nApiKey(),
-        getBaseUrl()
+        getBaseUrlOrDefault()  // Returns default if not set
       ])
 
       // Check required API key
@@ -106,13 +106,13 @@ chrome.runtime.onConnect.addListener((port) => {
         ? (msg.messages as ChatMessage[])
         : []  // apply_plan uses empty messages (resumes from checkpoint)
 
-      // Run graph - it handles EVERYTHING (routing, planning, execution, validation)
+      // Run graph - baseUrl already has default applied, no fallbacks needed downstream
       const result = await runGraph({
         sessionId,
         apiKey,
         messages,
         n8nApiKey,
-        n8nBaseUrl: baseUrl
+        n8nBaseUrl: baseUrl  // Already defaulted by getBaseUrlOrDefault()
       }, (token) => post({ type: 'token', token }))
 
       // Send results (workflow_created sent automatically via messaging subscriber)

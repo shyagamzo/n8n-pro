@@ -1,11 +1,12 @@
 import { tool } from '@langchain/core/tools'
 import { z } from 'zod'
 import { createN8nClient } from '../../n8n'
+import { DEFAULTS } from '../../constants'
 
 const createWorkflowSchema = z.object({
   workflow: z.any().describe('The workflow object to create (with nodes, connections, etc.)'),
   apiKey: z.string().describe('n8n API key for authentication'),
-  baseUrl: z.string().default('http://localhost:5678').describe('n8n instance base URL')
+  baseUrl: z.string().default(DEFAULTS.N8N_BASE_URL).describe('n8n instance base URL')
 })
 
 /**

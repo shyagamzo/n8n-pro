@@ -35,8 +35,8 @@ export async function executorNode(
 
   const apiKey = config?.configurable?.openai_api_key
   const n8nApiKey = config?.configurable?.n8n_api_key
-  const n8nBaseUrl = config?.configurable?.n8n_base_url || 'http://localhost:5678'
-  const modelName = config?.configurable?.model || 'gpt-4o-mini'
+  const n8nBaseUrl = config?.configurable?.n8n_base_url  // Already defaulted by runGraph()
+  const modelName = config?.configurable?.model  // Already defaulted by runGraph()
   const session = config?.metadata?.session as DebugSession | undefined
 
   if (!apiKey)
