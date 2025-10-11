@@ -236,21 +236,15 @@ async function handleChat(
   // Get session-specific orchestrator
   const orchestrator = getOrchestrator(sessionId)
 
-  // Generate conversational response (enrichment agent runs here)
-  await orchestrator.handle({
+  // Generate conversational response (enrichment agent runs here and reports readiness)
+  // Response is streamed via onToken callback, we only need the ready status
+  const { ready } = await orchestrator.handle({
     apiKey,
     messages: (msg.messages as ChatMessage[]),
   }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
 
-  // AFTER enrichment completes, check if we have enough information to generate a plan
-  // This must happen AFTER handle() because enrichment agent calls reportRequirementsStatus during handle()
-  const readiness = await orchestrator.isReadyToPlan({
-    apiKey,
-    messages: (msg.messages as ChatMessage[]),
-  })
-
-  // Only generate plan if we have enough information
-  if (readiness.ready)
+  // Generate plan if enrichment reported ready
+  if (ready)
   {
     if (!n8nApiKey)
     {

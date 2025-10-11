@@ -6,7 +6,6 @@ import { workflowGraph } from './graph'
 import { TokenStreamHandler } from './streaming'
 import { DebugCallbackHandler } from './debug-handler'
 import { DebugSession } from '../utils/debug'
-import { emitApiError } from '../events'
 import { emitLangGraphEvent } from '../events/langchain-bridge'
 
 /**
@@ -60,12 +59,12 @@ export class ChatOrchestrator
    *
    * @param input - API key and message history
    * @param onToken - Optional callback for token streaming
-   * @returns Response string
+   * @returns Response string and readiness status
    */
   public async handle(
     input: OrchestratorInput,
     onToken?: StreamTokenHandler
-  ): Promise<string>
+  ): Promise<{ response: string; ready: boolean }>
   {
     const config = {
       configurable: {
@@ -98,77 +97,23 @@ export class ChatOrchestrator
     }
 
     const lastMessage = finalState?.messages?.[finalState.messages.length - 1]
-    return (lastMessage?.content as string) || ''
-  }
-
-  /**
-   * Check if enrichment conversation is ready to transition to planning.
-   *
-   * With the new tool-based architecture, readiness is determined by the enrichment agent
-   * via tool calls that update the state. This method checks the current state.
-   *
-   * @param input - API key and message history
-   * @returns Whether ready to plan and reason if not
-   */
-  public async isReadyToPlan(
-    input: OrchestratorInput
-  ): Promise<{ ready: boolean; reason?: string }>
-  {
-    if (!input.apiKey) {
-      return { ready: false, reason: 'API key not provided' }
-    }
-
-    try {
-      const config = {
-        configurable: {
-          thread_id: `chat-${this.threadId}`,  // Must match handle() thread to check same state!
-          openai_api_key: input.apiKey,
-          model: 'gpt-4o-mini'
-        }
-      }
-
-      const lcMessages = this.convertMessages(input.messages)
-
-      // Stream events and collect final state
-      const eventStream = workflowGraph.streamEvents(
-        {
-          mode: 'chat' as const,
-          messages: lcMessages,
-          sessionId: this.threadId
-        },
-        { ...config, version: 'v2' }
-      )
-
-      // Process events and collect final state
-      let finalState: any = null
-      for await (const event of eventStream) {
-        emitLangGraphEvent(event)
-        if (event.event === 'on_chain_end' && event.data?.output) {
-          finalState = event.data.output
-        }
-      }
-
-      // Check if enrichment agent reported readiness via tool calls
-      const lastMessage = finalState?.messages?.[finalState.messages.length - 1] as any
-      if (lastMessage?.tool_calls && lastMessage.tool_calls.length > 0) {
-        for (const toolCall of lastMessage.tool_calls) {
-          if (toolCall.name === 'reportRequirementsStatus') {
-            const args = toolCall.args as { hasAllRequiredInfo: boolean; confidence: number }
-            if (args.hasAllRequiredInfo && args.confidence > 0.8) {
-              return { ready: true }
-            }
+    const response = (lastMessage?.content as string) || ''
+    
+    // Check if enrichment reported readiness via tool calls
+    let ready = false
+    if (lastMessage?.tool_calls && lastMessage.tool_calls.length > 0) {
+      for (const toolCall of lastMessage.tool_calls) {
+        if (toolCall.name === 'reportRequirementsStatus') {
+          const args = toolCall.args as { hasAllRequiredInfo: boolean; confidence: number }
+          if (args.hasAllRequiredInfo && args.confidence > 0.8) {
+            ready = true
+            break
           }
         }
       }
-
-      return {
-        ready: false,
-        reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!'
-      }
-    } catch (error) {
-      emitApiError(error as Error, 'readiness-check')
-      return { ready: false, reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!' }
     }
+    
+    return { response, ready }
   }
 
   /**
