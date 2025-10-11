@@ -80,36 +80,47 @@ function injectTriggerAndPanel(): void
   testButton.innerHTML = '🧪'
   testButton.title = 'Test workflow creation'
 
+  // Beautiful gradient colors (purple/blue theme)
+  const testColor1 = '#a78bfa' // purple-400
+  const testColor2 = '#8b5cf6' // purple-500
+
   testButton.style.position = 'fixed'
   testButton.style.bottom = '20px'
   testButton.style.right = '180px' // Position to the left of the trigger button
   testButton.style.zIndex = '2147483647'
-  testButton.style.width = '40px'
-  testButton.style.height = '40px'
+  testButton.style.width = '48px'
+  testButton.style.height = '48px'
   testButton.style.padding = '0'
   testButton.style.borderRadius = '50%'
-  testButton.style.background = 'rgba(58, 59, 74, 0.8)'
-  testButton.style.color = '#c5c7d0'
-  testButton.style.border = '1px solid rgba(79, 81, 102, 0.6)'
+  testButton.style.background = `linear-gradient(135deg, color-mix(in srgb, ${testColor1} 90%, black) 0%, color-mix(in srgb, ${testColor2} 85%, black) 100%)`
+  testButton.style.color = '#fff'
+  testButton.style.border = '1px solid rgba(255, 255, 255, 0.2)'
   testButton.style.cursor = 'pointer'
-  testButton.style.fontSize = '18px'
-  testButton.style.transition = 'all 0.2s ease'
+  testButton.style.fontSize = '20px'
+  testButton.style.boxShadow = `0 8px 24px color-mix(in srgb, ${testColor2} 40%, transparent), 0 4px 12px rgba(0, 0, 0, 0.3)`
+  testButton.style.transition = 'all 0.3s ease'
   testButton.style.display = 'flex'
   testButton.style.alignItems = 'center'
   testButton.style.justifyContent = 'center'
-  testButton.style.opacity = '0.5'
   testButton.style.backdropFilter = 'blur(10px)'
+  testButton.style.fontFamily = 'system-ui, -apple-system, sans-serif'
 
   testButton.addEventListener('mouseenter', () => {
-    testButton.style.opacity = '1'
-    testButton.style.transform = 'scale(1.1)'
-    testButton.style.borderColor = primaryColor
+    testButton.style.transform = 'translateY(-4px) scale(1.05)'
+    testButton.style.boxShadow = `0 12px 32px color-mix(in srgb, ${testColor2} 50%, transparent), 0 6px 16px rgba(0, 0, 0, 0.4)`
   })
 
   testButton.addEventListener('mouseleave', () => {
-    testButton.style.opacity = '0.5'
-    testButton.style.transform = 'scale(1)'
-    testButton.style.borderColor = 'rgba(79, 81, 102, 0.6)'
+    testButton.style.transform = 'translateY(0) scale(1)'
+    testButton.style.boxShadow = `0 8px 24px color-mix(in srgb, ${testColor2} 40%, transparent), 0 4px 12px rgba(0, 0, 0, 0.3)`
+  })
+
+  testButton.addEventListener('mousedown', () => {
+    testButton.style.transform = 'translateY(-2px) scale(1.02)'
+  })
+
+  testButton.addEventListener('mouseup', () => {
+    testButton.style.transform = 'translateY(-4px) scale(1.05)'
   })
 
   testButton.addEventListener('click', async () =>
