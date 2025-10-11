@@ -1,6 +1,6 @@
 /**
  * LangGraph Event Bridge
- * 
+ *
  * Converts LangGraph's .streamEvents() async generator into our RxJS event system.
  * This provides automatic event emission for all LLM, tool, and chain operations
  * without manual event emission in orchestrator nodes.
@@ -29,14 +29,14 @@ type StreamEvent = {
  */
 export function sanitizeMetadata(metadata?: Record<string, any>): Record<string, any> | undefined {
   if (!metadata) return undefined
-  
+
   const sanitized = { ...metadata }
-  
+
   // Remove API keys and sensitive data
   delete sanitized.openai_api_key
   delete sanitized.n8n_api_key
   delete sanitized.api_key
-  
+
   return sanitized
 }
 
@@ -46,7 +46,7 @@ export function sanitizeMetadata(metadata?: Record<string, any>): Record<string,
  */
 export function extractAgentFromMetadata(metadata?: Record<string, any>): string {
   if (!metadata) return 'unknown'
-  
+
   // Try langgraph_node first (most reliable)
   const node = metadata.langgraph_node
   if (node && typeof node === 'string') {
@@ -58,27 +58,27 @@ export function extractAgentFromMetadata(metadata?: Record<string, any>): string
       if (ns.includes('executor')) return 'executor'
       if (ns.includes('classifier')) return 'classifier'
     }
-    
+
     // Direct node name
     if (node.includes('enrichment')) return 'enrichment'
     if (node.includes('planner')) return 'planner'
     if (node.includes('executor')) return 'executor'
     if (node.includes('classifier')) return 'classifier'
   }
-  
+
   return 'unknown'
 }
 
 /**
  * Bridge LangGraph's event stream to our RxJS system
- * 
+ *
  * @param eventStream - AsyncGenerator from workflowGraph.streamEvents()
  * @returns Observable that emits SystemEvents
  */
 export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>): Observable<StreamEvent> {
   return from(eventStream).pipe(
-    filter(({ event }) => 
-      event === 'on_llm_start' || 
+    filter(({ event }) =>
+      event === 'on_llm_start' ||
       event === 'on_llm_end' ||
       event === 'on_llm_error' ||
       event === 'on_tool_start' ||
@@ -95,27 +95,27 @@ export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>):
             metadata?.run_id
           )
           break
-          
+
         case 'on_llm_end':
           emitLLMCompleted(
             data?.output?.usage_metadata,
             metadata?.run_id
           )
           break
-          
+
         case 'on_llm_error':
           systemEvents.emit({
             domain: 'error',
             type: 'llm',
             payload: {
-              error: data?.error || new Error('LLM error'),
+              error: (data as any)?.error || new Error('LLM error'),
               source: 'langchain',
               context: { name, metadata: sanitizeMetadata(metadata) }
             },
             timestamp: Date.now()
           })
           break
-          
+
         case 'on_tool_start':
           systemEvents.emit({
             domain: 'agent',
@@ -128,7 +128,7 @@ export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>):
             timestamp: Date.now()
           })
           break
-          
+
         case 'on_tool_end':
           systemEvents.emit({
             domain: 'agent',
@@ -141,7 +141,7 @@ export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>):
             timestamp: Date.now()
           })
           break
-          
+
         case 'on_chain_start':
           // Map chain names to agent types (sanitize metadata to remove API keys)
           const sanitizedStartMetadata = sanitizeMetadata(metadata)
@@ -155,7 +155,7 @@ export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>):
             emitAgentStarted('classifier', 'classifying', sanitizedStartMetadata)
           }
           break
-          
+
         case 'on_chain_end':
           // Map chain names to agent types (sanitize metadata to remove API keys)
           const sanitizedEndMetadata = sanitizeMetadata(metadata)

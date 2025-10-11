@@ -15,6 +15,7 @@ import {
   emitApiError
 } from '../events'
 import { sanitizeMetadata, extractAgentFromMetadata } from '../events/langchain-bridge'
+import type { StreamEvent } from '@langchain/core/tracers/log_stream'
 
 /**
  * Orchestrator input for chat and workflow operations.
@@ -140,7 +141,7 @@ export class ChatOrchestrator
       }
 
       const lcMessages = this.convertMessages(input.messages)
-      
+
       // Use streamEvents for single execution
       const eventStream = workflowGraph.streamEvents(
         {
@@ -326,7 +327,7 @@ export class ChatOrchestrator
    * This avoids double-consumption of the async generator.
    * Uses shared sanitization and agent extraction to prevent API key leaks.
    */
-  private emitEventToReactiveSystem(event: any): void
+  private emitEventToReactiveSystem(event: StreamEvent): void
   {
     const { event: eventType, name, data, metadata } = event
 
@@ -344,7 +345,7 @@ export class ChatOrchestrator
           domain: 'error',
           type: 'llm',
           payload: {
-            error: data?.error || new Error('LLM error'),
+            error: (data as any)?.error || new Error('LLM error'),
             source: 'langchain',
             context: { name, metadata: sanitizeMetadata(metadata) }
           },
