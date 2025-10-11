@@ -1,28 +1,34 @@
 ---
-description: Index and README file organization patterns - keep index files for exports only, keep READMEs as summaries
+description: Public API export files and README organization patterns - keep exports separate from implementation, keep READMEs as summaries
 alwaysApply: true
 ---
 
-# Index and README File Patterns
+# Public API Export and README File Patterns
 
-Keep `index.ts` files for exports only. Keep README files as summaries with links to detailed docs.
+Keep public API export files for exports only. Keep README files as summaries with links to detailed docs.
 
 ## Core Principles
 
-1. **Discoverability**: Files should be findable by their descriptive names, not generic "index" names
-2. **Public API Boundary**: Index files define what's public, implementation files contain the code
+1. **Discoverability**: Files should be findable by their descriptive names, not generic export file names
+2. **Public API Boundary**: Export files define what's public, implementation files contain the code
 3. **Documentation Hierarchy**: READMEs provide overview, separate files contain details
 
-## Index Files
+## Public API Export Files
 
-**Rule: Index files should ONLY contain exports - never implementation code**
+**Rule: Public API export files should ONLY contain exports - never implementation code**
+
+Common export file patterns across languages:
+- TypeScript/JavaScript: `index.ts`, `index.js`
+- Python: `__init__.py`
+- Rust: `mod.rs`, `lib.rs`
+- Go: package-level files
 
 ### Pattern
 
 ```typescript
 /**
  * [Module Name] - Public API
- * Brief description. See ./implementation.ts for details.
+ * Brief description. See ./implementation for details.
  */
 
 export { MainClass, helperFunction } from './implementation'
@@ -31,14 +37,22 @@ export type { PublicType, Options } from './implementation'
 
 ### Examples
 
-✅ **Good:**
+✅ **Good - Exports only:**
 ```typescript
 // lib/client/index.ts
 export { createClient, Client } from './client'
 export type { ClientConfig } from './client'
 ```
 
-❌ **Bad:**
+```python
+# lib/client/__init__.py
+from .client import Client, create_client
+from .types import ClientConfig
+
+__all__ = ['Client', 'create_client', 'ClientConfig']
+```
+
+❌ **Bad - Implementation in export file:**
 ```typescript
 // lib/client/index.ts
 export class Client {
@@ -48,11 +62,17 @@ export class Client {
 
 ### Entry Points Exception
 
-Entry point index files may import for side effects:
+Entry point export files may import for side effects:
 
 ```typescript
 // content/index.ts
 import './content-script'  // ✅ Acceptable for entry points
+```
+
+```python
+# __main__.py
+from .app import main
+main()  # ✅ Acceptable for entry points
 ```
 
 ## README Files
@@ -97,19 +117,19 @@ Split README when it exceeds ~100 lines or covers multiple topics:
 Implementation files use descriptive names that indicate content:
 
 ✅ **Good:**
-- `orchestrator.ts` - Orchestrator class
-- `prompt-loader.ts` - Prompt loading utilities
-- `client.ts` - API client
+- `orchestrator.ts`, `orchestrator.py` - Orchestrator implementation
+- `prompt_loader.py`, `prompt-loader.ts` - Prompt loading utilities
+- `client.rs`, `client.go` - API client
 
 ❌ **Avoid:**
-- `utils.ts`, `helpers.ts` - Too generic
-- `main.ts`, `core.ts` - Not descriptive
-- `module/module-thing.ts` - Redundant directory prefix
+- `utils.*`, `helpers.*` - Too generic
+- `main.*`, `core.*` - Not descriptive (unless true entry point)
+- `module/module_thing.*` - Redundant directory prefix
 
 Documentation files use descriptive, prefixed names:
 
 ✅ **Good:**
-- `loom-protocol.md`, `loom-api.md` - Clear context
+- `protocol-spec.md`, `api-reference.md` - Clear context
 - `authoring-guidelines.md` - Descriptive
 
 ❌ **Avoid:**
@@ -124,7 +144,7 @@ lib/service/
   └── index.ts (300 lines - implementation + exports)
   └── README.md (250 lines - all documentation)
 ```
-Problem: Can't find "service" in Ctrl+P, only "index"
+Problem: Can't find "service" - file search only shows "index" or "__init__"
 
 **After:**
 ```
@@ -135,11 +155,11 @@ lib/service/
   ├── api-reference.md (100 lines)
   └── best-practices.md (90 lines)
 ```
-Result: Ctrl+P "service" finds `service.ts` immediately
+Result: File search for "service" finds implementation immediately
 
 ## Benefits
 
-- **Findable**: Ctrl+P searches find implementation files by name
+- **Findable**: File searches find implementation by descriptive name, not generic export file name
 - **Navigable**: README provides quick overview without overwhelming detail
-- **Maintainable**: Separate concerns are easier to update
-- **Clear API**: Index exports define public interface
+- **Maintainable**: Separate concerns (API vs implementation) are easier to update
+- **Clear API**: Export files define explicit public interface boundaries
