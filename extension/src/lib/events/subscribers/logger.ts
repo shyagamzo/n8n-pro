@@ -18,12 +18,53 @@ const destroy$ = new Subject<void>()
  */
 function logEvent(event: any): void {
   const prefix = `[${event.domain}]`
-  const style = 'color: #6366f1; font-weight: bold'
+  const time = new Date(event.timestamp).toLocaleTimeString()
   
-  // Always log errors prominently
+  // Build informative title with key details from payload
+  let title = `${prefix} ${event.type}`
+  let details: string[] = []
+  
+  // Extract key details based on domain/type
+  const p = event.payload
+  
+  switch (event.domain) {
+    case 'workflow':
+      if (p.workflow?.name) details.push(`"${p.workflow.name}"`)
+      if (p.workflowId) details.push(`id: ${p.workflowId}`)
+      break
+      
+    case 'agent':
+      if (p.agent) details.push(p.agent)
+      if (p.action) details.push(p.action)
+      if (p.tool) details.push(`tool: ${p.tool}`)
+      break
+      
+    case 'llm':
+      if (p.model) details.push(p.model)
+      if (p.provider) details.push(`(${p.provider})`)
+      if (p.usage?.total_tokens) details.push(`${p.usage.total_tokens} tokens`)
+      break
+      
+    case 'storage':
+      if (p.key) details.push(`key: ${p.key}`)
+      break
+  }
+  
+  // Add details to title
+  if (details.length > 0) {
+    title += ` - ${details.join(' ')}`
+  }
+  
+  // Add timestamp to title
+  title += ` @ ${time}`
+  
+  // Always log errors prominently (expanded)
   if (event.domain === 'error') {
-    console.group(`%c${prefix} ${event.type}`, 'color: #ef4444; font-weight: bold')
+    console.group(`%c${title}`, 'color: #ef4444; font-weight: bold')
     console.error('Error:', event.payload.error)
+    if (event.payload.source) {
+      console.log('Source:', event.payload.source)
+    }
     if (event.payload.context) {
       console.log('Context:', event.payload.context)
     }
@@ -32,11 +73,10 @@ function logEvent(event: any): void {
   }
   
   // Log other events with collapsed groups
-  console.groupCollapsed(`%c${prefix} ${event.type}`, style)
+  console.groupCollapsed(`%c${title}`, 'color: #6366f1; font-weight: bold')
   if (event.payload && Object.keys(event.payload).length > 0) {
     console.log('Payload:', event.payload)
   }
-  console.log('Timestamp:', new Date(event.timestamp).toLocaleTimeString())
   console.groupEnd()
 }
 
