@@ -2,8 +2,17 @@
 .message-bubble {
   max-width: 80%;
   word-wrap: break-word;
-  animation: slideIn 0.3s ease-out;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Only animate user messages */
+.message-bubble--user {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Never animate assistant messages to prevent jump during streaming */
+.message-bubble--assistant {
+  animation: none;
 }
 
 @keyframes slideIn {
@@ -22,8 +31,8 @@
 }
 
 .message-bubble--user {
-  background: linear-gradient(135deg, 
-    var(--color-chat-user-background, #ff6d5a) 0%, 
+  background: linear-gradient(135deg,
+    var(--color-chat-user-background, #ff6d5a) 0%,
     var(--color-primary-shade, #e55a47) 100%
   );
   color: var(--color-chat-user-text, #ffffff);
@@ -43,8 +52,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%, 
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.08) 0%,
     transparent 50%
   );
   pointer-events: none;
@@ -73,8 +82,8 @@
   left: 0;
   width: 3px;
   height: 100%;
-  background: linear-gradient(180deg, 
-    var(--color-primary, #ff6d5a) 0%, 
+  background: linear-gradient(180deg,
+    var(--color-primary, #ff6d5a) 0%,
     var(--color-primary-shade, #e55a47) 100%
   );
   border-radius: var(--border-radius-large, 0.75rem) 0 0 var(--border-radius-large, 0.75rem);
@@ -83,3 +92,4 @@
 .message-bubble--assistant:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
+

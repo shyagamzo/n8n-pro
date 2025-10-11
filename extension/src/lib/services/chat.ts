@@ -9,6 +9,7 @@ export class ChatService
 {
   private port = createChatPort()
   private lastSentMessages: ChatMessage[] = []
+  private streamingMessageId: string | null = null
 
   private messageHandlers: Record<string, (msg: any) => void> = {
     token: (msg) => this.handleToken(msg),
@@ -29,8 +30,16 @@ export class ChatService
 
   private handleToken(message: { type: 'token'; token: string }): void
   {
-    const currentDraft = useChatStore.getState().assistantDraft
-    useChatStore.getState().setAssistantDraft(currentDraft + message.token)
+    // Update existing streaming message
+    if (!this.streamingMessageId) return
+
+    const currentMessage = useChatStore.getState().messages.find(m => m.id === this.streamingMessageId)
+    if (currentMessage)
+    {
+      useChatStore.getState().updateMessage(this.streamingMessageId, {
+        text: currentMessage.text + message.token
+      })
+    }
   }
 
   private handleWorkflowCreated(message: { type: 'workflow_created'; workflowId: string; workflowUrl: string }): void
@@ -67,28 +76,38 @@ export class ChatService
 
   private handleDone(): void
   {
-    const { assistantDraft, pendingPlan, addMessage, setAssistantDraft, setPendingPlan, finishSending } = useChatStore.getState()
+    const { pendingPlan, updateMessage, setPendingPlan, finishSending } = useChatStore.getState()
 
-    if (assistantDraft)
+    // Mark the streaming message as complete
+    if (this.streamingMessageId)
     {
-      addMessage({
-        id: generateId(),
-        role: 'assistant',
-        text: assistantDraft,
+      updateMessage(this.streamingMessageId, {
+        streaming: false,
         plan: pendingPlan || undefined
       })
+      this.streamingMessageId = null
     }
 
-    setAssistantDraft('')
     setPendingPlan(null)
     finishSending()
   }
 
   private handleError(message: { type: 'error'; error: string }): void
   {
-    const { setAssistantDraft, setPendingPlan, finishSending, addMessage } = useChatStore.getState()
+    const { setPendingPlan, finishSending, addMessage, messages } = useChatStore.getState()
 
-    setAssistantDraft('')
+    // Remove streaming message if it exists
+    if (this.streamingMessageId)
+    {
+      const streamingMsg = messages.find(m => m.id === this.streamingMessageId)
+      if (streamingMsg)
+      {
+        // Remove the incomplete streaming message
+        useChatStore.setState({ messages: messages.filter(m => m.id !== this.streamingMessageId) })
+      }
+      this.streamingMessageId = null
+    }
+
     setPendingPlan(null)
     finishSending()
 
@@ -157,22 +176,32 @@ export class ChatService
 
   public send(text: string): void
   {
-    const { addMessage, startSending, setAssistantDraft } = useChatStore.getState()
+    const { addMessage, startSending } = useChatStore.getState()
     addMessage({ id: generateId(), role: 'user', text })
-    setAssistantDraft('')
+
+    // Create streaming message immediately to avoid animation reset
+    this.streamingMessageId = generateId()
+    addMessage({
+      id: this.streamingMessageId,
+      role: 'assistant',
+      text: '',
+      streaming: true
+    })
+
     startSending()
 
-    const currentMessages: ChatMessage[] = useChatStore.getState().messages
+    // Filter out streaming messages before sending to backend
+    const currentMessages: ChatMessage[] = useChatStore.getState().messages.filter(m => !m.streaming)
     this.lastSentMessages = currentMessages
     this.port.sendChat(currentMessages)
   }
 
   public retry(payload: { messages: ChatMessage[] }): void
   {
-    const { startSending, setAssistantDraft } = useChatStore.getState()
+    const { startSending } = useChatStore.getState()
 
     startSending()
-    setAssistantDraft('')
+    this.streamingMessageId = null // Reset streaming message ID
 
     this.lastSentMessages = payload.messages
     this.port.sendChat(payload.messages)

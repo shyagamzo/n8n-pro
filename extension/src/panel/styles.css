@@ -1,8 +1,8 @@
 /* Panel component styles */
 .panel-body {
   height: 100%;
-  background: linear-gradient(180deg, 
-    var(--color-background-light, #1a1a24) 0%, 
+  background: linear-gradient(180deg,
+    var(--color-background-light, #1a1a24) 0%,
     var(--color-background-base, #2d2e3a) 100%
   );
 }
@@ -10,6 +10,7 @@
 .messages-list {
   padding: var(--spacing-s, 1rem);
   background: transparent;
+  overflow-x: hidden; /* Prevent horizontal scrollbar during message animations */
 }
 
 .message-wrapper--assistant {
@@ -17,8 +18,8 @@
 }
 
 .draft-bubble {
-  background: linear-gradient(135deg, 
-    var(--color-chat-bot-background, #2d2e3a) 0%, 
+  background: linear-gradient(135deg,
+    var(--color-chat-bot-background, #2d2e3a) 0%,
     var(--color-background-xlight, #3a3b4a) 100%
   );
   color: var(--color-chat-bot-text, #ffffff);
@@ -40,8 +41,8 @@
   left: 0;
   width: 3px;
   height: 100%;
-  background: linear-gradient(180deg, 
-    var(--color-primary, #ff6d5a) 0%, 
+  background: linear-gradient(180deg,
+    var(--color-primary, #ff6d5a) 0%,
     var(--color-primary-shade, #e55a47) 100%
   );
   border-radius: var(--border-radius-large, 0.75rem) 0 0 var(--border-radius-large, 0.75rem);

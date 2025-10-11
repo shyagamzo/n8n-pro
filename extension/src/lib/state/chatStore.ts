@@ -24,6 +24,7 @@ type ChatState = {
   toasts: ToastProps[]
   setOpen: (open: boolean) => void
   addMessage: (msg: ChatMessage) => void
+  updateMessage: (id: string, updates: Partial<ChatMessage>) => void
   startSending: () => void
   finishSending: () => void
   clear: () => void
@@ -64,7 +65,24 @@ export const useChatStore = create<ChatState>((set) => ({
     set((s) =>
     {
       const newMessages = [...s.messages, msg]
-      saveMessages(newMessages)
+      // Only save non-streaming messages to storage
+      if (!msg.streaming)
+      {
+        saveMessages(newMessages)
+      }
+      return { messages: newMessages }
+    })
+  },
+  updateMessage: (id, updates) =>
+  {
+    set((s) =>
+    {
+      const newMessages = s.messages.map(m => m.id === id ? { ...m, ...updates } : m)
+      // Only save to storage when message is no longer streaming
+      if (updates.streaming === false || updates.streaming === undefined)
+      {
+        saveMessages(newMessages)
+      }
       return { messages: newMessages }
     })
   },
