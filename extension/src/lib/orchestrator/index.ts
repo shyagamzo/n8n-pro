@@ -59,17 +59,14 @@ export class ChatOrchestrator
   /**
    * Handle chat messages (enrichment mode).
    *
-   * Uses state-based interruption for clarification (browser-compatible).
-   * When enrichment needs clarification, it sets clarificationQuestion in state.
-   *
    * @param input - API key and message history
    * @param onToken - Optional callback for token streaming
-   * @returns Object with response and optional clarification question
+   * @returns Response string
    */
   public async handle(
     input: OrchestratorInput,
     onToken?: StreamTokenHandler
-  ): Promise<{ response: string; needsClarification?: string }>
+  ): Promise<string>
   {
     const config = {
       configurable: {
@@ -87,26 +84,14 @@ export class ChatOrchestrator
       {
         mode: 'chat' as const,
         messages: lcMessages,
-        sessionId: this.threadId,
-        clarificationQuestion: undefined  // Clear previous clarification
+        sessionId: this.threadId
       },
       config
     )
 
-    // Check if enrichment set a clarification question
-    if (result.clarificationQuestion)
-    {
-      return {
-        response: result.clarificationQuestion,
-        needsClarification: result.clarificationQuestion
-      }
-    }
-
     // Extract last message content
     const lastMessage = result.messages[result.messages.length - 1]
-    return {
-      response: (lastMessage?.content as string) || ''
-    }
+    return (lastMessage?.content as string) || ''
   }
 
   /**

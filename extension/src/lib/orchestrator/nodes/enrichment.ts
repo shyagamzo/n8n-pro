@@ -6,22 +6,21 @@ import type { RunnableConfig } from '@langchain/core/runnables'
 import type { OrchestratorStateType } from '../state'
 import { buildPrompt } from '../../prompts'
 import { debugAgentDecision, debugAgentHandoff } from '../../utils/debug'
-import { enrichmentTools } from '../tools/enrichment'
 
 /**
  * Enrichment node handles conversational chat and requirement gathering.
  *
  * Features:
- * - Tool-based clarification (askClarification tool)
+ * - Natural conversation flow with clarification questions
  * - Token streaming support via callbacks
  * - Clean content (no markers in streamed output)
  * - Returns Command for explicit routing control
  *
  * Flow:
- * 1. LLM responds to user message OR calls askClarification tool
- * 2. If tool called: extract question → set in state → return to END
- * 3. If normal response: return content → END
- * 4. UI detects clarificationQuestion in state and prompts user
+ * 1. LLM responds naturally to user message
+ * 2. If clarification needed: asks question in chat response
+ * 3. User responds naturally in chat conversation
+ * 4. Conversation continues until requirements are clear
  *
  * Benefits:
  * - No markers appear in streamed content
@@ -50,23 +49,12 @@ export async function enrichmentNode(
     temperature: 0.7,
     streaming: true
     // Don't pass callbacks here - LangGraph propagates them automatically
-  }).bindTools(enrichmentTools)
+  })
 
   const systemPrompt = buildPrompt('enrichment', {
     includeNodesReference: true,
     includeConstraints: true
-  }) + `
-
-IMPORTANT: You have access to the askClarification tool.
-
-When you need more information from the user:
-- Call the askClarification tool with your question
-- Ask ONE specific question at a time
-- Only use when you truly need critical information
-
-When you have enough information or are just chatting:
-- Respond normally without calling any tools
-`
+  })
 
   const response = await model.invoke([
     new SystemMessage(systemPrompt),
@@ -80,51 +68,21 @@ When you have enough information or are just chatting:
     { hasToolCalls: !!(response as AIMessage).tool_calls?.length }
   )
 
-  // Check if LLM called askClarification tool
-  const toolCalls = (response as AIMessage).tool_calls
-
-  if (toolCalls && toolCalls.length > 0)
-  {
-    const askClarCall = toolCalls.find((tc: any) => tc.name === 'askClarification')
-
-    if (askClarCall)
-    {
-      const question = askClarCall.args?.question as string
-
-      debugAgentDecision(
-        'enrichment',
-        'Needs clarification',
-        'Tool called for user input',
-        { question }
-      )
-
-      // Set clarification question in state
-      // Don't add messages yet - wait for user response
-      return new Command({
-        goto: 'END',
-        update: {
-          clarificationQuestion: question
-        }
-      })
-    }
-  }
-
-  // Normal response - no clarification needed
+  // Always return the response as a normal chat message
   const content = response.content as string
 
   debugAgentDecision(
     'enrichment',
-    'Chat complete',
+    'Chat response',
     content.substring(0, 100),
     { contentLength: content.length }
   )
 
-  // Return response
+  // Return response - let the LLM handle clarification naturally in chat
   return new Command({
     goto: 'END',
     update: {
-      messages: [response as AIMessage],
-      clarificationQuestion: undefined  // Clear any previous clarification
+      messages: [response as AIMessage]
     }
   })
 }
