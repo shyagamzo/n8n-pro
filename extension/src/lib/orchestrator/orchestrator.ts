@@ -6,7 +6,6 @@ import { workflowGraph } from './graph'
 import { TokenStreamHandler } from './streaming'
 import { DebugCallbackHandler } from './debug-handler'
 import { DebugSession } from '../utils/debug'
-import { bridgeLangGraphEvents } from '../events/langchain-bridge'
 
 /**
  * Orchestrator input for chat and workflow operations.
@@ -78,7 +77,7 @@ export class ChatOrchestrator
     // Convert ChatMessage[] to LangChain BaseMessage[]
     const lcMessages = this.convertMessages(input.messages)
 
-    // Stream events for chat mode
+    // Use streamEvents - single execution that provides both result and events
     const eventStream = workflowGraph.streamEvents(
       {
         mode: 'chat' as const,
@@ -88,21 +87,20 @@ export class ChatOrchestrator
       { ...config, version: 'v2' }
     )
 
-    const eventSubscription = bridgeLangGraphEvents(eventStream).subscribe()
-
-    const result = await workflowGraph.invoke(
-      {
-        mode: 'chat' as const,
-        messages: lcMessages,
-        sessionId: this.threadId
-      },
-      config
-    )
-
-    eventSubscription.unsubscribe()
+    // Process event stream: emit events to reactive system AND collect final state
+    let finalState: any = null
+    for await (const event of eventStream) {
+      // Emit to reactive system via bridge logic (inline to avoid double consumption)
+      this.emitEventToReactiveSystem(event)
+      
+      // Capture final state
+      if (event.event === 'on_chain_end' && event.data?.output) {
+        finalState = event.data.output
+      }
+    }
 
     // Extract last message content
-    const lastMessage = result.messages[result.messages.length - 1]
+    const lastMessage = finalState?.messages?.[finalState.messages.length - 1]
     return (lastMessage?.content as string) || ''
   }
 
@@ -119,15 +117,11 @@ export class ChatOrchestrator
     input: OrchestratorInput
   ): Promise<{ ready: boolean; reason?: string }>
   {
-    // In the new architecture, readiness is determined by tool calls from the enrichment agent
-    // We need to run the enrichment agent to see if it calls markReady tool
-
     if (!input.apiKey) {
       return { ready: false, reason: 'API key not provided' }
     }
 
     try {
-      // Run enrichment agent to see if it determines readiness
       const config = {
         configurable: {
           thread_id: `readiness-check-${this.threadId}`,
@@ -137,18 +131,29 @@ export class ChatOrchestrator
       }
 
       const lcMessages = this.convertMessages(input.messages)
-      const result = await workflowGraph.invoke(
+      
+      // Use streamEvents for single execution
+      const eventStream = workflowGraph.streamEvents(
         {
           mode: 'chat' as const,
           messages: lcMessages,
           sessionId: this.threadId
         },
-        config
+        { ...config, version: 'v2' }
       )
 
-      // Check if enrichment agent reported it has all required info via tool calls
-      const lastMessage = result.messages[result.messages.length - 1] as any
-      if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
+      // Collect final state and emit events
+      let finalState: any = null
+      for await (const event of eventStream) {
+        this.emitEventToReactiveSystem(event)
+        if (event.event === 'on_chain_end' && event.data?.output) {
+          finalState = event.data.output
+        }
+      }
+
+      // Check if enrichment agent reported readiness via tool calls
+      const lastMessage = finalState?.messages?.[finalState.messages.length - 1] as any
+      if (lastMessage?.tool_calls && lastMessage.tool_calls.length > 0) {
         for (const toolCall of lastMessage.tool_calls) {
           if (toolCall.name === 'reportRequirementsStatus') {
             const args = toolCall.args as { hasAllRequiredInfo: boolean; confidence: number }
@@ -164,7 +169,8 @@ export class ChatOrchestrator
         reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!'
       }
     } catch (error) {
-      console.error('❌ Readiness check failed:', error)
+      const { emitApiError } = require('../events')
+      emitApiError(error as Error, 'readiness-check')
       return { ready: false, reason: 'Continue chatting to gather requirements. Ask me about your workflow idea!' }
     }
   }
@@ -198,12 +204,9 @@ export class ChatOrchestrator
       }
     }
 
-    // Convert ChatMessage[] to LangChain BaseMessage[]
     const lcMessages = this.convertMessages(input.messages)
 
-    // Stream events in parallel with graph execution
-    // Note: We use streamEvents() to capture events, then invoke() for actual execution
-    // This allows us to maintain interrupt-based flow while capturing events
+    // Use streamEvents for single execution with event capture
     const eventStream = workflowGraph.streamEvents(
       {
         mode: 'workflow' as const,
@@ -213,29 +216,23 @@ export class ChatOrchestrator
       { ...config, version: 'v2' }
     )
 
-    // Bridge LangGraph events to our RxJS system (runs in background)
-    const eventSubscription = bridgeLangGraphEvents(eventStream).subscribe()
+    // Collect final state and emit events
+    let finalState: any = null
+    for await (const event of eventStream) {
+      this.emitEventToReactiveSystem(event)
+      if (event.event === 'on_chain_end' && event.data?.output) {
+        finalState = event.data.output
+      }
+    }
 
-    // Run workflow mode (planner → validator → [pause] → executor)
-    const result = await workflowGraph.invoke(
-      {
-        mode: 'workflow' as const,
-        messages: lcMessages,
-        sessionId: this.threadId
-      },
-      config
-    )
-
-    // Cleanup event streaming
-    eventSubscription.unsubscribe()
     session.end(true)
 
-    if (!result.plan)
+    if (!finalState?.plan)
     {
       throw new Error('Failed to generate workflow plan')
     }
 
-    return result.plan
+    return finalState.plan
   }
 
   /**
@@ -268,18 +265,21 @@ export class ChatOrchestrator
       }
     }
 
-    // Stream events during workflow application
+    // Use streamEvents for single execution (null input = resume from checkpoint)
     const eventStream = workflowGraph.streamEvents(null, { ...config, version: 'v2' })
-    const eventSubscription = bridgeLangGraphEvents(eventStream).subscribe()
 
-    // Resume from executor interrupt (null input = continue from checkpoint)
-    const result = await workflowGraph.invoke(null, config)
-
-    eventSubscription.unsubscribe()
+    // Collect final state and emit events
+    let finalState: any = null
+    for await (const event of eventStream) {
+      this.emitEventToReactiveSystem(event)
+      if (event.event === 'on_chain_end' && event.data?.output) {
+        finalState = event.data.output
+      }
+    }
 
     return {
-      workflowId: result.workflowId,
-      credentialGuidance: result.credentialGuidance
+      workflowId: finalState?.workflowId,
+      credentialGuidance: finalState?.credentialGuidance
     }
   }
 
@@ -311,6 +311,91 @@ export class ChatOrchestrator
         return new HumanMessage(msg.text)
       }
     })
+  }
+
+  /**
+   * Emit LangGraph events to reactive system (inline bridge logic).
+   * This avoids double-consumption of the async generator.
+   */
+  private emitEventToReactiveSystem(event: any): void
+  {
+    const { event: eventType, name, data, metadata } = event
+    
+    // Import emitters at top of file
+    const { systemEvents, emitAgentStarted, emitAgentCompleted, emitLLMStarted, emitLLMCompleted } = require('../events')
+    
+    switch (eventType) {
+      case 'on_llm_start':
+        emitLLMStarted(metadata?.ls_model_name, metadata?.ls_provider, metadata?.run_id)
+        break
+        
+      case 'on_llm_end':
+        emitLLMCompleted(data?.output?.usage_metadata, metadata?.run_id)
+        break
+        
+      case 'on_llm_error':
+        systemEvents.emit({
+          domain: 'error',
+          type: 'llm',
+          payload: {
+            error: data?.error || new Error('LLM error'),
+            source: 'langchain',
+            context: { name, metadata }
+          },
+          timestamp: Date.now()
+        })
+        break
+        
+      case 'on_tool_start':
+        systemEvents.emit({
+          domain: 'agent',
+          type: 'tool_started',
+          payload: {
+            agent: 'executor',
+            tool: name || 'unknown',
+            metadata: { input: data?.input, ...metadata }
+          },
+          timestamp: Date.now()
+        })
+        break
+        
+      case 'on_tool_end':
+        systemEvents.emit({
+          domain: 'agent',
+          type: 'tool_completed',
+          payload: {
+            agent: 'executor',
+            tool: name || 'unknown',
+            metadata: { output: data?.output, ...metadata }
+          },
+          timestamp: Date.now()
+        })
+        break
+        
+      case 'on_chain_start':
+        if (name?.toLowerCase().includes('planner')) {
+          emitAgentStarted('planner', 'planning', metadata)
+        } else if (name?.toLowerCase().includes('executor')) {
+          emitAgentStarted('executor', 'executing', metadata)
+        } else if (name?.toLowerCase().includes('enrichment')) {
+          emitAgentStarted('enrichment', 'enriching', metadata)
+        } else if (name?.toLowerCase().includes('classifier')) {
+          emitAgentStarted('classifier', 'classifying', metadata)
+        }
+        break
+        
+      case 'on_chain_end':
+        if (name?.toLowerCase().includes('planner')) {
+          emitAgentCompleted('planner', metadata)
+        } else if (name?.toLowerCase().includes('executor')) {
+          emitAgentCompleted('executor', metadata)
+        } else if (name?.toLowerCase().includes('enrichment')) {
+          emitAgentCompleted('enrichment', metadata)
+        } else if (name?.toLowerCase().includes('classifier')) {
+          emitAgentCompleted('classifier', metadata)
+        }
+        break
+    }
   }
 }
 
