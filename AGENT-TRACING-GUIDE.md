@@ -116,7 +116,7 @@ const trace = getTrace('session-id-123')
 [workflow] failed - { workflow: {...}, error: Error(...) }
 ```
 
-### Agent Lifecycle  
+### Agent Lifecycle
 ```javascript
 [agent] started - { agent: 'planner', action: 'planning' }
 [agent] tool_started - { agent: 'executor', tool: 'create_n8n_workflow' }
