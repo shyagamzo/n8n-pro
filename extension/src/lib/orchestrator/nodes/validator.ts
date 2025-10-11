@@ -11,7 +11,7 @@ import { stripCodeFences } from '../../utils/markdown'
 import { loomToPlan } from '../plan-converter'
 import { format as formatLoom } from '../../loom'
 import { type DebugSession } from '../../utils/debug'
-import { emitWorkflowValidated, emitValidationError } from '../../events/emitters'
+import { emitWorkflowValidated, emitValidationError } from '../../events'
 
 /**
  * Validator node performs LLM-based validation of workflow plans.

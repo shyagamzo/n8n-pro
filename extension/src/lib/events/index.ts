@@ -70,6 +70,7 @@ export class SystemEvents {
  */
 export const systemEvents = new SystemEvents()
 
-// Re-export types for convenience
+// Re-export types and emitters for convenience
 export type * from './types'
+export * from './emitters'
 

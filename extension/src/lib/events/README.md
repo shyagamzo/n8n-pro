@@ -9,7 +9,7 @@ Reactive, event-driven architecture using RxJS 7.8.2 for decoupled, extensible c
 Use helper functions instead of calling `systemEvents.emit()` directly:
 
 ```typescript
-import { emitWorkflowCreated, emitApiError } from './events/emitters'
+import { emitWorkflowCreated, emitApiError } from './events'
 
 // Success
 async function createWorkflow(data) {

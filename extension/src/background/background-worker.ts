@@ -6,12 +6,12 @@ import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings
 import { debugWorkflowCreated, debugWorkflowError } from '../lib/utils/debug'
 
 // Reactive event system
-import { systemEvents } from '../lib/events'
 import { 
+  systemEvents,
   emitUnhandledError, 
   emitWorkflowCreated, 
   emitWorkflowFailed
-} from '../lib/events/emitters'
+} from '../lib/events'
 import * as logger from '../lib/events/subscribers/logger'
 import * as persistence from '../lib/events/subscribers/persistence'
 import * as tracing from '../lib/events/subscribers/tracing'
@@ -295,10 +295,11 @@ async function handleChat(
     try
     {
       // Generate plan (runs until executor interrupt)
+      // Events (agent lifecycle, LLM calls) automatically emitted by LangGraph bridge
       const plan = await orchestrator.plan({
         apiKey,
         messages: (msg.messages as ChatMessage[]),
-      }, post)
+      })
 
       post({ type: 'plan', plan } satisfies BackgroundMessage)
       console.log('📋 Plan generated and sent:', { title: plan.title })
