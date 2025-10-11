@@ -87,7 +87,7 @@ export class ChatOrchestrator
       },
       { ...config, version: 'v2' }
     )
-    
+
     const eventSubscription = bridgeLangGraphEvents(eventStream).subscribe()
 
     const result = await workflowGraph.invoke(
@@ -212,7 +212,7 @@ export class ChatOrchestrator
       },
       { ...config, version: 'v2' }
     )
-    
+
     // Bridge LangGraph events to our RxJS system (runs in background)
     const eventSubscription = bridgeLangGraphEvents(eventStream).subscribe()
 
