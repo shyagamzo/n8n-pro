@@ -7,8 +7,6 @@ import ErrorBoundary from '../lib/components/ErrorBoundary'
 import Panel from '../lib/components/Panel'
 import PanelSkeleton from './components/PanelSkeleton'
 import ToastContainer from '../lib/components/ToastContainer'
-// TEMPORARY IMPORT - Remove before production
-import TestButton from './components/TestButton'
 
 export default function ChatContainer(): React.ReactElement | null
 {
@@ -64,6 +62,7 @@ export default function ChatContainer(): React.ReactElement | null
         sending={sending}
         activities={activities}
         onSend={(text) => chat.send(text)}
+        onTest={handleTestWorkflow}
       />
       {isOpen && (
         <ConfirmModal
@@ -81,8 +80,6 @@ export default function ChatContainer(): React.ReactElement | null
         />
       )}
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      {/* TEMPORARY TEST BUTTON - Remove before production */}
-      {isOpen && <TestButton onTest={handleTestWorkflow} />}
     </ErrorBoundary>
   )
 }

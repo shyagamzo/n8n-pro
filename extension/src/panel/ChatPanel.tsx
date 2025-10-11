@@ -5,6 +5,8 @@ import type { AgentActivity } from '../lib/state/chatStore'
 import MessagesList from './components/MessagesList'
 import ChatComposer from './components/ChatComposer'
 import AgentActivityPanel from '../lib/components/AgentActivityPanel'
+// TEMPORARY IMPORT - Remove before production
+import TestButton from './components/TestButton'
 import '../lib/styles/utilities.css'
 import './styles.css'
 
@@ -17,6 +19,8 @@ type ChatPanelProps = {
     sending: boolean
     activities: AgentActivity[]
     onSend: (text: string) => void
+    // TEMPORARY PROP - Remove before production
+    onTest?: () => void
 }
 
 export default function ChatPanel({
@@ -27,7 +31,8 @@ export default function ChatPanel({
     draft,
     sending,
     activities,
-    onSend
+    onSend,
+    onTest
 }: ChatPanelProps): React.ReactElement | null
 {
 
@@ -40,6 +45,8 @@ export default function ChatPanel({
                 <MessagesList messages={messages} draft={draft} sending={sending} onSend={onSend} />
                 <AgentActivityPanel activities={activities} />
                 <ChatComposer sending={sending} onSend={(text) => onSend(text)} />
+                {/* TEMPORARY TEST BUTTON - Remove before production */}
+                {onTest && <TestButton onTest={onTest} />}
             </div>
         </Panel>
     )
