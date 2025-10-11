@@ -3,6 +3,7 @@ import type { ChatMessage } from '../types/chat'
 import Markdown from './Markdown'
 import ErrorMessage from './ErrorMessage'
 import PlanMessage from '../../panel/components/PlanMessage'
+import ThinkingAnimation from './ThinkingAnimation'
 import { chat } from '../services/chat'
 import './MessageBubble.css'
 
@@ -29,6 +30,16 @@ export default function MessageBubble({ message }: MessageBubbleProps): React.Re
             : undefined
           }
         />
+      </div>
+    )
+  }
+
+  // Show loading indicator for empty streaming messages
+  if (message.streaming && !message.text)
+  {
+    return (
+      <div className={bubbleClass}>
+        <ThinkingAnimation />
       </div>
     )
   }
