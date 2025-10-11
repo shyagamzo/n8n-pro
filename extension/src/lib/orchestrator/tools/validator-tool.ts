@@ -4,6 +4,7 @@ import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
 import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import { buildPrompt } from '../../prompts'
+import { parse as parseLoom, format as formatLoom } from '../../loom'
 import { stripCodeFences } from '../../utils/markdown'
 import {
   buildValidationPrompt,
@@ -57,18 +58,36 @@ async function runValidation(
 }
 
 function processValidationResult(content: string): string {
-  // Check for valid workflow
-  if (content.includes('[VALID]')) {
+  // Parse the validation result as Loom format
+  const cleaned = stripCodeFences(content)
+  const parsed = parseLoom(cleaned)
+
+  if (!parsed.success || !parsed.data) {
+    // If we can't parse as Loom, return as unexpected response
+    return formatUnexpectedResponse(content)
+  }
+
+  const validationData = parsed.data as any
+
+  // Check validation status
+  if (validationData.validation?.status === 'valid') {
     return formatValidResponse()
   }
 
-  // Check for invalid workflow
-  if (content.includes('[INVALID]')) {
-    const correctedLoom = extractLoomFromResponse(content)
-    return formatInvalidResponse(content, correctedLoom)
+  if (validationData.validation?.status === 'invalid') {
+    // Extract errors
+    const errors = validationData.validation.errors
+      ?.map((e: any) => `- ${e.error}`)
+      .join('\n') || 'No specific errors provided'
+
+    // Extract corrected workflow (it's a Loom object, need to convert back to string)
+    const correctedWorkflowObj = validationData.validation.correctedWorkflow
+    const correctedLoom = correctedWorkflowObj ? formatLoom(correctedWorkflowObj) : null
+
+    return formatInvalidResponse(errors, correctedLoom)
   }
 
-  // Unexpected response
+  // Unexpected status or missing validation field
   return formatUnexpectedResponse(content)
 }
 
@@ -97,27 +116,4 @@ export function createValidatorTool(apiKey: string, modelName: string = 'gpt-4o-
   )
 }
 
-/**
- * Extract Loom format from validator response.
- * Looks for corrected workflow after error explanation.
- */
-function extractLoomFromResponse(response: string): string | null
-{
-  // Look for Loom block after "CORRECTED" or similar markers
-  const loomMatch = response.match(/(?:corrected|fixed).*?:?\s*\n([\s\S]+?)(?:\n\n|$)/i)
-  if (loomMatch)
-  {
-    return stripCodeFences(loomMatch[1].trim())
-  }
-
-  // Try to extract any Loom-like structure (starts with key:value pattern)
-  const lines = response.split('\n')
-  const loomStart = lines.findIndex(line => /^[a-zA-Z_][a-zA-Z0-9_]*:/.test(line.trim()))
-  if (loomStart !== -1)
-  {
-    return lines.slice(loomStart).join('\n')
-  }
-
-  return null
-}
 

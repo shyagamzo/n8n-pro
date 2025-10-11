@@ -6,7 +6,7 @@ import unexpectedMd from '../../prompts/agents/validator-responses/unexpected.md
 
 /**
  * Response templates for the validator tool.
- * 
+ *
  * All templates are loaded from markdown files for easy editing.
  * Template variables are replaced at runtime with actual content.
  */

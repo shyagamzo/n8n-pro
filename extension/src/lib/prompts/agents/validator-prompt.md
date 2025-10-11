@@ -16,9 +16,42 @@ Check for:
 4. **Trigger nodes** are appropriate (scheduleTrigger, webhook, manualTrigger, etc.)
 5. **Credentials** are correctly specified where needed
 
-## Response Format
+## Output Format (Loom)
 
-- If the workflow is VALID, respond with: `[VALID]`
-- If there are ERRORS, respond with: `[INVALID]`
-  Then list each error clearly, and provide a CORRECTED version of the workflow in Loom format.
+Respond in Loom format with your validation result.
+
+**If the workflow is VALID:**
+```
+validation:
+  status: valid
+```
+
+**If the workflow is INVALID:**
+```
+validation:
+  status: invalid
+  errors:
+    - error: Specific error description here
+    - error: Another error description here
+  correctedWorkflow:
+    workflow:
+      name: Corrected Workflow Name
+      nodes:
+        - id: node1
+          type: n8n-nodes-base.nodetype
+          parameters:
+            param1: value1
+      connections:
+        node1:
+          main:
+            - node: node2
+              type: main
+              index: 0
+```
+
+**Important**: 
+- Use `status: valid` or `status: invalid` (no other values)
+- List each error as a separate array item under `errors:`
+- Put the corrected workflow as a nested object under `correctedWorkflow:` (no pipe character)
+- Ensure corrected workflow is in proper Loom format with correct indentation
 
