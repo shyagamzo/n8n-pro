@@ -44,7 +44,6 @@ export async function validatorNode(
 
   const apiKey = config?.configurable?.openai_api_key
   const modelName = config?.configurable?.model || 'gpt-4o-mini'
-  const narrator = config?.metadata?.narrator as any
   const session = config?.metadata?.session as DebugSession | undefined
 
   if (!apiKey)

@@ -67,8 +67,6 @@ export async function enrichmentNode(
     config
   )
 
-  const lastMessage = result.messages[result.messages.length - 1]
-
   // Agent events (response, tool calls) automatically captured by LangGraph bridge
   // Let the conditional edge handle routing based on tool calls
   return new Command({
