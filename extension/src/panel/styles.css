@@ -10,6 +10,7 @@
 .messages-list {
   padding: var(--spacing-s, 1rem);
   background: transparent;
+  overflow-x: hidden; /* Prevent horizontal scrollbar during message animations */
 }
 
 .message-wrapper--assistant {
