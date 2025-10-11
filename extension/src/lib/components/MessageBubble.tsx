@@ -3,6 +3,7 @@ import type { ChatMessage } from '../types/chat'
 import Markdown from './Markdown'
 import ErrorMessage from './ErrorMessage'
 import PlanMessage from '../../panel/components/PlanMessage'
+import ThinkingAnimation from './ThinkingAnimation'
 import { chat } from '../services/chat'
 import './MessageBubble.css'
 
@@ -35,8 +36,14 @@ export default function MessageBubble({ message }: MessageBubbleProps): React.Re
 
   return (
     <div className={bubbleClass}>
-      <Markdown content={message.text} />
-      {message.plan && <PlanMessage plan={message.plan} />}
+      {message.streaming && !message.text ? (
+        <ThinkingAnimation />
+      ) : (
+        <>
+          <Markdown content={message.text} />
+          {message.plan && <PlanMessage plan={message.plan} />}
+        </>
+      )}
     </div>
   )
 }

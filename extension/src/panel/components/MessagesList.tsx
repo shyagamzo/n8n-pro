@@ -51,12 +51,11 @@ export default function MessagesList({ messages, draft, sending, onSend }: Messa
       {!hasMessages && <EmptyState onExampleClick={onSend} />}
       {messages.map((m) => (
         <div key={m.id} className={`message-wrapper flex w-full ${m.role === 'user' ? 'flex-justify-end' : ''}`}>
-          {/* Only render bubble if it has content, otherwise keep showing the thinking animation below */}
-          {m.streaming && !m.text ? null : <MessageBubble message={m} />}
+          <MessageBubble message={m} />
         </div>
       ))}
-      {/* Show thinking animation when sending and either no streaming message exists or streaming message has no text yet */}
-      {sending && messages.every(m => !m.streaming || (m.streaming && !m.text)) ? (
+      {/* Show thinking animation only when sending and no streaming message exists yet */}
+      {sending && !messages.some(m => m.streaming) ? (
         <div className="message-wrapper flex w-full">
           <div className="draft-bubble">
             <ThinkingAnimation />
