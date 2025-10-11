@@ -1,7 +1,6 @@
 import type { ChatRequest, BackgroundMessage, ApplyPlanRequest } from '../lib/types/messaging'
 import type { ChatMessage } from '../lib/types/chat'
-import { getOrchestrator, cleanupOrchestrator } from './orchestrator-manager'
-import { createN8nClient } from '../lib/n8n'
+import { runGraph } from '../lib/orchestrator'
 import { getOpenAiKey, getN8nApiKey, getBaseUrl } from '../lib/services/settings'
 
 // Reactive event system
@@ -64,52 +63,6 @@ function createSafePost(port: chrome.runtime.Port)
   }
 }
 
-/**
- * Transform connections to n8n's expected format (double-nested arrays)
- * n8n expects: { "NodeName": { "main": [[{ node, type, index }]] } }
- * LLM might generate: { "NodeName": { "main": [{ node, type, index }] } }
- */
-function normalizeConnections(connections: unknown): Record<string, unknown>
-{
-  if (!connections || typeof connections !== 'object') return {}
-
-  const normalized: Record<string, unknown> = {}
-  const conns = connections as Record<string, unknown>
-
-  for (const [sourceNode, outputs] of Object.entries(conns))
-  {
-    if (!outputs || typeof outputs !== 'object') continue
-
-    const normalizedOutputs: Record<string, unknown> = {}
-    const outputsObj = outputs as Record<string, unknown>
-
-    for (const [outputType, connections] of Object.entries(outputsObj))
-    {
-      if (!Array.isArray(connections))
-      {
-        normalizedOutputs[outputType] = []
-        continue
-      }
-
-      // Check if it's already double-nested
-      if (connections.length > 0 && Array.isArray(connections[0]))
-      {
-        // Already double-nested, keep as is
-        normalizedOutputs[outputType] = connections
-      }
-      else
-      {
-        // Single-nested, wrap in outer array
-        normalizedOutputs[outputType] = [connections]
-      }
-    }
-
-    normalized[sourceNode] = normalizedOutputs
-  }
-
-  return normalized
-}
-
 async function handleApplyPlan(
   msg: ApplyPlanRequest,
   post: (m: BackgroundMessage) => void,
@@ -136,37 +89,26 @@ async function handleApplyPlan(
     return
   }
 
-  const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
   post({ type: 'token', token: '\nApplying plan…' } satisfies BackgroundMessage)
 
-  // Quick auth check
   try
   {
-    await n8n.getWorkflows()
-  }
-  catch (e)
-  {
-    const err = e as Error
-    emitApiError(err, 'n8n-auth-check', { baseUrl, hasApiKey: !!n8nApiKey })
-    post({ type: 'error', error: `n8n authorization failed. Check Base URL and API key. ${err.message}` } satisfies BackgroundMessage)
-    return
-  }
-
-  // Get session-specific orchestrator
-  const orchestrator = getOrchestrator(sessionId)
-
-  try
-  {
-    // Resume graph execution from executor interrupt
+    // Resume graph execution from executor interrupt (null messages = resume from checkpoint)
     // The executor node will create the workflow in n8n
-    const result = await orchestrator.applyWorkflow(openaiApiKey, n8nApiKey)
+    const result = await runGraph({
+      sessionId,
+      apiKey: openaiApiKey,
+      messages: [],  // Empty - resuming from checkpoint
+      n8nApiKey,
+      n8nBaseUrl: baseUrl || undefined
+    })
 
     if (!result.workflowId)
     {
       throw new Error('Workflow creation did not return a workflow ID')
     }
 
-    // Emit workflow created event (subscribers will handle logging and UI updates)
+    // Emit workflow created event (subscribers will handle logging)
     emitWorkflowCreated(msg.plan.workflow, result.workflowId)
 
     // Generate deep link to workflow
@@ -176,30 +118,11 @@ async function handleApplyPlan(
     // Send workflow created notification for toast
     post({ type: 'workflow_created', workflowId: result.workflowId, workflowUrl } satisfies BackgroundMessage)
 
-    // If there are credentials needed from the orchestrator
-    if (result.credentialGuidance && result.credentialGuidance.missing.length > 0)
-    {
-      post({ type: 'token', token: '\n\n**Next steps to activate:**' } satisfies BackgroundMessage)
-
-      result.credentialGuidance.missing.forEach((cred, idx) =>
-      {
-        const setupLink = result.credentialGuidance!.setupLinks.find(link => link.name === cred.name)
-        const credUrl = setupLink?.url || `${baseUrl}/credentials/new/${encodeURIComponent(cred.type)}`
-
-        post({
-          type: 'token',
-          token: `\n${idx + 1}. **${cred.name}** (${cred.type}): [Create credential →](${credUrl})`
-        } satisfies BackgroundMessage)
-      })
-
-      post({ type: 'token', token: '\n\n💡 **Tip:** Set up these credentials to activate your workflow.' } satisfies BackgroundMessage)
-    }
-
     post({ type: 'done' } satisfies BackgroundMessage)
   }
   catch (error)
   {
-    // Emit workflow failed event (subscribers will handle logging and UI updates)
+    // Emit workflow failed event (subscribers will handle logging)
     const errorObj = error instanceof Error ? error : new Error(String(error))
     emitWorkflowFailed(msg.plan.workflow, errorObj)
 
@@ -233,15 +156,14 @@ async function handleChat(
     return
   }
 
-  // Get session-specific orchestrator
-  const orchestrator = getOrchestrator(sessionId)
-
   try {
     // Run graph - automatically handles: enrichment → orchestrator → planner (if ready)
     // Response is streamed via onToken, plan returned if orchestrator routed to planner
-    const result = await orchestrator.run({
+    const result = await runGraph({
+      sessionId,
       apiKey,
       messages: (msg.messages as ChatMessage[]),
+      n8nApiKey: n8nApiKey || undefined,
     }, (token) => post({ type: 'token', token } satisfies BackgroundMessage))
 
     // If graph generated a plan (orchestrator routed to planner)
@@ -301,52 +223,14 @@ chrome.runtime.onConnect.addListener((port) =>
     }
   })
 
-  // Clean up orchestrator when port disconnects
+  // Port cleanup (no orchestrator instances to clean up - graph handles state)
   port.onDisconnect.addListener(() =>
   {
-    cleanupOrchestrator(sessionId)
+    // Graph checkpointer maintains state; no manual cleanup needed
   })
 })
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
-{
-  const msg = message as ApplyPlanRequest
-  if (msg?.type !== 'apply_plan') return
-
-  void (async () =>
-  {
-    try
-    {
-      const [n8nApiKey, baseUrl] = await Promise.all([getN8nApiKey(), getBaseUrl()])
-      const n8n = createN8nClient({ apiKey: n8nApiKey || undefined, baseUrl: baseUrl || undefined })
-
-      // Normalize connections format for n8n API
-      const normalizedWorkflow = {
-        ...msg.plan.workflow,
-        connections: normalizeConnections(msg.plan.workflow.connections)
-      }
-
-      const created = await n8n.createWorkflow(normalizedWorkflow)
-      emitWorkflowCreated(msg.plan.workflow, created.id)
-    }
-    catch (error)
-    {
-      // One-off message handler - errors are shown through chat flow in primary use case
-      const errorObj = error instanceof Error ? error : new Error(String(error))
-      emitWorkflowFailed(msg.plan.workflow, errorObj)
-    }
-  })()
-
-  // Immediately acknowledge to satisfy sendMessage callbacks, if any
-  try
-  {
-    sendResponse({ ok: true })
-  }
-  catch (error)
-  {
-    // Sender context may be invalidated - silently ignore
-  }
-
-  return true
-})
+// Note: One-off message handler removed
+// All workflow creation now happens through graph execution (executor node with tools)
+// The executor node will handle workflow creation, normalization, and n8n API calls
 

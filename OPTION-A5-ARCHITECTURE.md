@@ -1,7 +1,7 @@
 # Option A.5: Orchestrator as Pure Routing Node
 
-**Status**: ✅ Implemented  
-**Date**: October 11, 2025  
+**Status**: ✅ Implemented
+**Date**: October 11, 2025
 **Build**: ✅ Passing
 
 ---
@@ -38,24 +38,24 @@ START → orchestrator (pure function)
 
 export function orchestratorNode(state: OrchestratorStateType): Command {
   const lastMessage = state.messages[state.messages.length - 1]
-  
+
   // Check enrichment's tool calls
   if (lastMessage?.tool_calls) {
     for (const toolCall of lastMessage.tool_calls) {
       if (toolCall.name === 'reportRequirementsStatus') {
         const { hasAllRequiredInfo, confidence } = toolCall.args
-        
+
         // Ready to plan?
         if (hasAllRequiredInfo && confidence > 0.8) {
           return new Command({ goto: 'planner' })
         }
-        
+
         // Need more info
         return new Command({ goto: 'enrichment' })
       }
     }
   }
-  
+
   // Default: start with enrichment
   return new Command({ goto: 'enrichment' })
 }
@@ -178,21 +178,21 @@ if (result.plan) {
 ## Benefits vs Other Options
 
 ### vs Current (Mode-Based)
-✅ **47% less code** (421 → 220 lines)  
-✅ **Single execution** (no duplicate runs)  
-✅ **Self-contained graph** (all logic inside)  
+✅ **47% less code** (421 → 220 lines)
+✅ **Single execution** (no duplicate runs)
+✅ **Self-contained graph** (all logic inside)
 ✅ **Cleaner API** (one method does it all)
 
 ### vs Option A (Full Orchestrator with LLM)
-✅ **Zero extra LLM calls** (pure function)  
-✅ **Faster routing** (milliseconds vs seconds)  
-✅ **Deterministic** (predictable behavior)  
+✅ **Zero extra LLM calls** (pure function)
+✅ **Faster routing** (milliseconds vs seconds)
+✅ **Deterministic** (predictable behavior)
 ✅ **Lower cost** (no additional tokens)
 
 ### vs Option B (No Orchestrator Class)
-✅ **Clean API** (keeps orchestrator.run())  
-✅ **Session management** (handles thread IDs)  
-✅ **Backwards compat** (legacy methods work)  
+✅ **Clean API** (keeps orchestrator.run())
+✅ **Session management** (handles thread IDs)
+✅ **Backwards compat** (legacy methods work)
 ✅ **Type conversion** (ChatMessage → BaseMessage)
 
 ---
@@ -244,8 +244,8 @@ if (result.plan) {
 - None! Legacy methods still work
 
 ### Deprecations
-- `orchestrator.handle()` → use `run()`  
-- `orchestrator.plan()` → use `run()`  
+- `orchestrator.handle()` → use `run()`
+- `orchestrator.plan()` → use `run()`
 - `mode` parameter → removed (graph decides)
 
 ---

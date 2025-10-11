@@ -1,10 +1,11 @@
 /**
- * ChatOrchestrator - Public API
+ * Graph Execution - Public API
  *
- * Multi-agent orchestrator for n8n workflow creation.
+ * Provides runGraph() function to execute the LangGraph workflow.
+ * The graph is self-contained with orchestrator node handling all routing.
  * See ./orchestrator.ts for implementation.
  */
 
-export { ChatOrchestrator, orchestrator } from './orchestrator'
-export type { OrchestratorInput, StreamTokenHandler } from './orchestrator'
+export { runGraph } from './orchestrator'
+export type { GraphInput, GraphResult, StreamTokenHandler } from './orchestrator'
 
