@@ -8,6 +8,9 @@
 export {
   getAgentPrompt,
   buildPrompt,
+  buildRequest,
+  buildRequestTemplate,
+  getRequestTemplate,
   validatePrompts,
   sharedKnowledge,
   prompts

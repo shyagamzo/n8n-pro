@@ -222,6 +222,76 @@ export function validatePrompts(): { valid: boolean; missing: string[] }
 }
 
 /**
+ * Extract request template section from agent prompt
+ *
+ * @param agent - Agent type
+ * @returns Request template string or undefined if not found
+ */
+export function getRequestTemplate(agent: AgentType): string | undefined
+{
+  const prompt = agentPrompts[agent]
+  const match = prompt.match(/^# Request Template\s*\n\n([\s\S]+?)(?:\n\n---|\n*$)/m)
+  return match ? match[1].trim() : undefined
+}
+
+/**
+ * Build a request with variable interpolation from agent's template
+ *
+ * @param agent - Agent type
+ * @param variables - Variables to interpolate into template
+ * @returns Interpolated request string
+ *
+ * @example
+ * ```ts
+ * const request = buildRequest('executor', {
+ *   workflowName: 'Daily Reminder',
+ *   nodeCount: 3
+ * })
+ * ```
+ */
+export function buildRequest(agent: AgentType, variables: Record<string, any> = {}): string
+{
+  const template = getRequestTemplate(agent)
+  
+  if (!template)
+  {
+    throw new Error(`No request template found for agent: ${agent}`)
+  }
+
+  return buildRequestTemplate(template, variables)
+}
+
+/**
+ * Build a request template with variable interpolation
+ *
+ * @param template - Template string with {{variable}} placeholders
+ * @param variables - Variables to interpolate
+ * @returns Interpolated template string
+ *
+ * @example
+ * ```ts
+ * const request = buildRequestTemplate(
+ *   "Process {{count}} items from {{source}}",
+ *   { count: 5, source: "database" }
+ * )
+ * // Returns: "Process 5 items from database"
+ * ```
+ */
+export function buildRequestTemplate(template: string, variables: Record<string, any> = {}): string
+{
+  let result = template
+
+  for (const [key, value] of Object.entries(variables))
+  {
+    const placeholder = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+    const replacement = value === null || value === undefined ? '' : String(value)
+    result = result.replace(placeholder, replacement)
+  }
+
+  return result
+}
+
+/**
  * Export all prompts for direct access if needed
  */
 export const prompts = {

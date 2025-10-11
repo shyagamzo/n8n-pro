@@ -5,7 +5,7 @@ import { HumanMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '../state'
-import { buildPrompt } from '../../prompts'
+import { buildPrompt, buildRequest } from '../../prompts'
 import { parse as parseLoom } from '../../loom'
 import { stripCodeFences } from '../../utils/markdown'
 import { loomToPlan } from '../plan-converter'
@@ -67,17 +67,7 @@ export async function plannerNode(
     messageModifier: systemPrompt
   })
 
-  const planRequest = new HumanMessage(`Generate a workflow plan based on our conversation.
-
-Process:
-1. If needed, use fetch_n8n_node_types to check available nodes
-2. Design the workflow in Loom format
-3. Use the validate_workflow tool to validate your design (pass only loomWorkflow parameter)
-4. If validation fails, read the errors and correctedWorkflow, then fix the issues
-5. Validate again until it passes
-6. Once validated, return ONLY the final raw Loom format - no markdown code blocks, no explanatory text
-
-Important: Always validate before finalizing. The validator will tell you what's wrong and provide corrections.`)
+  const planRequest = new HumanMessage(buildRequest('planner'))
 
   // ReAct agent handles tool loop internally
   const result = await agent.invoke(

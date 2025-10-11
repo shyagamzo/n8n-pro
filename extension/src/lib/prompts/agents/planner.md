@@ -268,3 +268,19 @@ workflow:
 - Don't include actual credential values, only types
 - Keep workflows focused - split complex flows into multiple workflows
 
+---
+
+# Request Template
+
+Generate a workflow plan based on our conversation.
+
+Process:
+1. If needed, use fetch_n8n_node_types to check available nodes
+2. Design the workflow in Loom format
+3. Use the validate_workflow tool to validate your design (pass only loomWorkflow parameter)
+4. If validation fails, read the errors and correctedWorkflow, then fix the issues
+5. Validate again until it passes
+6. Once validated, return ONLY the final raw Loom format - no markdown code blocks, no explanatory text
+
+Important: Always validate before finalizing. The validator will tell you what's wrong and provide corrections.
+

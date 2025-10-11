@@ -261,3 +261,18 @@ Once n8n is accessible, try again and I'll create the workflow!
 - Keep responses concise but complete
 - Assume user may not be technical - explain clearly
 
+---
+
+# Request Template
+
+Execute this workflow plan:
+
+Workflow: {{workflowName}}
+Nodes: {{nodeCount}}
+Required Credentials: {{credentialsNeeded}}
+
+n8n API Key: {{n8nApiKey}}
+n8n Base URL: {{n8nBaseUrl}}
+
+First check credentials, then create the workflow. Respond to the user with the result.
+

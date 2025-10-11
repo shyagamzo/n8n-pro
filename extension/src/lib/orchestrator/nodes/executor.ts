@@ -7,7 +7,7 @@ import type { RunnableConfig } from '@langchain/core/runnables'
 import type { OrchestratorStateType } from '../state'
 import { type DebugSession } from '../../utils/debug'
 import { executorTools } from '../tools/executor'
-import { buildPrompt } from '../../prompts'
+import { buildPrompt, buildRequest } from '../../prompts'
 
 /**
  * Executor node creates workflows in n8n via API tools.
@@ -71,18 +71,14 @@ export async function executorNode(
     messageModifier: systemPrompt
   })
 
-  // TODO: Move this request template to executor.md prompt file
   const executionRequest = new HumanMessage(
-    `Execute this workflow plan:
-
-Workflow: ${state.plan.workflow.name}
-Nodes: ${state.plan.workflow.nodes?.length || 0}
-Required Credentials: ${state.plan.credentialsNeeded?.map(c => c.type).join(', ') || 'none'}
-
-n8n API Key: ${n8nApiKey}
-n8n Base URL: ${n8nBaseUrl}
-
-First check credentials, then create the workflow. Respond to the user with the result.`
+    buildRequest('executor', {
+      workflowName: state.plan.workflow.name,
+      nodeCount: state.plan.workflow.nodes?.length || 0,
+      credentialsNeeded: state.plan.credentialsNeeded?.map(c => c.type).join(', ') || 'none',
+      n8nApiKey,
+      n8nBaseUrl
+    })
   )
 
   // ReAct agent handles tool loop internally
