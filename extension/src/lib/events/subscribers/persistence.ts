@@ -1,26 +1,72 @@
 /**
  * Persistence Subscriber
- * 
+ *
  * Automatically saves important events to chrome.storage.
  * Uses switchMap for async operations and debouncing to prevent excessive writes.
- * 
- * Currently a placeholder - will be expanded when persistence requirements are defined.
  */
 
 import { Subject } from 'rxjs'
-import { takeUntil, finalize, tap } from 'rxjs/operators'
+import { takeUntil, finalize, switchMap, debounceTime, filter, catchError } from 'rxjs/operators'
+import { EMPTY } from 'rxjs'
 import { systemEvents } from '../index'
+import { emitStorageSave, emitSubscriberError } from '../emitters'
+import { storageGet, storageSet } from '../../utils/storage'
+import { STORAGE_KEYS } from '../../constants'
+import type { WorkflowEvent } from '../types'
 
 const destroy$ = new Subject<void>()
 
-// Observable pipeline: log persistable events (placeholder for future persistence logic)
-const persistableEvents$ = systemEvents.workflow$.pipe(
-  tap(event => {
-    // TODO: Add actual persistence logic here
-    // For now, just acknowledge persistence would happen
-    if (event.type === 'created' && process.env.NODE_ENV === 'development') {
-      console.log('[persistence] Would persist:', event.payload.workflow.name)
-    }
+export type WorkflowHistoryEntry = {
+  id: string
+  name: string
+  createdAt: number
+  workflowId?: string
+}
+
+/**
+ * Persist workflow creation to history
+ */
+async function persistWorkflow(event: WorkflowEvent): Promise<void> {
+  if (event.type !== 'created') return
+
+  const { workflow, workflowId } = event.payload
+
+  // Load existing history
+  const history = await storageGet<WorkflowHistoryEntry[]>(STORAGE_KEYS.WORKFLOW_HISTORY) ?? []
+
+  // Add new entry (keep last 50)
+  const entry: WorkflowHistoryEntry = {
+    id: workflowId ?? `temp-${Date.now()}`,
+    name: workflow.name ?? 'Unnamed Workflow',
+    createdAt: event.timestamp,
+    workflowId: workflowId
+  }
+
+  const updatedHistory = [entry, ...history].slice(0, 50)
+
+  // Save to storage
+  await storageSet(STORAGE_KEYS.WORKFLOW_HISTORY, updatedHistory)
+
+  // Emit storage event
+  emitStorageSave(STORAGE_KEYS.WORKFLOW_HISTORY, updatedHistory)
+}
+
+// Observable pipeline: persist workflow created events
+const workflowPersistence$ = systemEvents.workflow$.pipe(
+  filter(event => event.type === 'created'),
+  debounceTime(500), // Debounce to prevent excessive writes
+  switchMap(event =>
+    persistWorkflow(event)
+      .then(() => event)
+      .catch(err => {
+        emitSubscriberError(err, 'workflow-persistence')
+        return null
+      })
+  ),
+  filter(event => event !== null),
+  catchError(err => {
+    emitSubscriberError(err, 'workflow-persistence')
+    return EMPTY
   })
 )
 
@@ -28,12 +74,16 @@ const persistableEvents$ = systemEvents.workflow$.pipe(
  * Start auto-persisting events
  */
 export function setup(): void {
-  persistableEvents$
+  workflowPersistence$
     .pipe(
       takeUntil(destroy$),
-      finalize(() => console.log('[persistence] Subscription cleaned up'))
+      finalize(() => console.log('[workflow-persistence] Subscription cleaned up'))
     )
-    .subscribe()
+    .subscribe(event => {
+      if (event && process.env.NODE_ENV === 'development') {
+        console.log('[workflow-persistence] Persisted workflow:', event.payload.workflow.name)
+      }
+    })
 }
 
 /**
@@ -42,5 +92,21 @@ export function setup(): void {
 export function cleanup(): void {
   destroy$.next()
   destroy$.complete()
+}
+
+/**
+ * Get workflow history from storage
+ */
+export async function getWorkflowHistory(): Promise<WorkflowHistoryEntry[]> {
+  const history = await storageGet<WorkflowHistoryEntry[]>(STORAGE_KEYS.WORKFLOW_HISTORY)
+  return history ?? []
+}
+
+/**
+ * Clear workflow history from storage
+ */
+export async function clearWorkflowHistory(): Promise<void> {
+  await storageSet(STORAGE_KEYS.WORKFLOW_HISTORY, [])
+  emitStorageSave(STORAGE_KEYS.WORKFLOW_HISTORY, [])
 }
 

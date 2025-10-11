@@ -7,4 +7,4 @@
 
 export { createN8nClient } from './client'
 export type { N8nClientOptions } from './client'
-export type { WorkflowSummary } from './types'
+export type { WorkflowSummary, Workflow, WorkflowNode, WorkflowConnections } from './types'

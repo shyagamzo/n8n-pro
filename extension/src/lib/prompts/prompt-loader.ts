@@ -6,7 +6,6 @@
  */
 
 // Import agent prompts using Vite's ?raw suffix
-import classifierPrompt from './agents/classifier.md?raw'
 import enrichmentPrompt from './agents/enrichment.md?raw'
 import plannerPrompt from './agents/planner.md?raw'
 import validatorPrompt from './agents/validator.md?raw'
@@ -20,7 +19,7 @@ import constraints from './shared/constraints.md?raw'
 /**
  * Agent types supported by the system
  */
-export type AgentType = 'classifier' | 'enrichment' | 'planner' | 'validator' | 'executor'
+export type AgentType = 'enrichment' | 'planner' | 'validator' | 'executor'
 
 /**
  * Prompt composition options for dynamic content injection
@@ -51,7 +50,6 @@ export type PromptOptions = {
  * Base prompts for each agent type
  */
 const agentPrompts: Record<AgentType, string> = {
-  classifier: classifierPrompt,
   enrichment: enrichmentPrompt,
   planner: plannerPrompt,
   validator: validatorPrompt,
@@ -252,7 +250,7 @@ export function getRequestTemplate(agent: AgentType): string | undefined
 export function buildRequest(agent: AgentType, variables: Record<string, any> = {}): string
 {
   const template = getRequestTemplate(agent)
-  
+
   if (!template)
   {
     throw new Error(`No request template found for agent: ${agent}`)

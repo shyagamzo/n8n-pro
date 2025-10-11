@@ -1,6 +1,6 @@
 /**
  * Helper functions for emitting events
- * 
+ *
  * These functions encapsulate event creation logic, providing a clean API
  * for modules to emit events without manually constructing event objects.
  * They handle:
@@ -11,95 +11,101 @@
  */
 
 import { systemEvents } from './index'
-import type { AgentType } from './types'
+import type {
+  AgentType,
+  SystemEvent,
+  WorkflowEvent,
+  AgentEvent,
+  LLMEvent,
+  ErrorEvent,
+  StorageEvent,
+  AgentMetadata,
+  TokenCount,
+  ErrorContext,
+  StorageValue
+} from './types'
+import type { Workflow } from '../n8n/types'
+
+/**
+ * Low-level event emitters
+ */
+
+/**
+ * Base event emitter - adds timestamp and emits
+ */
+function emitEvent(event: Omit<SystemEvent, 'timestamp'>): void {
+  systemEvents.emit({
+    ...event,
+    timestamp: Date.now()
+  } as SystemEvent)
+}
+
+/**
+ * Domain-specific event emitters
+ */
+
+function emitWorkflowEvent(type: WorkflowEvent['type'], payload: WorkflowEvent['payload']): void {
+  emitEvent({ domain: 'workflow', type, payload })
+}
+
+function emitAgentEvent(type: AgentEvent['type'], payload: AgentEvent['payload']): void {
+  emitEvent({ domain: 'agent', type, payload })
+}
+
+function emitLLMEvent(type: LLMEvent['type'], payload: LLMEvent['payload']): void {
+  emitEvent({ domain: 'llm', type, payload })
+}
+
+function emitErrorEvent(type: ErrorEvent['type'], payload: ErrorEvent['payload']): void {
+  emitEvent({ domain: 'error', type, payload })
+}
+
+function emitStorageEvent(type: StorageEvent['type'], payload: StorageEvent['payload']): void {
+  emitEvent({ domain: 'storage', type, payload })
+}
 
 /**
  * Workflow event emitters
  */
 
-export function emitWorkflowCreated(workflow: any, workflowId?: string): void {
-  systemEvents.emit({
-    domain: 'workflow',
-    type: 'created',
-    payload: { workflow, workflowId },
-    timestamp: Date.now()
-  })
+export function emitWorkflowCreated(workflow: Workflow | Partial<Workflow>, workflowId?: string): void {
+  emitWorkflowEvent('created', { workflow, workflowId })
 }
 
-export function emitWorkflowUpdated(workflow: any, workflowId?: string): void {
-  systemEvents.emit({
-    domain: 'workflow',
-    type: 'updated',
-    payload: { workflow, workflowId },
-    timestamp: Date.now()
-  })
+export function emitWorkflowUpdated(workflow: Workflow | Partial<Workflow>, workflowId?: string): void {
+  emitWorkflowEvent('updated', { workflow, workflowId })
 }
 
-export function emitWorkflowValidated(workflow: any): void {
-  systemEvents.emit({
-    domain: 'workflow',
-    type: 'validated',
-    payload: { workflow },
-    timestamp: Date.now()
-  })
+export function emitWorkflowValidated(workflow: Workflow | Partial<Workflow>): void {
+  emitWorkflowEvent('validated', { workflow })
 }
 
-export function emitWorkflowFailed(workflow: any, error: Error): void {
-  systemEvents.emit({
-    domain: 'workflow',
-    type: 'failed',
-    payload: { workflow, error },
-    timestamp: Date.now()
-  })
+export function emitWorkflowFailed(workflow: Workflow | Partial<Workflow>, error: Error): void {
+  emitWorkflowEvent('failed', { workflow, error })
 }
 
 /**
  * Agent event emitters
  */
 
-export function emitAgentStarted(agent: AgentType, action: string, metadata?: unknown, sessionId?: string): void {
-  systemEvents.emit({
-    domain: 'agent',
-    type: 'started',
-    payload: { agent, action, metadata, sessionId },
-    timestamp: Date.now()
-  })
+export function emitAgentStarted(agent: AgentType, action: string, metadata?: AgentMetadata, sessionId?: string): void {
+  emitAgentEvent('started', { agent, action, metadata, sessionId })
 }
 
-export function emitAgentCompleted(agent: AgentType, metadata?: unknown, sessionId?: string): void {
-  systemEvents.emit({
-    domain: 'agent',
-    type: 'completed',
-    payload: { agent, metadata, sessionId },
-    timestamp: Date.now()
-  })
+export function emitAgentCompleted(agent: AgentType, metadata?: AgentMetadata, sessionId?: string): void {
+  emitAgentEvent('completed', { agent, metadata, sessionId })
 }
 
 export function emitAgentHandoff(fromAgent: AgentType, toAgent: AgentType, reason: string, sessionId?: string): void {
-  systemEvents.emit({
-    domain: 'agent',
-    type: 'handoff',
-    payload: { agent: fromAgent, action: `handoff to ${toAgent}: ${reason}`, sessionId },
-    timestamp: Date.now()
-  })
+  emitAgentEvent('handoff', { agent: fromAgent, action: `handoff to ${toAgent}: ${reason}`, sessionId })
 }
 
-export function emitToolStarted(agent: AgentType, tool: string, metadata?: unknown, sessionId?: string): void {
-  systemEvents.emit({
-    domain: 'agent',
-    type: 'tool_started',
-    payload: { agent, tool, metadata, sessionId },
-    timestamp: Date.now()
-  })
+export function emitToolStarted(agent: AgentType, tool: string, metadata?: AgentMetadata, sessionId?: string): void {
+  emitAgentEvent('tool_started', { agent, tool, metadata, sessionId })
 }
 
-export function emitToolCompleted(agent: AgentType, tool: string, metadata?: unknown, sessionId?: string): void {
-  systemEvents.emit({
-    domain: 'agent',
-    type: 'tool_completed',
-    payload: { agent, tool, metadata, sessionId },
-    timestamp: Date.now()
-  })
+export function emitToolCompleted(agent: AgentType, tool: string, metadata?: AgentMetadata, sessionId?: string): void {
+  emitAgentEvent('tool_completed', { agent, tool, metadata, sessionId })
 }
 
 /**
@@ -107,143 +113,61 @@ export function emitToolCompleted(agent: AgentType, tool: string, metadata?: unk
  */
 
 export function emitLLMStarted(model?: string, provider?: string, runId?: string): void {
-  systemEvents.emit({
-    domain: 'llm',
-    type: 'started',
-    payload: { model, provider, runId },
-    timestamp: Date.now()
-  })
+  emitLLMEvent('started', { model, provider, runId })
 }
 
-export function emitLLMCompleted(tokens?: { prompt?: number; completion?: number }, runId?: string): void {
-  systemEvents.emit({
-    domain: 'llm',
-    type: 'completed',
-    payload: { tokens, runId },
-    timestamp: Date.now()
-  })
+export function emitLLMCompleted(tokens?: TokenCount, runId?: string): void {
+  emitLLMEvent('completed', { tokens, runId })
 }
 
 export function emitLLMToken(runId?: string): void {
-  systemEvents.emit({
-    domain: 'llm',
-    type: 'token',
-    payload: { runId },
-    timestamp: Date.now()
-  })
+  emitLLMEvent('token', { runId })
 }
 
 /**
  * Error event emitters
- * 
+ *
  * These normalize unknown errors to Error objects and generate user-friendly messages
  */
 
-export function emitApiError(error: unknown, source: string, context?: unknown): void {
+export function emitApiError(error: unknown, source: string, context?: ErrorContext): void {
   const errorObj = error instanceof Error ? error : new Error(String(error))
-  
-  systemEvents.emit({
-    domain: 'error',
-    type: 'api',
-    payload: {
-      error: errorObj,
-      source,
-      context,
-      userMessage: `API error in ${source}: ${errorObj.message}`
-    },
-    timestamp: Date.now()
-  })
+  emitErrorEvent('api', { error: errorObj, source, context, userMessage: `API error in ${source}: ${errorObj.message}` })
 }
 
-export function emitUnhandledError(error: unknown, source: string): void {
+export function emitUnhandledError(error: unknown, source: string, context?: ErrorContext): void {
   const errorObj = error instanceof Error ? error : new Error(String(error))
-  
-  systemEvents.emit({
-    domain: 'error',
-    type: 'unhandled',
-    payload: {
-      error: errorObj,
-      source,
-      userMessage: 'An unexpected error occurred'
-    },
-    timestamp: Date.now()
-  })
+  emitErrorEvent('unhandled', { error: errorObj, source, context, userMessage: 'An unexpected error occurred' })
 }
 
-export function emitSubscriberError(error: unknown, subscriberName: string): void {
+export function emitSubscriberError(error: unknown, subscriberName: string, context?: ErrorContext): void {
   const errorObj = error instanceof Error ? error : new Error(String(error))
-  
-  systemEvents.emit({
-    domain: 'error',
-    type: 'subscriber',
-    payload: {
-      error: errorObj,
-      source: subscriberName,
-      userMessage: `${subscriberName} encountered an error`
-    },
-    timestamp: Date.now()
-  })
+  emitErrorEvent('subscriber', { error: errorObj, source: subscriberName, context, userMessage: `${subscriberName} encountered an error` })
 }
 
-export function emitValidationError(error: unknown, source: string, context?: unknown): void {
+export function emitValidationError(error: unknown, source: string, context?: ErrorContext): void {
   const errorObj = error instanceof Error ? error : new Error(String(error))
-  
-  systemEvents.emit({
-    domain: 'error',
-    type: 'validation',
-    payload: {
-      error: errorObj,
-      source,
-      context,
-      userMessage: `Validation error: ${errorObj.message}`
-    },
-    timestamp: Date.now()
-  })
+  emitErrorEvent('validation', { error: errorObj, source, context, userMessage: `Validation error: ${errorObj.message}` })
 }
 
-export function emitSystemError(error: unknown, source: string): void {
+export function emitSystemError(error: unknown, source: string, context?: ErrorContext): void {
   const errorObj = error instanceof Error ? error : new Error(String(error))
-  
-  systemEvents.emit({
-    domain: 'error',
-    type: 'system',
-    payload: {
-      error: errorObj,
-      source,
-      userMessage: 'A system error occurred'
-    },
-    timestamp: Date.now()
-  })
+  emitErrorEvent('system', { error: errorObj, source, context, userMessage: 'A system error occurred' })
 }
 
 /**
  * Storage event emitters
  */
 
-export function emitStorageSave(key: string, value: unknown): void {
-  systemEvents.emit({
-    domain: 'storage',
-    type: 'save',
-    payload: { key, value },
-    timestamp: Date.now()
-  })
+export function emitStorageSave(key: string, value: StorageValue): void {
+  emitStorageEvent('save', { key, value })
 }
 
-export function emitStorageLoad(key: string, value: unknown): void {
-  systemEvents.emit({
-    domain: 'storage',
-    type: 'load',
-    payload: { key, value },
-    timestamp: Date.now()
-  })
+export function emitStorageLoad(key: string, value: StorageValue): void {
+  emitStorageEvent('load', { key, value })
 }
 
 export function emitStorageClear(key: string): void {
-  systemEvents.emit({
-    domain: 'storage',
-    type: 'clear',
-    payload: { key },
-    timestamp: Date.now()
-  })
+  emitStorageEvent('clear', { key })
 }
 

@@ -10,6 +10,9 @@ export const STORAGE_KEYS = {
   // Chat State
   CHAT_MESSAGES: 'n8n-pro-chat-messages',
 
+  // Workflow History
+  WORKFLOW_HISTORY: 'n8n-pro-workflow-history',
+
   // UI State
   PANEL_POSITION: 'n8n-pro-panel-position',
   PANEL_SIZE: 'n8n-pro-panel-size',
@@ -17,7 +20,7 @@ export const STORAGE_KEYS = {
 
 /**
  * Default values for configuration
- * 
+ *
  * N8N_BASE_URL: Default n8n instance URL
  * Use getBaseUrlOrDefault() from services/settings for async retrieval
  */

@@ -1,6 +1,6 @@
 /**
  * Activity Subscriber
- * 
+ *
  * Tracks agent and LLM activities, displaying them in the UI.
  * Uses debouncing for rapid events and auto-cleanup after completion.
  */
@@ -12,20 +12,37 @@ import { systemEvents } from '../index'
 import { useChatStore } from '../../state/chatStore'
 import { emitSubscriberError } from '../emitters'
 import type { AgentActivity } from '../../state/chatStore'
+import type { AgentEvent, LLMEvent } from '../types'
 
 const destroy$ = new Subject<void>()
 
+/**
+ * Convert system event to agent activity for UI display
+ */
+function eventToActivity(event: AgentEvent | LLMEvent): AgentActivity {
+  // Extract agent type from payload, defaulting to 'orchestrator' for LLM events
+  const agent: AgentActivity['agent'] =
+    'agent' in event.payload
+      ? event.payload.agent
+      : 'orchestrator'
+
+  const status: AgentActivity['status'] =
+    event.type === 'started' ? 'started' :
+    event.type === 'completed' ? 'complete' :
+    'working'
+
+  return {
+    id: `${event.domain}-${event.timestamp}`,
+    agent,
+    activity: event.type,
+    status,
+    timestamp: event.timestamp
+  }
+}
+
 // Observable pipeline: activity updates (debounced)
 const activityUpdates$ = merge(systemEvents.agent$, systemEvents.llm$).pipe(
-  map(e => ({
-    id: `${e.domain}-${e.timestamp}`,
-    agent: ('agent' in e.payload ? e.payload.agent : 'llm') || 'system',
-    activity: e.type,
-    status: (e.type === 'started' ? 'started' : 
-             e.type === 'completed' ? 'complete' : 
-             'working') as 'started' | 'working' | 'complete' | 'error',
-    timestamp: e.timestamp
-  } as AgentActivity)),
+  map(eventToActivity),
   debounceTime(50), // Debounce rapid events
   catchError(err => {
     emitSubscriberError(err, 'activity-updates')
@@ -51,7 +68,7 @@ export function setup(): void {
       finalize(() => console.log('[activity-updates] Subscription cleaned up'))
     )
     .subscribe(activity => useChatStore.getState().addActivity(activity))
-  
+
   // Subscribe to activity cleanup
   activityCleanup$
     .pipe(

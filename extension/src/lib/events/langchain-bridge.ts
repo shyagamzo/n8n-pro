@@ -8,8 +8,8 @@
 import { from } from 'rxjs'
 import { tap, filter } from 'rxjs/operators'
 import type { Observable } from 'rxjs'
-import { systemEvents } from './index'
-import { emitAgentStarted, emitAgentCompleted, emitLLMStarted, emitLLMCompleted } from './emitters'
+import { emitAgentStarted, emitAgentCompleted, emitLLMStarted, emitLLMCompleted, emitToolStarted, emitToolCompleted, emitSystemError } from './emitters'
+import type { AgentType } from './types'
 
 /**
  * LangGraph StreamEvent type (simplified)
@@ -43,8 +43,8 @@ export function sanitizeMetadata(metadata?: Record<string, any>): Record<string,
  * Extract agent name from LangGraph metadata
  * Uses langgraph_node or checkpoint_ns to determine which agent is executing
  */
-export function extractAgentFromMetadata(metadata?: Record<string, any>): string {
-  if (!metadata) return 'unknown'
+export function extractAgentFromMetadata(metadata?: Record<string, any>): AgentType {
+  if (!metadata) return 'orchestrator'
 
   // Try langgraph_node first (most reliable)
   const node = metadata.langgraph_node
@@ -55,17 +55,16 @@ export function extractAgentFromMetadata(metadata?: Record<string, any>): string
       if (ns.includes('enrichment')) return 'enrichment'
       if (ns.includes('planner')) return 'planner'
       if (ns.includes('executor')) return 'executor'
-      if (ns.includes('classifier')) return 'classifier'
     }
 
     // Direct node name
     if (node.includes('enrichment')) return 'enrichment'
     if (node.includes('planner')) return 'planner'
     if (node.includes('executor')) return 'executor'
-    if (node.includes('classifier')) return 'classifier'
   }
 
-  return 'unknown'
+  // Default to orchestrator for unknown agents
+  return 'orchestrator'
 }
 
 /**
@@ -94,42 +93,27 @@ export function emitLangGraphEvent(event: StreamEvent): void {
       break
 
     case 'on_llm_error':
-      systemEvents.emit({
-        domain: 'error',
-        type: 'llm',
-        payload: {
-          error: (data as any)?.error || new Error('LLM error'),
-          source: 'langchain',
-          context: { name, metadata: sanitizeMetadata(metadata) }
-        },
-        timestamp: Date.now()
-      })
+      emitSystemError(
+        (data as any)?.error || new Error('LLM error'),
+        'langchain',
+        { name, ...sanitizeMetadata(metadata) }
+      )
       break
 
     case 'on_tool_start':
-      systemEvents.emit({
-        domain: 'agent',
-        type: 'tool_started',
-        payload: {
-          agent: extractAgentFromMetadata(metadata) as any,
-          tool: name || 'unknown',
-          metadata: { input: data?.input, ...sanitizeMetadata(metadata) }
-        },
-        timestamp: Date.now()
-      })
+      emitToolStarted(
+        extractAgentFromMetadata(metadata),
+        name || 'unknown',
+        { input: data?.input, ...sanitizeMetadata(metadata) }
+      )
       break
 
     case 'on_tool_end':
-      systemEvents.emit({
-        domain: 'agent',
-        type: 'tool_completed',
-        payload: {
-          agent: extractAgentFromMetadata(metadata) as any,
-          tool: name || 'unknown',
-          metadata: { output: data?.output, ...sanitizeMetadata(metadata) }
-        },
-        timestamp: Date.now()
-      })
+      emitToolCompleted(
+        extractAgentFromMetadata(metadata),
+        name || 'unknown',
+        { output: data?.output, ...sanitizeMetadata(metadata) }
+      )
       break
 
     case 'on_chain_start':
@@ -141,8 +125,6 @@ export function emitLangGraphEvent(event: StreamEvent): void {
           emitAgentStarted('executor', 'executing', sanitized)
         } else if (name?.toLowerCase().includes('enrichment')) {
           emitAgentStarted('enrichment', 'enriching', sanitized)
-        } else if (name?.toLowerCase().includes('classifier')) {
-          emitAgentStarted('classifier', 'classifying', sanitized)
         }
       }
       break
@@ -156,8 +138,6 @@ export function emitLangGraphEvent(event: StreamEvent): void {
           emitAgentCompleted('executor', sanitized)
         } else if (name?.toLowerCase().includes('enrichment')) {
           emitAgentCompleted('enrichment', sanitized)
-        } else if (name?.toLowerCase().includes('classifier')) {
-          emitAgentCompleted('classifier', sanitized)
         }
       }
       break
