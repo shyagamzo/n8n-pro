@@ -46,13 +46,13 @@ function convertMessages(messages: ChatMessage[]): Array<HumanMessage | AIMessag
 
 /**
  * Run the workflow graph for a session.
- * 
+ *
  * This is the ONLY entry point to the graph. All business logic
  * (routing, planning, execution) happens inside the graph via nodes and tools.
- * 
+ *
  * Graph Flow (Automatic):
  * START → orchestrator → enrichment ⟲ orchestrator → planner → executor → END
- * 
+ *
  * Features:
  * - Session persistence via checkpointer and thread_id
  * - Token streaming for real-time UI updates
@@ -97,7 +97,7 @@ export async function runGraph(
 
   const lastMessage = finalState?.messages?.[finalState.messages.length - 1]
   const response = (lastMessage?.content as string) || ''
-  
+
   return {
     response,
     plan: finalState?.plan,
