@@ -22,6 +22,7 @@ type ChatState = {
   pendingPlan?: Plan | null
   activities: AgentActivity[]
   toasts: ToastProps[]
+  clarificationQuestion?: string | null
   setOpen: (open: boolean) => void
   addMessage: (msg: ChatMessage) => void
   startSending: () => void
@@ -37,6 +38,7 @@ type ChatState = {
   addToast: (toast: Omit<ToastProps, 'onClose'>) => void
   removeToast: (id: string) => void
   loadMessages: () => Promise<void>
+  setClarificationQuestion: (question: string | null) => void
 }
 
 async function saveMessages(messages: ChatMessage[]): Promise<void>
@@ -58,6 +60,7 @@ export const useChatStore = create<ChatState>((set) => ({
   pendingPlan: null,
   activities: [],
   toasts: [],
+  clarificationQuestion: null,
   setOpen: (open) => set({ isOpen: open }),
   addMessage: (msg) =>
   {
@@ -73,7 +76,7 @@ export const useChatStore = create<ChatState>((set) => ({
   clear: () => set({ messages: [] }),
   clearSession: () =>
   {
-    set({ messages: [], assistantDraft: '', pendingPlan: null, sending: false, activities: [] })
+    set({ messages: [], assistantDraft: '', pendingPlan: null, sending: false, activities: [], clarificationQuestion: null })
     saveMessages([])
   },
   setAssistantDraft: (t) => set({ assistantDraft: t }),
@@ -120,5 +123,6 @@ export const useChatStore = create<ChatState>((set) => ({
   {
     const messages = await loadStoredMessages()
     set({ messages })
-  }
+  },
+  setClarificationQuestion: (question) => set({ clarificationQuestion: question })
 }))

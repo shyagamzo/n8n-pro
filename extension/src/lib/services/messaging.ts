@@ -3,6 +3,7 @@ import type { ApplyPlanRequest, BackgroundMessage } from '../types/messaging'
 
 export type ChatPort = {
   sendChat: (messages: ChatMessage[]) => void
+  sendClarificationResponse: (resumeValue: string, messages: ChatMessage[]) => void
   applyPlan: (req: ApplyPlanRequest) => void
   onMessage: (cb: (m: BackgroundMessage) => void) => void
   disconnect: () => void
@@ -60,6 +61,11 @@ export function createChatPort(): ChatPort
     {
       ensurePort()
       safePost({ type: 'chat', messages })
+    },
+    sendClarificationResponse(resumeValue: string, messages: ChatMessage[])
+    {
+      ensurePort()
+      safePost({ type: 'resume_chat', resumeValue, messages })
     },
     applyPlan(req: ApplyPlanRequest)
     {

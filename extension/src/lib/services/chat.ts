@@ -17,6 +17,7 @@ export class ChatService
     done: () => this.handleDone(),
     error: (msg) => this.handleError(msg),
     plan: (msg) => this.handlePlan(msg),
+    needs_input: (msg) => this.handleNeedsInput(msg),
   }
 
   public constructor()
@@ -114,6 +115,18 @@ export class ChatService
     useChatStore.getState().setPendingPlan(message.plan)
   }
 
+  private handleNeedsInput(message: { type: 'needs_input'; question: string; reason: string }): void
+  {
+    const { setAssistantDraft, setClarificationQuestion, finishSending } = useChatStore.getState()
+    
+    // Clear any draft and stop sending state
+    setAssistantDraft('')
+    finishSending()
+    
+    // Set the clarification question to show the modal
+    setClarificationQuestion(message.question)
+  }
+
   private getErrorTitle(error: string): string
   {
     if (error.includes('API key')) return 'API Key Error'
@@ -181,6 +194,23 @@ export class ChatService
   {
     const req: ApplyPlanRequest = { type: 'apply_plan', plan }
     this.port.applyPlan(req)
+  }
+
+  public sendClarificationResponse(resumeValue: string): void
+  {
+    const { setClarificationQuestion, startSending, setAssistantDraft } = useChatStore.getState()
+    
+    // Clear the clarification question
+    setClarificationQuestion(null)
+    
+    // Start sending state
+    startSending()
+    setAssistantDraft('')
+    
+    // Send the clarification response
+    const currentMessages: ChatMessage[] = useChatStore.getState().messages
+    this.lastSentMessages = currentMessages
+    this.port.sendClarificationResponse(resumeValue, currentMessages)
   }
 }
 

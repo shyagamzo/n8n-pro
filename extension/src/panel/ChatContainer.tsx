@@ -3,6 +3,7 @@ import ChatPanel from './ChatPanel'
 import { useChatStore } from '../lib/state/chatStore'
 import { chat } from '../lib/services/chat'
 import ConfirmModal from '../lib/components/ConfirmModal'
+import ClarificationInputModal from '../lib/components/ClarificationInputModal'
 import ErrorBoundary from '../lib/components/ErrorBoundary'
 import Panel from '../lib/components/Panel'
 import PanelSkeleton from './components/PanelSkeleton'
@@ -12,7 +13,7 @@ export default function ChatContainer(): React.ReactElement | null
 {
   const {
     isOpen, setOpen, messages, assistantDraft, sending, activities,
-    clearSession, loadMessages, toasts, removeToast
+    clearSession, loadMessages, toasts, removeToast, clarificationQuestion, setClarificationQuestion
   } = useChatStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -62,6 +63,14 @@ export default function ChatContainer(): React.ReactElement | null
             setShowConfirmModal(false)
           }}
           onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
+      {isOpen && (
+        <ClarificationInputModal
+          isOpen={!!clarificationQuestion}
+          question={clarificationQuestion || ''}
+          onSubmit={(answer) => chat.sendClarificationResponse(answer)}
+          onCancel={() => setClarificationQuestion(null)}
         />
       )}
       <ToastContainer toasts={toasts} onClose={removeToast} />
