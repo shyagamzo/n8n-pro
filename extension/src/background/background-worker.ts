@@ -7,7 +7,12 @@ import { debugWorkflowCreated, debugWorkflowError } from '../lib/utils/debug'
 
 // Reactive event system
 import { systemEvents } from '../lib/events'
-import { emitUnhandledError } from '../lib/events/emitters'
+import { 
+  emitUnhandledError, 
+  emitWorkflowCreated, 
+  emitWorkflowFailed,
+  emitApiError 
+} from '../lib/events/emitters'
 import * as logger from '../lib/events/subscribers/logger'
 import * as chat from '../lib/events/subscribers/chat'
 import * as activity from '../lib/events/subscribers/activity'
@@ -175,6 +180,9 @@ async function handleApplyPlan(
       throw new Error('Workflow creation did not return a workflow ID')
     }
 
+    // Emit workflow created event (subscribers will handle logging and UI updates)
+    emitWorkflowCreated(msg.plan.workflow, result.workflowId)
+    
     debugWorkflowCreated(result.workflowId, `${baseUrl}/workflow/${result.workflowId}`)
     console.log('✅ Workflow created successfully:', {
       workflowId: result.workflowId,
@@ -211,6 +219,10 @@ async function handleApplyPlan(
   }
   catch (error)
   {
+    // Emit workflow failed event (subscribers will handle logging and UI updates)
+    const errorObj = error instanceof Error ? error : new Error(String(error))
+    emitWorkflowFailed(msg.plan.workflow, errorObj)
+    
     debugWorkflowError(error, msg.plan.workflow)
 
     // Enhanced error reporting
