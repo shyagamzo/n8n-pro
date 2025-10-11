@@ -1,3 +1,5 @@
+import validatorPromptMd from '../../prompts/agents/validator-prompt.md?raw'
+
 /**
  * Response templates for the validator tool.
  * 
@@ -6,25 +8,16 @@
  */
 
 // ============================================================================
-// Response Templates
+// Prompt Template
 // ============================================================================
 
-export const VALIDATION_PROMPT_TEMPLATE = (loomWorkflow: string) => `Validate this n8n workflow plan for correctness.
-
-Workflow Plan (Loom format):
-${loomWorkflow}
-
-Check for:
-1. Node types are valid n8n node types (correct package.nodeName format, e.g. "n8n-nodes-base.slack")
-2. Required parameters are present for each node type
-3. Connections reference existing node names
-4. Trigger nodes are appropriate (scheduleTrigger, webhook, manualTrigger, etc.)
-5. Credentials are correctly specified where needed
-
-Response format:
-- If the workflow is VALID, respond with: [VALID]
-- If there are ERRORS, respond with: [INVALID]
-  Then list each error clearly, and provide a CORRECTED version of the workflow in Loom format.`
+/**
+ * Build validation prompt from markdown template.
+ * Injects the Loom workflow into the template.
+ */
+export function buildValidationPrompt(loomWorkflow: string): string {
+  return validatorPromptMd.replace('{LOOM_WORKFLOW}', loomWorkflow)
+}
 
 // ============================================================================
 // Response Formatters

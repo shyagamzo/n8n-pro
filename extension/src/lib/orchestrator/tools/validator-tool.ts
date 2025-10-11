@@ -6,7 +6,7 @@ import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import { buildPrompt } from '../../prompts'
 import { stripCodeFences } from '../../utils/markdown'
 import {
-  VALIDATION_PROMPT_TEMPLATE,
+  buildValidationPrompt,
   formatValidResponse,
   formatInvalidResponse,
   formatUnexpectedResponse
@@ -45,7 +45,7 @@ async function runValidation(
     messageModifier: new SystemMessage(systemPrompt)
   })
 
-  const validationPrompt = new HumanMessage(VALIDATION_PROMPT_TEMPLATE(loomWorkflow))
+  const validationPrompt = new HumanMessage(buildValidationPrompt(loomWorkflow))
 
   // Run validation
   const result = await agent.invoke({
