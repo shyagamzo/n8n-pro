@@ -2,8 +2,7 @@
  * LangGraph Event Bridge
  *
  * Converts LangGraph's .streamEvents() async generator into our RxJS event system.
- * This provides automatic event emission for all LLM, tool, and chain operations
- * without manual event emission in orchestrator nodes.
+ * Provides utilities for event emission and metadata sanitization.
  */
 
 import { from } from 'rxjs'
@@ -16,7 +15,7 @@ import { emitAgentStarted, emitAgentCompleted, emitLLMStarted, emitLLMCompleted 
  * LangGraph StreamEvent type (simplified)
  * Full types come from @langchain/core/tracers/log_stream
  */
-type StreamEvent = {
+export type StreamEvent = {
   event: string
   name?: string
   data?: any
@@ -70,6 +69,102 @@ export function extractAgentFromMetadata(metadata?: Record<string, any>): string
 }
 
 /**
+ * Emit a single LangGraph event to the reactive system.
+ * Shared logic used by both bridge Observable and manual iteration.
+ *
+ * @param event - StreamEvent from LangGraph
+ */
+export function emitLangGraphEvent(event: StreamEvent): void {
+  const { event: eventType, name, data, metadata } = event
+
+  switch (eventType) {
+    case 'on_llm_start':
+      emitLLMStarted(
+        metadata?.ls_model_name,
+        metadata?.ls_provider,
+        metadata?.run_id
+      )
+      break
+
+    case 'on_llm_end':
+      emitLLMCompleted(
+        data?.output?.usage_metadata,
+        metadata?.run_id
+      )
+      break
+
+    case 'on_llm_error':
+      systemEvents.emit({
+        domain: 'error',
+        type: 'llm',
+        payload: {
+          error: (data as any)?.error || new Error('LLM error'),
+          source: 'langchain',
+          context: { name, metadata: sanitizeMetadata(metadata) }
+        },
+        timestamp: Date.now()
+      })
+      break
+
+    case 'on_tool_start':
+      systemEvents.emit({
+        domain: 'agent',
+        type: 'tool_started',
+        payload: {
+          agent: extractAgentFromMetadata(metadata) as any,
+          tool: name || 'unknown',
+          metadata: { input: data?.input, ...sanitizeMetadata(metadata) }
+        },
+        timestamp: Date.now()
+      })
+      break
+
+    case 'on_tool_end':
+      systemEvents.emit({
+        domain: 'agent',
+        type: 'tool_completed',
+        payload: {
+          agent: extractAgentFromMetadata(metadata) as any,
+          tool: name || 'unknown',
+          metadata: { output: data?.output, ...sanitizeMetadata(metadata) }
+        },
+        timestamp: Date.now()
+      })
+      break
+
+    case 'on_chain_start':
+      {
+        const sanitized = sanitizeMetadata(metadata)
+        if (name?.toLowerCase().includes('planner')) {
+          emitAgentStarted('planner', 'planning', sanitized)
+        } else if (name?.toLowerCase().includes('executor')) {
+          emitAgentStarted('executor', 'executing', sanitized)
+        } else if (name?.toLowerCase().includes('enrichment')) {
+          emitAgentStarted('enrichment', 'enriching', sanitized)
+        } else if (name?.toLowerCase().includes('classifier')) {
+          emitAgentStarted('classifier', 'classifying', sanitized)
+        }
+      }
+      break
+
+    case 'on_chain_end':
+      {
+        const sanitized = sanitizeMetadata(metadata)
+        if (name?.toLowerCase().includes('planner')) {
+          emitAgentCompleted('planner', sanitized)
+        } else if (name?.toLowerCase().includes('executor')) {
+          emitAgentCompleted('executor', sanitized)
+        } else if (name?.toLowerCase().includes('enrichment')) {
+          emitAgentCompleted('enrichment', sanitized)
+        } else if (name?.toLowerCase().includes('classifier')) {
+          emitAgentCompleted('classifier', sanitized)
+        }
+      }
+      break
+  }
+}
+
+/**
  * Bridge LangGraph's event stream to our RxJS system
  *
  * @param eventStream - AsyncGenerator from workflowGraph.streamEvents()
@@ -86,91 +181,6 @@ export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>):
       event === 'on_chain_start' ||
       event === 'on_chain_end'
     ),
-    tap(({ event, name, data, metadata }) => {
-      switch (event) {
-        case 'on_llm_start':
-          emitLLMStarted(
-            metadata?.ls_model_name,
-            metadata?.ls_provider,
-            metadata?.run_id
-          )
-          break
-
-        case 'on_llm_end':
-          emitLLMCompleted(
-            data?.output?.usage_metadata,
-            metadata?.run_id
-          )
-          break
-
-        case 'on_llm_error':
-          systemEvents.emit({
-            domain: 'error',
-            type: 'llm',
-            payload: {
-              error: (data as any)?.error || new Error('LLM error'),
-              source: 'langchain',
-              context: { name, metadata: sanitizeMetadata(metadata) }
-            },
-            timestamp: Date.now()
-          })
-          break
-
-        case 'on_tool_start':
-          systemEvents.emit({
-            domain: 'agent',
-            type: 'tool_started',
-            payload: {
-              agent: extractAgentFromMetadata(metadata) as any,
-              tool: name || 'unknown',
-              metadata: { input: data?.input, ...sanitizeMetadata(metadata) }
-            },
-            timestamp: Date.now()
-          })
-          break
-
-        case 'on_tool_end':
-          systemEvents.emit({
-            domain: 'agent',
-            type: 'tool_completed',
-            payload: {
-              agent: extractAgentFromMetadata(metadata) as any,
-              tool: name || 'unknown',
-              metadata: { output: data?.output, ...sanitizeMetadata(metadata) }
-            },
-            timestamp: Date.now()
-          })
-          break
-
-        case 'on_chain_start':
-          // Map chain names to agent types (sanitize metadata to remove API keys)
-          const sanitizedStartMetadata = sanitizeMetadata(metadata)
-          if (name?.toLowerCase().includes('planner')) {
-            emitAgentStarted('planner', 'planning', sanitizedStartMetadata)
-          } else if (name?.toLowerCase().includes('executor')) {
-            emitAgentStarted('executor', 'executing', sanitizedStartMetadata)
-          } else if (name?.toLowerCase().includes('enrichment')) {
-            emitAgentStarted('enrichment', 'enriching', sanitizedStartMetadata)
-          } else if (name?.toLowerCase().includes('classifier')) {
-            emitAgentStarted('classifier', 'classifying', sanitizedStartMetadata)
-          }
-          break
-
-        case 'on_chain_end':
-          // Map chain names to agent types (sanitize metadata to remove API keys)
-          const sanitizedEndMetadata = sanitizeMetadata(metadata)
-          if (name?.toLowerCase().includes('planner')) {
-            emitAgentCompleted('planner', sanitizedEndMetadata)
-          } else if (name?.toLowerCase().includes('executor')) {
-            emitAgentCompleted('executor', sanitizedEndMetadata)
-          } else if (name?.toLowerCase().includes('enrichment')) {
-            emitAgentCompleted('enrichment', sanitizedEndMetadata)
-          } else if (name?.toLowerCase().includes('classifier')) {
-            emitAgentCompleted('classifier', sanitizedEndMetadata)
-          }
-          break
-      }
-    })
+    tap(emitLangGraphEvent)
   )
 }
-

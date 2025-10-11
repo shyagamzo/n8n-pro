@@ -6,16 +6,8 @@ import { workflowGraph } from './graph'
 import { TokenStreamHandler } from './streaming'
 import { DebugCallbackHandler } from './debug-handler'
 import { DebugSession } from '../utils/debug'
-import {
-  systemEvents,
-  emitAgentStarted,
-  emitAgentCompleted,
-  emitLLMStarted,
-  emitLLMCompleted,
-  emitApiError
-} from '../events'
-import { sanitizeMetadata, extractAgentFromMetadata } from '../events/langchain-bridge'
-import type { StreamEvent } from '@langchain/core/tracers/log_stream'
+import { emitApiError } from '../events'
+import { emitLangGraphEvent } from '../events/langchain-bridge'
 
 /**
  * Orchestrator input for chat and workflow operations.
@@ -84,10 +76,9 @@ export class ChatOrchestrator
       callbacks: onToken ? [new TokenStreamHandler(onToken)] : []
     }
 
-    // Convert ChatMessage[] to LangChain BaseMessage[]
     const lcMessages = this.convertMessages(input.messages)
 
-    // Use streamEvents - single execution that provides both result and events
+    // Stream events and collect final state
     const eventStream = workflowGraph.streamEvents(
       {
         mode: 'chat' as const,
@@ -97,19 +88,15 @@ export class ChatOrchestrator
       { ...config, version: 'v2' }
     )
 
-    // Process event stream: emit events to reactive system AND collect final state
+    // Process events: emit to reactive system and collect final state
     let finalState: any = null
     for await (const event of eventStream) {
-      // Emit to reactive system via bridge logic (inline to avoid double consumption)
-      this.emitEventToReactiveSystem(event)
-
-      // Capture final state
+      emitLangGraphEvent(event)
       if (event.event === 'on_chain_end' && event.data?.output) {
         finalState = event.data.output
       }
     }
 
-    // Extract last message content
     const lastMessage = finalState?.messages?.[finalState.messages.length - 1]
     return (lastMessage?.content as string) || ''
   }
@@ -142,7 +129,7 @@ export class ChatOrchestrator
 
       const lcMessages = this.convertMessages(input.messages)
 
-      // Use streamEvents for single execution
+      // Stream events and collect final state
       const eventStream = workflowGraph.streamEvents(
         {
           mode: 'chat' as const,
@@ -152,10 +139,10 @@ export class ChatOrchestrator
         { ...config, version: 'v2' }
       )
 
-      // Collect final state and emit events
+      // Process events and collect final state
       let finalState: any = null
       for await (const event of eventStream) {
-        this.emitEventToReactiveSystem(event)
+        emitLangGraphEvent(event)
         if (event.event === 'on_chain_end' && event.data?.output) {
           finalState = event.data.output
         }
@@ -215,7 +202,7 @@ export class ChatOrchestrator
 
     const lcMessages = this.convertMessages(input.messages)
 
-    // Use streamEvents for single execution with event capture
+    // Stream events and collect final state
     const eventStream = workflowGraph.streamEvents(
       {
         mode: 'workflow' as const,
@@ -225,10 +212,10 @@ export class ChatOrchestrator
       { ...config, version: 'v2' }
     )
 
-    // Collect final state and emit events
+    // Process events and collect final state
     let finalState: any = null
     for await (const event of eventStream) {
-      this.emitEventToReactiveSystem(event)
+      emitLangGraphEvent(event)
       if (event.event === 'on_chain_end' && event.data?.output) {
         finalState = event.data.output
       }
@@ -274,13 +261,13 @@ export class ChatOrchestrator
       }
     }
 
-    // Use streamEvents for single execution (null input = resume from checkpoint)
+    // Stream events and collect final state (null input = resume from checkpoint)
     const eventStream = workflowGraph.streamEvents(null, { ...config, version: 'v2' })
 
-    // Collect final state and emit events
+    // Process events and collect final state
     let finalState: any = null
     for await (const event of eventStream) {
-      this.emitEventToReactiveSystem(event)
+      emitLangGraphEvent(event)
       if (event.event === 'on_chain_end' && event.data?.output) {
         finalState = event.data.output
       }
@@ -320,95 +307,6 @@ export class ChatOrchestrator
         return new HumanMessage(msg.text)
       }
     })
-  }
-
-  /**
-   * Emit LangGraph events to reactive system (inline bridge logic).
-   * This avoids double-consumption of the async generator.
-   * Uses shared sanitization and agent extraction to prevent API key leaks.
-   */
-  private emitEventToReactiveSystem(event: StreamEvent): void
-  {
-    const { event: eventType, name, data, metadata } = event
-
-    switch (eventType) {
-      case 'on_llm_start':
-        emitLLMStarted(metadata?.ls_model_name, metadata?.ls_provider, metadata?.run_id)
-        break
-
-      case 'on_llm_end':
-        emitLLMCompleted(data?.output?.usage_metadata, metadata?.run_id)
-        break
-
-      case 'on_llm_error':
-        systemEvents.emit({
-          domain: 'error',
-          type: 'llm',
-          payload: {
-            error: (data as any)?.error || new Error('LLM error'),
-            source: 'langchain',
-            context: { name, metadata: sanitizeMetadata(metadata) }
-          },
-          timestamp: Date.now()
-        })
-        break
-
-      case 'on_tool_start':
-        systemEvents.emit({
-          domain: 'agent',
-          type: 'tool_started',
-          payload: {
-            agent: extractAgentFromMetadata(metadata) as any,
-            tool: name || 'unknown',
-            metadata: { input: data?.input, ...sanitizeMetadata(metadata) }
-          },
-          timestamp: Date.now()
-        })
-        break
-
-      case 'on_tool_end':
-        systemEvents.emit({
-          domain: 'agent',
-          type: 'tool_completed',
-          payload: {
-            agent: extractAgentFromMetadata(metadata) as any,
-            tool: name || 'unknown',
-            metadata: { output: data?.output, ...sanitizeMetadata(metadata) }
-          },
-          timestamp: Date.now()
-        })
-        break
-
-      case 'on_chain_start':
-        {
-          const sanitized = sanitizeMetadata(metadata)
-          if (name?.toLowerCase().includes('planner')) {
-            emitAgentStarted('planner', 'planning', sanitized)
-          } else if (name?.toLowerCase().includes('executor')) {
-            emitAgentStarted('executor', 'executing', sanitized)
-          } else if (name?.toLowerCase().includes('enrichment')) {
-            emitAgentStarted('enrichment', 'enriching', sanitized)
-          } else if (name?.toLowerCase().includes('classifier')) {
-            emitAgentStarted('classifier', 'classifying', sanitized)
-          }
-        }
-        break
-
-      case 'on_chain_end':
-        {
-          const sanitized = sanitizeMetadata(metadata)
-          if (name?.toLowerCase().includes('planner')) {
-            emitAgentCompleted('planner', sanitized)
-          } else if (name?.toLowerCase().includes('executor')) {
-            emitAgentCompleted('executor', sanitized)
-          } else if (name?.toLowerCase().includes('enrichment')) {
-            emitAgentCompleted('enrichment', sanitized)
-          } else if (name?.toLowerCase().includes('classifier')) {
-            emitAgentCompleted('classifier', sanitized)
-          }
-        }
-        break
-    }
   }
 }
 
