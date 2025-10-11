@@ -6,41 +6,18 @@ import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import { buildPrompt } from '../../prompts'
 import { stripCodeFences } from '../../utils/markdown'
 
+// ============================================================================
+// Schema & Constants
+// ============================================================================
+
 const validateWorkflowSchema = z.object({
   loomWorkflow: z.string().describe('The workflow in Loom format to validate')
 })
 
-/**
- * Factory function to create a validator tool with API key from closure.
- *
- * This ensures the API key is not passed as a tool parameter (security).
- * The validator uses createReactAgent for consistency with other agents.
- */
-export function createValidatorTool(apiKey: string, modelName: string = 'gpt-4o-mini') {
-  return tool(
-    async (input) => {
-      const args = input as z.infer<typeof validateWorkflowSchema>
-
-      // Create ReAct agent for validation (consistent with other agents)
-      const systemPrompt = buildPrompt('validator', {
-        includeNodesReference: true,
-        includeConstraints: true
-      })
-
-      const agent = createReactAgent({
-        llm: new ChatOpenAI({
-          apiKey,
-          model: modelName,
-          temperature: 0.1  // Low temperature for consistent validation
-        }),
-        tools: [],  // No tools needed for validation
-        messageModifier: new SystemMessage(systemPrompt)
-      })
-
-      const validationPrompt = new HumanMessage(`Validate this n8n workflow plan for correctness.
+const VALIDATION_PROMPT_TEMPLATE = (loomWorkflow: string) => `Validate this n8n workflow plan for correctness.
 
 Workflow Plan (Loom format):
-${args.loomWorkflow}
+${loomWorkflow}
 
 Check for:
 1. Node types are valid n8n node types (correct package.nodeName format, e.g. "n8n-nodes-base.slack")
@@ -52,39 +29,31 @@ Check for:
 Response format:
 - If the workflow is VALID, respond with: [VALID]
 - If there are ERRORS, respond with: [INVALID]
-  Then list each error clearly, and provide a CORRECTED version of the workflow in Loom format.`)
+  Then list each error clearly, and provide a CORRECTED version of the workflow in Loom format.`
 
-      // ReAct agent validates the workflow
-      const result = await agent.invoke({
-        messages: [validationPrompt]
-      })
+// ============================================================================
+// Response Formatters
+// ============================================================================
 
-      const lastMessage = result.messages[result.messages.length - 1]
-      const content = lastMessage.content as string
-
-      // Return validation result in natural language format (easier for LLM to understand)
-      if (content.includes('[VALID]')) {
-        return `✅ VALIDATION PASSED
+function formatValidResponse(): string {
+  return `✅ VALIDATION PASSED
 
 The workflow is valid and n8n-compatible. You can proceed with the final output.`
-      }
+}
 
-      if (content.includes('[INVALID]')) {
-        // Extract corrected Loom from response
-        const correctedLoom = extractLoomFromResponse(content)
+function formatInvalidResponse(errors: string, correctedLoom: string | null): string {
+  if (!correctedLoom) {
+    return `❌ VALIDATION FAILED
 
-        if (!correctedLoom) {
-          return `❌ VALIDATION FAILED
-
-${content}
+${errors}
 
 Note: Could not automatically extract a corrected workflow. Please review the errors above and fix them manually.`
-        }
+  }
 
-        return `❌ VALIDATION FAILED
+  return `❌ VALIDATION FAILED
 
 Errors Found:
-${content}
+${errors}
 
 ---
 
@@ -94,10 +63,10 @@ ${correctedLoom}
 ---
 
 Next Step: Review the corrected workflow above and use it for your final output.`
-      }
+}
 
-      // Unexpected response
-      return `⚠️ VALIDATION ERROR
+function formatUnexpectedResponse(content: string): string {
+  return `⚠️ VALIDATION ERROR
 
 Unexpected validation response (no [VALID] or [INVALID] marker found).
 
@@ -105,6 +74,76 @@ Response:
 ${content}
 
 Please review and try validating again.`
+}
+
+// ============================================================================
+// Validator Agent
+// ============================================================================
+
+async function runValidation(
+  loomWorkflow: string,
+  apiKey: string,
+  modelName: string
+): Promise<string> {
+  // Create ReAct agent for validation
+  const systemPrompt = buildPrompt('validator', {
+    includeNodesReference: true,
+    includeConstraints: true
+  })
+
+  const agent = createReactAgent({
+    llm: new ChatOpenAI({
+      apiKey,
+      model: modelName,
+      temperature: 0.1  // Low temperature for consistent validation
+    }),
+    tools: [],  // No tools needed for validation
+    messageModifier: new SystemMessage(systemPrompt)
+  })
+
+  const validationPrompt = new HumanMessage(VALIDATION_PROMPT_TEMPLATE(loomWorkflow))
+
+  // Run validation
+  const result = await agent.invoke({
+    messages: [validationPrompt]
+  })
+
+  const lastMessage = result.messages[result.messages.length - 1]
+  return lastMessage.content as string
+}
+
+function processValidationResult(content: string): string {
+  // Check for valid workflow
+  if (content.includes('[VALID]')) {
+    return formatValidResponse()
+  }
+
+  // Check for invalid workflow
+  if (content.includes('[INVALID]')) {
+    const correctedLoom = extractLoomFromResponse(content)
+    return formatInvalidResponse(content, correctedLoom)
+  }
+
+  // Unexpected response
+  return formatUnexpectedResponse(content)
+}
+
+// ============================================================================
+// Tool Factory
+// ============================================================================
+
+/**
+ * Factory function to create a validator tool with API key from closure.
+ *
+ * This ensures the API key is not passed as a tool parameter (security).
+ * The validator uses createReactAgent for consistency with other agents.
+ */
+export function createValidatorTool(apiKey: string, modelName: string = 'gpt-4o-mini') {
+  return tool(
+    async (input) => {
+      const args = input as z.infer<typeof validateWorkflowSchema>
+      const validationResult = await runValidation(args.loomWorkflow, apiKey, modelName)
+      return processValidationResult(validationResult)
     },
     {
       name: 'validate_workflow',
