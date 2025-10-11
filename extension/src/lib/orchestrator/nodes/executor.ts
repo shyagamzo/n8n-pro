@@ -1,6 +1,7 @@
 import { Command, END } from '@langchain/langgraph'
+import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
-import { SystemMessage, HumanMessage, AIMessage } from '@langchain/core/messages'
+import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '../state'
@@ -10,17 +11,17 @@ import { executorTools } from '../tools/executor'
 /**
  * Executor node creates workflows in n8n via API tools.
  *
- * Features:
+ * Uses createReactAgent for automatic tool loop handling:
  * - Bound tools: create_n8n_workflow, check_credentials
+ * - ReAct agent handles tool calls internally (no separate tool node needed)
  * - Non-blocking credential checks (workflow created even with missing creds)
  * - Provides setup links for missing credentials
  * - Paused before execution via interruptBefore in graph config
  *
  * Flow:
  * 1. (User approves via interrupt) → executor resumes
- * 2. LLM checks credentials and creates workflow using tools
- * 3. If tool calls: goto executor_tools node
- * 4. If workflow created: extract results → goto END
+ * 2. ReAct agent checks credentials and creates workflow (calls tools internally)
+ * 3. Extract results → goto END
  */
 export async function executorNode(
   state: OrchestratorStateType,
@@ -52,19 +53,13 @@ export async function executorNode(
   narrator?.post('executor', 'creating workflow', 'started')
   session?.log('Executing workflow creation')
 
-  debugAgentDecision('executor', 'Starting workflow execution', 'Creating workflow in n8n', {
+  debugAgentDecision('executor', 'Starting workflow execution', 'Using ReAct agent with tools', {
     workflowName: state.plan.workflow.name,
     nodeCount: state.plan.workflow.nodes?.length || 0
   })
 
-  // Bind executor-specific tools
-  const model = new ChatOpenAI({
-    apiKey,
-    model: modelName,
-    temperature: 0.1
-  }).bindTools(executorTools)
-
-  const systemPrompt = `You are the workflow executor for n8n. Your job is to:
+  // Create ReAct agent with executor tools
+  const systemPrompt = new SystemMessage(`You are the workflow executor for n8n. Your job is to:
 
 1. Check if required credentials exist using the check_credentials tool
 2. Create the workflow using the create_n8n_workflow tool
@@ -79,9 +74,19 @@ You have access to these tools:
 - check_credentials: Check which credentials exist and which are missing
 - create_n8n_workflow: Create the workflow in n8n
 
-Use the tools to complete the task.`
+Use the tools to complete the task.`)
 
-  const executionRequest = `Execute this workflow plan:
+  const agent = createReactAgent({
+    llm: new ChatOpenAI({
+      apiKey,
+      model: modelName,
+      temperature: 0.1
+    }),
+    tools: executorTools,
+    messageModifier: systemPrompt
+  })
+
+  const executionRequest = new HumanMessage(`Execute this workflow plan:
 
 Workflow: ${state.plan.workflow.name}
 Nodes: ${state.plan.workflow.nodes?.length || 0}
@@ -90,34 +95,20 @@ Required Credentials: ${state.plan.credentialsNeeded?.map(c => c.type).join(', '
 n8n API Key: ${n8nApiKey}
 n8n Base URL: ${n8nBaseUrl}
 
-First check credentials, then create the workflow. Respond to the user with the result.`
+First check credentials, then create the workflow. Respond to the user with the result.`)
 
-  const response = await model.invoke([
-    new SystemMessage(systemPrompt),
-    new HumanMessage(executionRequest)
-  ])
+  // ReAct agent handles tool loop internally
+  const result = await agent.invoke(
+    { messages: [...state.messages, executionRequest] },
+    config
+  )
 
-  // Check if LLM called tools
-  if ((response as AIMessage).tool_calls?.length)
-  {
-    debugAgentDecision('executor', 'Calling tools', 'Executing n8n API operations', {
-      toolCount: (response as AIMessage).tool_calls?.length
-    })
+  // Extract results from agent response
+  const lastMessage = result.messages[result.messages.length - 1]
+  const content = lastMessage.content as string
 
-    // Route to executor_tools node
-    return new Command({
-      goto: 'executor_tools',
-      update: {
-        messages: [response]
-      }
-    })
-  }
-
-  // Extract results from response
-  const content = response.content as string
-
-  // Try to extract workflow ID and credential info from the response
-  const workflowId = extractWorkflowId(content, state.messages)
+  // Try to extract workflow ID and credential info from the message history
+  const workflowId = extractWorkflowId(content, result.messages)
   const credentialGuidance = extractCredentialGuidance(content)
 
   session?.log('Workflow created successfully', { workflowId })
@@ -133,7 +124,7 @@ First check credentials, then create the workflow. Respond to the user with the 
     update: {
       workflowId,
       credentialGuidance,
-      messages: [response]
+      messages: result.messages
     }
   })
 }

@@ -1,4 +1,5 @@
 import { Command } from '@langchain/langgraph'
+import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
 import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
@@ -14,9 +15,11 @@ import { debugAgentDecision, type DebugSession } from '../../utils/debug'
 /**
  * Validator node performs LLM-based validation of workflow plans.
  *
- * No tools - relies on LLM's knowledge of n8n schemas and patterns.
- * This is intentional: LLMs are trained on n8n documentation and can validate
- * without needing custom validation code.
+ * Uses createReactAgent for consistent agent pattern:
+ * - No tools - relies on LLM's knowledge of n8n schemas and patterns
+ * - ReAct agent for validation consistency
+ * - This is intentional: LLMs are trained on n8n documentation and can validate
+ *   without needing custom validation code
  *
  * Features:
  * - Pure LLM validation using n8n knowledge
@@ -24,7 +27,7 @@ import { debugAgentDecision, type DebugSession } from '../../utils/debug'
  * - No structural validation code
  *
  * Flow:
- * 1. LLM validates the plan
+ * 1. ReAct agent validates the plan
  * 2. If valid: goto executor
  * 3. If invalid: extract corrected plan → goto executor with corrected plan
  */
@@ -51,25 +54,30 @@ export async function validatorNode(
   narrator?.post('validator', 'validating workflow', 'started')
   session?.log('Starting workflow validation')
 
-  debugAgentDecision('validator', 'Validating workflow plan', 'Using LLM n8n knowledge', {
+  debugAgentDecision('validator', 'Validating workflow plan', 'Using ReAct agent with LLM n8n knowledge', {
     nodeCount: state.plan.workflow.nodes?.length || 0
   })
 
-  const model = new ChatOpenAI({
-    apiKey,
-    model: modelName,
-    temperature: 0.1  // Low temperature for consistent validation
-  })
-
+  // Create ReAct agent (no tools, pure LLM validation)
   const systemPrompt = buildPrompt('validator', {
     includeNodesReference: true,
     includeConstraints: true
   })
 
+  const agent = createReactAgent({
+    llm: new ChatOpenAI({
+      apiKey,
+      model: modelName,
+      temperature: 0.1  // Low temperature for consistent validation
+    }),
+    tools: [],  // No tools - pure LLM validation
+    messageModifier: new SystemMessage(systemPrompt)
+  })
+
   // Convert plan to Loom for validation
   const loomRepresentation = formatLoom(state.plan)
 
-  const validationPrompt = `Validate this n8n workflow plan for correctness.
+  const validationPrompt = new HumanMessage(`Validate this n8n workflow plan for correctness.
 
 Workflow Plan (Loom format):
 ${loomRepresentation}
@@ -84,14 +92,16 @@ Check for:
 Response format:
 - If the workflow is VALID, respond with: [VALID]
 - If there are ERRORS, respond with: [INVALID]
-  Then list each error clearly, and provide a CORRECTED version of the workflow in Loom format.`
+  Then list each error clearly, and provide a CORRECTED version of the workflow in Loom format.`)
 
-  const validationResponse = await model.invoke([
-    new SystemMessage(systemPrompt),
-    new HumanMessage(validationPrompt)
-  ])
+  // ReAct agent validates the plan
+  const result = await agent.invoke(
+    { messages: [validationPrompt] },
+    config
+  )
 
-  const content = validationResponse.content as string
+  const lastMessage = result.messages[result.messages.length - 1]
+  const content = lastMessage.content as string
 
   // Check validation result
   if (content.includes('[VALID]'))

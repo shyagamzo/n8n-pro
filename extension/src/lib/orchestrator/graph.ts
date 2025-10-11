@@ -6,10 +6,8 @@ import { OrchestratorState } from './state'
 import {
   enrichmentNode,
   plannerNode,
-  plannerToolsNode,
   validatorNode,
-  executorNode,
-  executorToolsNode
+  executorNode
 } from './nodes'
 
 /**
@@ -41,15 +39,11 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorag
 
 const graph = new StateGraph(OrchestratorState)
 
-// Add all agent nodes
+// Add all agent nodes (all use createReactAgent)
 graph.addNode('enrichment', enrichmentNode)
 graph.addNode('planner', plannerNode)
 graph.addNode('validator', validatorNode)
 graph.addNode('executor', executorNode)
-
-// Add tool execution nodes
-graph.addNode('planner_tools', plannerToolsNode)
-graph.addNode('executor_tools', executorToolsNode)
 
 // Entry routing based on mode
 graph.addConditionalEdges(
@@ -71,6 +65,7 @@ graph.addConditionalEdges(
 )
 
 // Orchestrator-based routing after enrichment
+// Enrichment agent uses createReactAgent which handles tools internally
 graph.addConditionalEdges(
   'enrichment' as any,
   (state) => {
@@ -92,16 +87,12 @@ graph.addConditionalEdges(
   }
 )
 
-// Planner ↔ Planner Tools loop
-// Planner node uses Command to route to planner_tools or validator
-graph.addEdge('planner_tools' as any, 'planner' as any)  // Tools always return to planner
+// All agents now use createReactAgent which handles tool loops internally
+// No need for separate tool execution nodes
 
-// Validator → Executor
-// Validator node uses Command to route to executor
-
-// Executor ↔ Executor Tools loop
-// Executor node uses Command to route to executor_tools or END
-graph.addEdge('executor_tools' as any, 'executor' as any)  // Tools always return to executor
+// Planner → Validator (via Command in planner node)
+// Validator → Executor (via Command in validator node)
+// Executor → END (via Command in executor node)
 
 /**
  * Compile the graph with checkpointer and interrupt configuration.

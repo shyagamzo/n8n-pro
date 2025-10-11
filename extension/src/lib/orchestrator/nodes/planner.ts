@@ -1,6 +1,7 @@
 import { Command } from '@langchain/langgraph'
+import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
-import { SystemMessage, HumanMessage, AIMessage } from '@langchain/core/messages'
+import { HumanMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '../state'
@@ -14,16 +15,16 @@ import { plannerTools } from '../tools/planner'
 /**
  * Planner node generates structured workflow plans in Loom format.
  *
- * Features:
+ * Uses createReactAgent for automatic tool loop handling:
  * - Bound tools: fetch_n8n_node_types, get_node_docs
+ * - ReAct agent handles tool calls internally (no separate tool node needed)
  * - Uses Loom protocol for efficient agent communication
  * - Integrates with narrator for progress updates
  * - Integrates with debug session for tracing
  *
  * Flow:
- * 1. LLM generates workflow plan OR calls tools
- * 2. If tool calls: goto planner_tools node
- * 3. If plan generated: parse Loom → validate → goto validator
+ * 1. ReAct agent generates workflow plan (calls tools as needed internally)
+ * 2. Parse Loom response → convert to plan → goto validator
  */
 export async function plannerNode(
   state: OrchestratorStateType,
@@ -43,55 +44,46 @@ export async function plannerNode(
   narrator?.post('planner', 'designing workflow', 'started')
   session?.log('Starting plan generation', { messageCount: state.messages.length })
 
-  debugAgentDecision('planner', 'Starting workflow plan generation', 'Converting conversation to Loom format', {
+  debugAgentDecision('planner', 'Starting workflow plan generation', 'Using ReAct agent with tools', {
     messageCount: state.messages.length
   })
 
-  // Bind planner-specific tools
-  const model = new ChatOpenAI({
-    apiKey,
-    model: modelName,
-    temperature: 0.2
-  }).bindTools(plannerTools)
-
+  // Create ReAct agent with planner tools
   const systemPrompt = buildPrompt('planner', {
     includeNodesReference: true,
     includeWorkflowPatterns: true,
     includeConstraints: true
   })
 
-  const planRequest = `Generate a workflow plan based on our conversation.
+  const agent = createReactAgent({
+    llm: new ChatOpenAI({
+      apiKey,
+      model: modelName,
+      temperature: 0.2
+    }),
+    tools: plannerTools,
+    messageModifier: systemPrompt
+  })
+
+  const planRequest = new HumanMessage(`Generate a workflow plan based on our conversation.
 Return ONLY raw Loom format - no markdown code blocks, no explanatory text, just the pure Loom structure.
 
-If you need to check what node types are available, use the fetch_n8n_node_types tool first.`
+If you need to check what node types are available, use the fetch_n8n_node_types tool first.`)
 
-  const response = await model.invoke([
-    new SystemMessage(systemPrompt),
-    ...state.messages,
-    new HumanMessage(planRequest)
-  ])
+  // ReAct agent handles tool loop internally
+  const result = await agent.invoke(
+    { messages: [...state.messages, planRequest] },
+    config
+  )
 
-  // Check if LLM called tools
-  if ((response as AIMessage).tool_calls?.length)
-  {
-    debugAgentDecision('planner', 'Calling tools', 'Fetching n8n node information', {
-      toolCount: (response as AIMessage).tool_calls?.length
-    })
+  // Extract final response from agent
+  const lastMessage = result.messages[result.messages.length - 1]
+  const content = lastMessage.content as string
 
-    // Route to planner_tools node
-    return new Command({
-      goto: 'planner_tools',
-      update: {
-        messages: [response]
-      }
-    })
-  }
-
-  // Parse Loom response
-  const content = response.content as string
   debugLLMResponse(content, session?.getSessionId() || '')
   session?.log('LLM response received', { responseLength: content.length })
 
+  // Parse Loom response
   const cleanedResponse = stripCodeFences(content)
   const parsed = parseLoom(cleanedResponse)
 
@@ -124,7 +116,7 @@ If you need to check what node types are available, use the fetch_n8n_node_types
     goto: 'validator',
     update: {
       plan,
-      messages: [response]
+      messages: result.messages
     }
   })
 }

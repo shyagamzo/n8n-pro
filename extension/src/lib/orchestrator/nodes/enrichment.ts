@@ -1,6 +1,7 @@
 import { Command } from '@langchain/langgraph'
+import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
-import { SystemMessage, AIMessage } from '@langchain/core/messages'
+import { SystemMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '../state'
@@ -11,22 +12,22 @@ import { enrichmentCommandTools } from '../tools/enrichment-commands'
 /**
  * Enrichment node handles conversational chat and requirement gathering.
  *
- * Features:
- * - Natural conversation flow with clarification questions
+ * Uses createReactAgent for consistent agent pattern:
+ * - Bound tools: reportRequirementsStatus, setConfidence (metadata-only)
+ * - ReAct agent for natural conversation flow
  * - Token streaming support via callbacks
  * - Clean content (no markers in streamed output)
- * - Returns Command for explicit routing control
  *
  * Flow:
- * 1. LLM responds naturally to user message
+ * 1. ReAct agent responds naturally to user message
  * 2. If clarification needed: asks question in chat response
- * 3. User responds naturally in chat conversation
- * 4. Conversation continues until requirements are clear
+ * 3. Calls reportRequirementsStatus tool when ready
+ * 4. Orchestrator routes based on tool call arguments
  *
  * Benefits:
+ * - Consistent with other agents (planner, executor)
  * - No markers appear in streamed content
  * - Tool calls are structured and reliable
- * - Follows proper LangGraph patterns
  */
 export async function enrichmentNode(
   state: OrchestratorStateType,
@@ -43,57 +44,65 @@ export async function enrichmentNode(
 
   debugAgentHandoff('orchestrator', 'enrichment', 'Conversational response and requirement gathering')
 
-  // Bind askClarification tool for requesting user input
-  const model = new ChatOpenAI({
-    apiKey,
-    model: modelName,
-    temperature: 0.7,
-    streaming: true
-    // Don't pass callbacks here - LangGraph propagates them automatically
-  }).bindTools(enrichmentCommandTools)
-
+  // Create ReAct agent with enrichment tools
   const systemPrompt = buildPrompt('enrichment', {
     includeNodesReference: true,
     includeConstraints: true
   })
 
-  const response = await model.invoke([
-    new SystemMessage(systemPrompt),
-    ...state.messages
-  ])
+  const agent = createReactAgent({
+    llm: new ChatOpenAI({
+      apiKey,
+      model: modelName,
+      temperature: 0.7,
+      streaming: true
+    }),
+    tools: enrichmentCommandTools,
+    messageModifier: new SystemMessage(systemPrompt)
+  })
+
+  // ReAct agent handles tool loop internally
+  const result = await agent.invoke(
+    { messages: state.messages },
+    config
+  )
+
+  const lastMessage = result.messages[result.messages.length - 1]
 
   debugAgentDecision(
     'enrichment',
     'Generated response',
-    `Response length: ${(response.content as string).length}`,
-    { hasToolCalls: !!(response as AIMessage).tool_calls?.length }
+    `Response length: ${(lastMessage.content as string).length}`,
+    { hasToolCalls: !!(lastMessage as any).tool_calls?.length }
   )
 
   // Check if LLM called any command tools
-  const toolCalls = (response as AIMessage).tool_calls
+  const toolCalls = (lastMessage as any).tool_calls
 
-  if (toolCalls && toolCalls.length > 0) {
+  if (toolCalls && toolCalls.length > 0)
+  {
     debugAgentDecision(
       'enrichment',
       'Status reported via tools',
       `Found ${toolCalls.length} tool calls`,
-      { toolCalls: toolCalls.map(tc => tc.name) }
+      { toolCalls: toolCalls.map((tc: any) => tc.name) }
     )
-  } else {
+  }
+  else
+  {
     debugAgentDecision(
       'enrichment',
       'Chat response',
-      (response.content as string).substring(0, 100),
-      { contentLength: (response.content as string).length }
+      (lastMessage.content as string).substring(0, 100),
+      { contentLength: (lastMessage.content as string).length }
     )
   }
 
   // Orchestrator reads tool calls directly from message and makes routing decision
-  // No need for separate tool execution node
   return new Command({
     goto: 'END',
     update: {
-      messages: [response as AIMessage]
+      messages: result.messages
     }
   })
 }

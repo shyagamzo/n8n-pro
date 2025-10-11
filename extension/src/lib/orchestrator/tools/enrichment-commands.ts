@@ -4,7 +4,7 @@ import { z } from 'zod'
 /**
  * Command tools for enrichment agent to signal system state changes.
  * These tools allow the LLM to communicate metadata without affecting user-facing content.
- * 
+ *
  * Note: These tools don't execute any actions - they're purely for schema validation.
  * The orchestrator reads the tool call arguments directly from the message to make routing decisions.
  */
