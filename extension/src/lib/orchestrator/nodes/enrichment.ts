@@ -98,9 +98,8 @@ export async function enrichmentNode(
     )
   }
 
-  // Orchestrator reads tool calls directly from message and makes routing decision
+  // Let the conditional edge handle routing based on tool calls
   return new Command({
-    goto: 'END',
     update: {
       messages: result.messages
     }
