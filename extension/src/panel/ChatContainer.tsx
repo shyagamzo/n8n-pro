@@ -17,20 +17,6 @@ export default function ChatContainer(): React.ReactElement | null
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // TEMPORARY TEST HANDLER - Remove before production
-  const handleTestWorkflow = (): void =>
-  {
-    clearSession()
-    setTimeout(() =>
-    {
-      chat.send(
-        'Create a workflow which will send me a joke email every morning ' +
-        '8AM, automatically, send through Gmail to shyagam@gmail.com. Generate both the jokes and the email subject using LLM. ' +
-        'Use gpt-4o-mini as the model'
-      )
-    }, 100)
-  }
-
   // Load persisted messages on mount
   useEffect(() =>
   {
@@ -62,7 +48,6 @@ export default function ChatContainer(): React.ReactElement | null
         sending={sending}
         activities={activities}
         onSend={(text) => chat.send(text)}
-        onTest={handleTestWorkflow}
       />
       {isOpen && (
         <ConfirmModal
