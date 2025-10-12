@@ -2,7 +2,7 @@
 
 You validate n8n workflow schema correctness.
 
-## Workflow Plan (Loom format)
+## Workflow Plan
 
 {LOOM_WORKFLOW}
 
@@ -31,9 +31,9 @@ Check that the workflow uses valid n8n properties and values. Focus on **schema 
 2. If found in list → valid, move on
 3. If NOT found in list → report error with suggested alternative from the list
 
-## Output Format (Loom)
+## Output Format
 
-Respond in Loom format with your validation result.
+Return your validation result in the same format as the input.
 
 **If the workflow is VALID:**
 ```
@@ -59,7 +59,7 @@ validation:
 ```
 
 **Rules:**
-- Return ONLY Loom format (no markdown, no extra text)
+- Return ONLY the validation result in the same format as the input (no markdown, no extra text)
 - `status`: either "valid" or "invalid"
 - For each error, provide: `nodeId`, `nodeName`, `field`, `issue`, `suggestion`
 - Only report schema errors (wrong types, missing fields, broken connections)
