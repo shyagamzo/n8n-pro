@@ -14,6 +14,7 @@ export type SystemEvent =
   | LLMEvent
   | ErrorEvent
   | StorageEvent
+  | SystemInfoEvent
 
 export type WorkflowEventPayload = {
   workflowId?: string
@@ -109,6 +110,20 @@ export type StorageEvent = {
   domain: 'storage'
   type: 'save' | 'load' | 'clear'
   payload: StorageEventPayload
+  timestamp: number
+}
+
+export type SystemInfoEventPayload = {
+  message: string
+  component: string
+  level: 'info' | 'debug'
+  data?: Record<string, unknown>
+}
+
+export type SystemInfoEvent = {
+  domain: 'system'
+  type: 'info' | 'debug' | 'init'
+  payload: SystemInfoEventPayload
   timestamp: number
 }
 

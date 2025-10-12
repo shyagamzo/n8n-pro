@@ -1,13 +1,13 @@
 /**
  * Tracing Subscriber
- * 
+ *
  * Accumulates agent and LLM events into traces for debugging.
  * Uses the scan operator to build trace state over time.
  */
 
 import { Subject, merge } from 'rxjs'
 import { scan, tap, takeUntil, finalize } from 'rxjs/operators'
-import { systemEvents } from '../index'
+import { systemEvents, emitSystemInfo } from '../index'
 import type { AgentTrace } from '../types'
 
 const destroy$ = new Subject<void>()
@@ -18,18 +18,18 @@ const traceUpdates$ = merge(systemEvents.agent$, systemEvents.llm$).pipe(
   scan((accTraces, event) => {
     // Extract session ID from event payload
     const sessionId = ('sessionId' in event.payload && event.payload.sessionId) || 'default'
-    
+
     // Get or create trace for this session
     const trace = accTraces.get(sessionId as string) || {
       sessionId: sessionId as string,
       events: [],
       startTime: Date.now()
     }
-    
+
     // Add event to trace
     trace.events.push(event)
     accTraces.set(sessionId as string, trace)
-    
+
     return accTraces
   }, new Map<string, AgentTrace>()),
   tap(updatedTraces => {
@@ -47,7 +47,7 @@ export function setup(): void {
     .pipe(
       takeUntil(destroy$),
       finalize(() => {
-        console.log('[tracing] Subscription cleaned up')
+        emitSystemInfo('tracing', 'Subscription cleaned up', {})
         traces.clear()
       })
     )

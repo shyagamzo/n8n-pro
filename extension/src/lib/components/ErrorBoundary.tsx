@@ -1,5 +1,6 @@
 import React, { Component, type ReactNode } from 'react'
 import './ErrorBoundary.css'
+import { emitUnhandledError } from '../events/emitters'
 
 type ErrorBoundaryProps = {
   children: ReactNode
@@ -32,12 +33,10 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void
   {
     this.setState({ errorInfo })
-    
-    // Log error for debugging (sanitize sensitive data)
-    console.error('❌ React Error Boundary caught an error:', {
-      error: error.message,
-      componentStack: errorInfo.componentStack,
-      stack: error.stack
+
+    // Emit error event for reactive logger
+    emitUnhandledError(error, 'ErrorBoundary', {
+      componentStack: errorInfo.componentStack
     })
   }
 
@@ -66,13 +65,13 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
             <div className="error-boundary__actions">
-              <button 
+              <button
                 className="error-boundary__button error-boundary__button--primary"
                 onClick={this.handleReset}
               >
                 Try Again
               </button>
-              <button 
+              <button
                 className="error-boundary__button error-boundary__button--secondary"
                 onClick={() => window.location.reload()}
               >

@@ -1,6 +1,7 @@
 import type { ChatMessage } from '../types/chat'
 import { DEFAULTS } from '../constants'
 import { fetchWithTimeout } from '../utils/fetch'
+import { emitSystemDebug } from '../events/emitters'
 
 export type OpenAiStreamOptions = {
   model?: string
@@ -89,7 +90,9 @@ function processSseChunk(chunk: string, onToken: (t: string) => void): boolean
     catch (error)
     {
       // Ignore malformed SSE lines - they may be incomplete chunks
-      console.debug('Skipping malformed SSE line:', error)
+      emitSystemDebug('openai', 'Skipping malformed SSE line', {
+        error: error instanceof Error ? error.message : String(error)
+      })
     }
   }
 

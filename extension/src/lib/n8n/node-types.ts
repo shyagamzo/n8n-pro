@@ -1,4 +1,5 @@
 import { apiFetch } from '../api/fetch'
+import { emitSystemInfo } from '../events/emitters'
 import { DEFAULTS } from '../constants'
 
 export type NodeParameter = {
@@ -83,14 +84,14 @@ export async function fetchNodeTypes(options: {
     nodeTypesCache = nodeTypes
     cacheTimestamp = now
 
-    console.info('✅ Node types fetched from n8n API', { count: Object.keys(nodeTypes).length })
+    emitSystemInfo('node-types', 'Node types fetched from n8n API', { count: Object.keys(nodeTypes).length })
     return nodeTypes
   }
   catch (error)
   {
     // Deep validation requires node types API, which may not be available in all n8n versions
     // This is not a critical error - we fall back to structural validation
-    console.info('ℹ️ Node types API unavailable (deep validation disabled)', {
+    emitSystemInfo('node-types', 'Node types API unavailable (deep validation disabled)', {
       endpoint: url,
       error: error instanceof Error ? error.message : String(error)
     })
@@ -98,7 +99,7 @@ export async function fetchNodeTypes(options: {
     // If we have stale cache, return it as fallback
     if (nodeTypesCache)
     {
-      console.info('Using cached node types from previous fetch')
+      emitSystemInfo('node-types', 'Using cached node types from previous fetch', {})
       return nodeTypesCache
     }
 

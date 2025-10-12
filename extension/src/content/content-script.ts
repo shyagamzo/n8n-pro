@@ -7,6 +7,7 @@
 import { isN8nHost } from './utils/host-detection'
 import { createTriggerButton } from './components/trigger-button'
 import { createTestButton } from './components/test-button'
+import { emitSystemInit } from '../lib/events/emitters'
 
 const MOUNT_ID = 'n8n-pro-mount-root'
 
@@ -21,7 +22,7 @@ function initialize(): void {
   document.body.appendChild(trigger)
   document.body.appendChild(testButton)
 
-  console.info('n8n Pro content script initialized')
+  emitSystemInit('content-script', 'n8n Pro content script initialized', {})
 }
 
 // Initialize if on n8n host

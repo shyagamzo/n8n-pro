@@ -9,7 +9,7 @@ import { Subject } from 'rxjs'
 import { takeUntil, finalize, switchMap, debounceTime, filter, catchError } from 'rxjs/operators'
 import { EMPTY } from 'rxjs'
 import { systemEvents } from '../index'
-import { emitStorageSave, emitSubscriberError } from '../emitters'
+import { emitStorageSave, emitSubscriberError, emitSystemInfo } from '../emitters'
 import { storageGet, storageSet } from '../../utils/storage'
 import { STORAGE_KEYS } from '../../constants'
 import type { WorkflowEvent } from '../types'
@@ -77,11 +77,13 @@ export function setup(): void {
   workflowPersistence$
     .pipe(
       takeUntil(destroy$),
-      finalize(() => console.log('[workflow-persistence] Subscription cleaned up'))
+      finalize(() => emitSystemInfo('persistence', 'Subscription cleaned up', {}))
     )
     .subscribe(event => {
       if (event && process.env.NODE_ENV === 'development') {
-        console.log('[workflow-persistence] Persisted workflow:', event.payload.workflow.name)
+        emitSystemInfo('persistence', 'Persisted workflow', {
+          workflowName: event.payload.workflow.name
+        })
       }
     })
 }

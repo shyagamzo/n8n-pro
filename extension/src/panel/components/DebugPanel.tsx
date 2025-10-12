@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import type { Plan } from '../../lib/types/plan'
 import '../../lib/styles/utilities.css'
 import './DebugPanel.css'
+import { emitSystemError } from '../../lib/events/emitters'
 
 type DebugPanelProps = {
   plan: Plan
@@ -130,7 +131,7 @@ async function copyToClipboard(data: unknown): Promise<void>
   }
   catch (error)
   {
-    console.error('❌ Failed to copy to clipboard:', error)
+    emitSystemError(error, 'DebugPanel.copyToClipboard', { action: 'copy' })
   }
 }
 

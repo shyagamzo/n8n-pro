@@ -19,6 +19,7 @@ import type {
   LLMEvent,
   ErrorEvent,
   StorageEvent,
+  SystemInfoEvent,
   AgentMetadata,
   TokenCount,
   ErrorContext,
@@ -62,6 +63,10 @@ function emitErrorEvent(type: ErrorEvent['type'], payload: ErrorEvent['payload']
 
 function emitStorageEvent(type: StorageEvent['type'], payload: StorageEvent['payload']): void {
   emitEvent({ domain: 'storage', type, payload })
+}
+
+function emitSystemInfoEvent(type: SystemInfoEvent['type'], payload: SystemInfoEvent['payload']): void {
+  emitEvent({ domain: 'system', type, payload })
 }
 
 /**
@@ -169,5 +174,21 @@ export function emitStorageLoad(key: string, value: StorageValue): void {
 
 export function emitStorageClear(key: string): void {
   emitStorageEvent('clear', { key })
+}
+
+/**
+ * System info event emitters
+ */
+
+export function emitSystemInit(component: string, message: string, data?: Record<string, unknown>): void {
+  emitSystemInfoEvent('init', { component, message, level: 'info', data })
+}
+
+export function emitSystemInfo(component: string, message: string, data?: Record<string, unknown>): void {
+  emitSystemInfoEvent('info', { component, message, level: 'info', data })
+}
+
+export function emitSystemDebug(component: string, message: string, data?: Record<string, unknown>): void {
+  emitSystemInfoEvent('debug', { component, message, level: 'debug', data })
 }
 

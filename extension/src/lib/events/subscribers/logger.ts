@@ -15,7 +15,8 @@ import type {
   AgentEvent,
   LLMEvent,
   ErrorEvent,
-  StorageEvent
+  StorageEvent,
+  SystemInfoEvent
 } from '../types'
 
 const destroy$ = new Subject<void>()
@@ -161,6 +162,29 @@ function logStorageEvent(event: StorageEvent): void {
 }
 
 /**
+ * Log system info events (init, info, debug)
+ */
+function logSystemInfoEvent(event: SystemInfoEvent): void {
+  const details: string[] = []
+  const p = event.payload
+
+  if (p.component) details.push(p.component)
+  if (p.message) details.push(p.message)
+
+  const title = formatTitle(event.domain, event.type, details, event.timestamp)
+
+  // Use different colors for different levels
+  const color = p.level === 'debug' ? '#6b7280' : '#3b82f6'
+  createLogGroup(title, color, true)
+
+  if (p.data && Object.keys(p.data).length > 0) {
+    console.log('Data:', p.data)
+  }
+
+  console.groupEnd()
+}
+
+/**
  * Route events to appropriate logging function
  */
 function logEvent(event: SystemEvent): void {
@@ -179,6 +203,9 @@ function logEvent(event: SystemEvent): void {
       break
     case 'storage':
       logStorageEvent(event)
+      break
+    case 'system':
+      logSystemInfoEvent(event)
       break
   }
 }

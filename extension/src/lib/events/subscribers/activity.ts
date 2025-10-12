@@ -10,7 +10,7 @@ import { map, debounceTime, delay, filter, catchError, takeUntil, finalize } fro
 import { EMPTY } from 'rxjs'
 import { systemEvents } from '../index'
 import { useChatStore } from '../../state/chatStore'
-import { emitSubscriberError } from '../emitters'
+import { emitSubscriberError, emitSystemInfo } from '../emitters'
 import type { AgentActivity } from '../../state/chatStore'
 import type { AgentEvent, LLMEvent } from '../types'
 
@@ -65,7 +65,7 @@ export function setup(): void {
   activityUpdates$
     .pipe(
       takeUntil(destroy$),
-      finalize(() => console.log('[activity-updates] Subscription cleaned up'))
+      finalize(() => emitSystemInfo('activity', 'Activity updates subscription cleaned up', {}))
     )
     .subscribe(activity => useChatStore.getState().addActivity(activity))
 
@@ -73,7 +73,7 @@ export function setup(): void {
   activityCleanup$
     .pipe(
       takeUntil(destroy$),
-      finalize(() => console.log('[activity-cleanup] Subscription cleaned up'))
+      finalize(() => emitSystemInfo('activity', 'Activity cleanup subscription cleaned up', {}))
     )
     .subscribe(id => useChatStore.getState().removeActivity(id))
 }

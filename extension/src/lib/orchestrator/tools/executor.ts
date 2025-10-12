@@ -1,6 +1,6 @@
 import { tool } from '@langchain/core/tools'
 import { z } from 'zod'
-import { createN8nClient } from '../../n8n'
+import { N8nClient } from '../../n8n'
 import { DEFAULTS } from '../../constants'
 
 const createWorkflowSchema = z.object({
@@ -16,7 +16,7 @@ const createWorkflowSchema = z.object({
 export const createWorkflowTool = tool(
   async (input) => {
     const args = input as z.infer<typeof createWorkflowSchema>
-    const n8n = createN8nClient({
+    const n8n = new N8nClient({
       apiKey: args.apiKey,
       baseUrl: args.baseUrl
     })

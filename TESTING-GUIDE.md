@@ -382,9 +382,9 @@ console.log('Parse result:', result)
 ### Test n8n API Directly
 
 ```typescript
-import { createN8nClient } from './lib/n8n'
+import { N8nClient } from './lib/n8n'
 
-const n8n = createN8nClient({
+const n8n = new N8nClient({
   baseUrl: 'http://localhost:5678',
   apiKey: 'your-api-key'
 })

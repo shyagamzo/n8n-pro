@@ -20,7 +20,8 @@ import { getOpenAiKey, getN8nApiKey, getBaseUrlOrDefault } from '../lib/services
 import {
   systemEvents,
   emitUnhandledError,
-  emitApiError
+  emitApiError,
+  emitSystemInit
 } from '../lib/events'
 import * as logger from '../lib/events/subscribers/logger'
 import * as persistence from '../lib/events/subscribers/persistence'
@@ -43,7 +44,7 @@ if (typeof window !== 'undefined') {
 }
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.info('n8n Pro Extension installed')
+  emitSystemInit('background-worker', 'n8n Pro Extension installed', {})
 })
 
 // Cleanup on extension suspend

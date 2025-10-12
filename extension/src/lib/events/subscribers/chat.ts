@@ -1,6 +1,6 @@
 /**
  * Chat Subscriber
- * 
+ *
  * Transforms workflow and error events into chat messages.
  * Updates the chat store reactively when events occur.
  */
@@ -11,7 +11,7 @@ import { EMPTY } from 'rxjs'
 import { systemEvents } from '../index'
 import { useChatStore } from '../../state/chatStore'
 import { generateId } from '../../utils/id'
-import { emitSubscriberError } from '../emitters'
+import { emitSubscriberError, emitSystemInfo } from '../emitters'
 
 const destroy$ = new Subject<void>()
 
@@ -55,15 +55,15 @@ export function setup(): void {
   workflowMessages$
     .pipe(
       takeUntil(destroy$),
-      finalize(() => console.log('[chat-workflow] Subscription cleaned up'))
+      finalize(() => emitSystemInfo('chat', 'Workflow messages subscription cleaned up', {}))
     )
     .subscribe(msg => useChatStore.getState().addMessage(msg))
-  
+
   // Subscribe to error messages
   errorMessages$
     .pipe(
       takeUntil(destroy$),
-      finalize(() => console.log('[chat-error] Subscription cleaned up'))
+      finalize(() => emitSystemInfo('chat', 'Error messages subscription cleaned up', {}))
     )
     .subscribe(msg => useChatStore.getState().addMessage(msg))
 }

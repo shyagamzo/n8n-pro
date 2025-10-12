@@ -10,7 +10,7 @@
 
 import { Subject } from 'rxjs'
 import { filter, takeUntil, finalize, switchMap } from 'rxjs/operators'
-import { systemEvents } from '../index'
+import { systemEvents, emitSystemInfo } from '../index'
 import { getBaseUrlOrDefault } from '../../services/settings'
 import type { BackgroundMessage } from '../../types/messaging'
 
@@ -34,7 +34,7 @@ export function setup(post: (msg: BackgroundMessage) => void): void {
         }
       }),
       takeUntil(destroy$),
-      finalize(() => console.log('[messaging-workflow] Cleaned up'))
+      finalize(() => emitSystemInfo('messaging', 'Workflow messaging subscription cleaned up', {}))
     )
     .subscribe(msg => post(msg))
 

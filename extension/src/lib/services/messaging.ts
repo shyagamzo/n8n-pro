@@ -1,5 +1,6 @@
 import type { ChatMessage } from '../types/chat'
 import type { ApplyPlanRequest, BackgroundMessage } from '../types/messaging'
+import { emitSystemError } from '../events/emitters'
 
 /**
  * ChatPort - Manages chrome.runtime port connection for chat messaging.
@@ -36,7 +37,7 @@ export class ChatPort {
       this.disconnected = false
     } catch (error) {
       // Extension context invalidated or background not available
-      console.warn('Failed to reconnect chat port:', error)
+      emitSystemError(error, 'ChatPort.ensureConnected', { action: 'reconnect' })
     }
   }
 
@@ -48,14 +49,14 @@ export class ChatPort {
       this.port.postMessage(data)
     } catch (error) {
       // Reconnect once and retry
-      console.warn('Port disconnected, attempting reconnect:', error)
+      emitSystemError(error, 'ChatPort.safePost', { action: 'post_attempt_1', data })
       this.ensureConnected()
 
       try {
         this.port.postMessage(data)
       } catch (retryError) {
         // Failed after retry - extension context likely invalidated
-        console.error('Failed to send message after reconnect:', retryError)
+        emitSystemError(retryError, 'ChatPort.safePost', { action: 'post_attempt_2_failed', data })
       }
     }
   }
@@ -91,7 +92,7 @@ export class ChatPort {
       this.port.disconnect()
     } catch (error) {
       // Port already disconnected or extension context invalidated
-      console.warn('Failed to disconnect port:', error)
+      emitSystemError(error, 'ChatPort.disconnect', { action: 'disconnect' })
     }
   }
 }
