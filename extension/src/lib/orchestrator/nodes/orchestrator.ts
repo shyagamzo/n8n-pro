@@ -16,65 +16,184 @@ import type { OrchestratorStateType } from '../state'
 import type { RunnableConfig } from '@langchain/core/runnables'
 import { emitAgentHandoff, emitSystemDebug } from '../../events/emitters'
 
+// ==========================================
+// Type Definitions
+// ==========================================
+
 /**
- * Orchestrator node - determines next agent based on current state
+ * Arguments for reportRequirementsStatus tool call
  */
-export function orchestratorNode(
-  state: OrchestratorStateType,
-  _config?: RunnableConfig
-): Command {
-  // Find the most recent AI message with tool calls
-  // (ReAct agents append ToolMessages after AIMessages, so last message might be a ToolMessage)
-  let lastAIMessageWithTools: any = null
-  for (let i = state.messages.length - 1; i >= 0; i--) {
-    const msg = state.messages[i] as any
-    if (msg.tool_calls && msg.tool_calls.length > 0) {
-      lastAIMessageWithTools = msg
-      break
+interface RequirementsStatusArgs
+{
+  hasAllRequiredInfo: boolean
+  confidence: number
+  missingInfo?: string[]
+}
+
+/**
+ * Routing thresholds
+ */
+const ROUTING_THRESHOLDS = {
+  CONFIDENCE_MIN: 0.8,  // Minimum confidence to proceed to planning
+} as const
+
+// ==========================================
+// Helper Functions
+// ==========================================
+
+/**
+ * Find the most recent AI message that contains tool calls
+ *
+ * ReAct agents append ToolMessages after AIMessages, so the last message
+ * in the array might be a ToolMessage. We need to search backwards to find
+ * the AIMessage that contains the tool_calls.
+ */
+function findLastAIMessageWithTools(messages: any[]): any | null
+{
+  for (let i = messages.length - 1; i >= 0; i--)
+  {
+    const msg = messages[i] as any
+
+    if (msg.tool_calls && msg.tool_calls.length > 0)
+    {
+      return msg
     }
   }
 
-  // Check if enrichment called reportRequirementsStatus tool
-  if (lastAIMessageWithTools) {
-    for (const toolCall of lastAIMessageWithTools.tool_calls) {
-      if (toolCall.name === 'reportRequirementsStatus') {
-        const args = toolCall.args as {
-          hasAllRequiredInfo: boolean
-          confidence: number
-          missingInfo?: string[]
-        }
+  return null
+}
 
-        emitSystemDebug('orchestrator', 'reportRequirementsStatus received', {
-          hasAllRequiredInfo: args.hasAllRequiredInfo,
-          confidence: args.confidence,
-          missingInfo: args.missingInfo
-        })
+/**
+ * Find reportRequirementsStatus tool call in message
+ */
+function findRequirementsStatusToolCall(message: any): RequirementsStatusArgs | null
+{
+  if (!message?.tool_calls) return null
 
-        // Ready to plan: high confidence + has all info
-        if (args.hasAllRequiredInfo && args.confidence > 0.8) {
-          emitAgentHandoff('enrichment', 'planner', `requirements complete (confidence: ${args.confidence})`)
-          return new Command({
-            goto: 'planner',
-            update: { mode: 'workflow' }  // Update state to workflow mode
-          })
-        }
-
-        // Not ready: continue gathering requirements
-        emitAgentHandoff('orchestrator', 'enrichment', `more info needed (confidence: ${args.confidence})`)
-        return new Command({
-          goto: 'enrichment',
-          update: { mode: 'chat' }  // Keep in chat mode
-        })
-      }
+  for (const toolCall of message.tool_calls)
+  {
+    if (toolCall.name === 'reportRequirementsStatus')
+    {
+      return toolCall.args as RequirementsStatusArgs
     }
   }
 
-  // No tool calls yet (initial state or pure conversation)
-  // Route to enrichment to start gathering requirements
-  emitSystemDebug('orchestrator', 'No tool calls found, routing to enrichment', { messageCount: state.messages.length })
+  return null
+}
+
+/**
+ * Check if requirements are complete and confidence is high enough
+ */
+function isReadyForPlanning(args: RequirementsStatusArgs): boolean
+{
+  return args.hasAllRequiredInfo && args.confidence > ROUTING_THRESHOLDS.CONFIDENCE_MIN
+}
+
+// ==========================================
+// Routing Commands
+// ==========================================
+
+/**
+ * Route to planner (requirements complete)
+ */
+function routeToPlanner(confidence: number): Command
+{
+  emitAgentHandoff(
+    'enrichment',
+    'planner',
+    `requirements complete (confidence: ${confidence})`
+  )
+
+  return new Command({
+    goto: 'planner',
+    update: { mode: 'workflow' }
+  })
+}
+
+/**
+ * Route back to enrichment (more info needed)
+ */
+function routeToEnrichment(confidence: number): Command
+{
+  emitAgentHandoff(
+    'orchestrator',
+    'enrichment',
+    `more info needed (confidence: ${confidence})`
+  )
+
   return new Command({
     goto: 'enrichment',
     update: { mode: 'chat' }
   })
+}
+
+/**
+ * Route to enrichment (initial state, no tool calls yet)
+ */
+function routeToEnrichmentInitial(messageCount: number): Command
+{
+  emitSystemDebug(
+    'orchestrator',
+    'No tool calls found, routing to enrichment',
+    { messageCount }
+  )
+
+  return new Command({
+    goto: 'enrichment',
+    update: { mode: 'chat' }
+  })
+}
+
+// ==========================================
+// Main Orchestrator Node
+// ==========================================
+
+/**
+ * Orchestrator node - determines next agent based on current state
+ *
+ * This is a pure routing function that analyzes the conversation state
+ * and decides which agent should handle the next step.
+ *
+ * @param state - Current orchestrator state with message history
+ * @param _config - Runnable config (unused)
+ * @returns Command with routing decision
+ */
+export function orchestratorNode(
+  state: OrchestratorStateType,
+  _config?: RunnableConfig
+): Command
+{
+  // Step 1: Find the most recent AI message with tool calls
+  const lastAIMessageWithTools = findLastAIMessageWithTools(state.messages)
+
+  if (!lastAIMessageWithTools)
+  {
+    // No tool calls yet - initial state or pure conversation
+    return routeToEnrichmentInitial(state.messages.length)
+  }
+
+  // Step 2: Check for reportRequirementsStatus tool call
+  const requirementsStatus = findRequirementsStatusToolCall(lastAIMessageWithTools)
+
+  if (!requirementsStatus)
+  {
+    // No requirements status reported - continue with enrichment
+    return routeToEnrichmentInitial(state.messages.length)
+  }
+
+  // Step 3: Log the status for debugging
+  emitSystemDebug('orchestrator', 'reportRequirementsStatus received', {
+    hasAllRequiredInfo: requirementsStatus.hasAllRequiredInfo,
+    confidence: requirementsStatus.confidence,
+    missingInfo: requirementsStatus.missingInfo
+  })
+
+  // Step 4: Make routing decision based on readiness
+  if (isReadyForPlanning(requirementsStatus))
+  {
+    return routeToPlanner(requirementsStatus.confidence)
+  }
+
+  return routeToEnrichment(requirementsStatus.confidence)
 }
 
