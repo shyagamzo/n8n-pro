@@ -48,6 +48,7 @@ export function extractAgentFromMetadata(metadata?: Record<string, any>): AgentT
 
   // Try langgraph_node first (most reliable)
   const node = metadata.langgraph_node
+  
   if (node && typeof node === 'string') {
     // Handle tool nodes by looking at checkpoint_ns
     if (node === 'tools' && metadata.checkpoint_ns) {
