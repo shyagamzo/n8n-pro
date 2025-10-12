@@ -14,6 +14,7 @@
 import { Command } from '@langchain/langgraph'
 import type { OrchestratorStateType } from '../state'
 import type { RunnableConfig } from '@langchain/core/runnables'
+import { emitAgentHandoff, emitSystemDebug } from '../../events/emitters'
 
 /**
  * Orchestrator node - determines next agent based on current state
@@ -43,11 +44,15 @@ export function orchestratorNode(
           missingInfo?: string[]
         }
 
-        console.log('[orchestrator] reportRequirementsStatus:', args)
+        emitSystemDebug('orchestrator', 'reportRequirementsStatus received', {
+          hasAllRequiredInfo: args.hasAllRequiredInfo,
+          confidence: args.confidence,
+          missingInfo: args.missingInfo
+        })
 
         // Ready to plan: high confidence + has all info
         if (args.hasAllRequiredInfo && args.confidence > 0.8) {
-          console.log('[orchestrator] Routing to planner (ready)')
+          emitAgentHandoff('enrichment', 'planner', `requirements complete (confidence: ${args.confidence})`)
           return new Command({
             goto: 'planner',
             update: { mode: 'workflow' }  // Update state to workflow mode
@@ -55,7 +60,7 @@ export function orchestratorNode(
         }
 
         // Not ready: continue gathering requirements
-        console.log('[orchestrator] Routing back to enrichment (not ready)')
+        emitAgentHandoff('orchestrator', 'enrichment', `more info needed (confidence: ${args.confidence})`)
         return new Command({
           goto: 'enrichment',
           update: { mode: 'chat' }  // Keep in chat mode
@@ -66,7 +71,7 @@ export function orchestratorNode(
 
   // No tool calls yet (initial state or pure conversation)
   // Route to enrichment to start gathering requirements
-  console.log('[orchestrator] No tool calls found, routing to enrichment (initial)')
+  emitSystemDebug('orchestrator', 'No tool calls found, routing to enrichment', { messageCount: state.messages.length })
   return new Command({
     goto: 'enrichment',
     update: { mode: 'chat' }
