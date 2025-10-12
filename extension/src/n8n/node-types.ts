@@ -1,5 +1,7 @@
-import { emitSystemInfo } from '@events/emitters'
+import { emitSystemInfo, emitSystemError } from '@events/emitters'
 import { getHardcodedNodeTypes, getNodeTypeCount } from './hardcoded-node-types'
+import { N8nInternalClient } from './internal-client'
+import type { NodeTypeInfo } from './internal-client'
 
 export type NodeParameter = {
   displayName: string
@@ -37,28 +39,103 @@ export type NodeTypesResponse = {
   [key: string]: NodeType
 }
 
+// Cache for fetched node types
+let cachedNodeTypes: NodeTypesResponse | null = null
+
 /**
  * Fetch all available node types.
  *
- * Since n8n doesn't provide a public node-types API endpoint,
- * we return hardcoded node types based on n8n's source code and documentation.
+ * Strategy:
+ * 1. Try fetching from n8n internal REST endpoint (/rest/node-types or similar)
+ * 2. Fall back to hardcoded types from source code (517 nodes)
  *
- * @param _options - Options (unused, kept for API compatibility)
- * @returns Hardcoded node types
+ * @param options - Fetch options
+ * @param options.baseUrl - n8n instance URL
+ * @param options.forceRefresh - Skip cache and fetch fresh data
+ * @param options.tryInternal - Try internal REST endpoint first (default: true, content scripts only)
+ * @returns Node types dictionary
  */
-export async function fetchNodeTypes(_options?: {
+export async function fetchNodeTypes(options?: {
   baseUrl?: string
   apiKey?: string
   forceRefresh?: boolean
+  tryInternal?: boolean
 }): Promise<NodeTypesResponse>
 {
+  // Return cached if available and not forcing refresh
+  if (cachedNodeTypes && !options?.forceRefresh)
+  {
+    emitSystemInfo('node-types', 'Using cached node types', { count: Object.keys(cachedNodeTypes).length })
+    return cachedNodeTypes
+  }
+
+  // Try internal REST endpoint if enabled (content scripts only)
+  if (options?.tryInternal !== false)
+  {
+    try
+    {
+      const client = new N8nInternalClient({ baseUrl: options?.baseUrl })
+      const internalNodes = await client.getNodeTypes()
+      
+      if (internalNodes && internalNodes.length > 0)
+      {
+        // Convert internal format to our format
+        const converted = convertInternalNodesToTypes(internalNodes)
+        cachedNodeTypes = converted
+        
+        emitSystemInfo('node-types', 'Fetched node types from n8n internal REST API', { 
+          count: Object.keys(converted).length,
+          source: 'internal-rest'
+        })
+        
+        return converted
+      }
+    }
+    catch (error)
+    {
+      emitSystemError(
+        error instanceof Error ? error : new Error(String(error)),
+        'node-types'
+      )
+    }
+  }
+
+  // Fall back to hardcoded types
   const nodeTypes = getHardcodedNodeTypes()
   const count = getNodeTypeCount()
+  cachedNodeTypes = nodeTypes
 
-  emitSystemInfo('node-types', 'Using hardcoded node types (n8n has no public API endpoint)', { count })
+  emitSystemInfo('node-types', 'Using hardcoded node types from source code', { 
+    count,
+    source: 'hardcoded'
+  })
 
-  // Return as promise for API compatibility
-  return Promise.resolve(nodeTypes)
+  return nodeTypes
+}
+
+/**
+ * Convert internal REST node format to our NodeType format
+ */
+function convertInternalNodesToTypes(internalNodes: NodeTypeInfo[]): NodeTypesResponse
+{
+  const result: NodeTypesResponse = {}
+
+  for (const node of internalNodes)
+  {
+    result[node.name] = {
+      name: node.name,
+      displayName: node.displayName,
+      description: node.description,
+      version: node.version,
+      defaults: { name: node.displayName },
+      inputs: node.inputs,
+      outputs: node.outputs,
+      properties: (node.properties as any) || [],
+      group: node.group
+    }
+  }
+
+  return result
 }
 
 /**
@@ -105,11 +182,12 @@ export function getCredentialTypes(nodeTypes: NodeTypesResponse, nodeType: strin
 }
 
 /**
- * Clear the node types cache (no-op for hardcoded types, kept for API compatibility)
+ * Clear the node types cache
  */
 export function clearNodeTypesCache(): void
 {
-  // No-op: hardcoded types don't need cache clearing
+  cachedNodeTypes = null
+  emitSystemInfo('node-types', 'Node types cache cleared', {})
 }
 
 /**
