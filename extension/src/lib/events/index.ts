@@ -14,39 +14,35 @@ export class SystemEvents {
   private eventStream$ = new Subject<SystemEvent>()
 
   /**
-   * Filtered observable streams by domain
-   * shareReplay ensures single execution shared by all subscribers
-   * refCount: true auto-unsubscribes when no subscribers remain
+   * Create a filtered observable for a specific domain
+   *
+   * @param domain - Event domain to filter by
+   * @returns Observable stream filtered by domain with shareReplay
    */
-  workflow$: Observable<WorkflowEvent> = this.eventStream$.pipe(
-    filter((e): e is WorkflowEvent => e.domain === 'workflow'),
-    shareReplay({ bufferSize: 1, refCount: true })
-  )
+  private createDomainStream<T extends SystemEvent>(
+    domain: T['domain']
+  ): Observable<T>
+  {
+    return this.eventStream$.pipe(
+      filter((e): e is T => e.domain === domain),
+      shareReplay({ bufferSize: 1, refCount: true })
+    )
+  }
 
-  agent$: Observable<AgentEvent> = this.eventStream$.pipe(
-    filter((e): e is AgentEvent => e.domain === 'agent'),
-    shareReplay({ bufferSize: 1, refCount: true })
-  )
-
-  llm$: Observable<LLMEvent> = this.eventStream$.pipe(
-    filter((e): e is LLMEvent => e.domain === 'llm'),
-    shareReplay({ bufferSize: 1, refCount: true })
-  )
-
-  error$: Observable<ErrorEvent> = this.eventStream$.pipe(
-    filter((e): e is ErrorEvent => e.domain === 'error'),
-    shareReplay({ bufferSize: 1, refCount: true })
-  )
-
-  storage$: Observable<StorageEvent> = this.eventStream$.pipe(
-    filter((e): e is StorageEvent => e.domain === 'storage'),
-    shareReplay({ bufferSize: 1, refCount: true })
-  )
-
-  system$: Observable<SystemInfoEvent> = this.eventStream$.pipe(
-    filter((e): e is SystemInfoEvent => e.domain === 'system'),
-    shareReplay({ bufferSize: 1, refCount: true })
-  )
+  /**
+   * Filtered observable streams by domain
+   *
+   * Each stream:
+   * - Filters events by domain
+   * - Uses shareReplay to prevent duplicate executions
+   * - Auto-unsubscribes when no subscribers remain (refCount: true)
+   */
+  workflow$ = this.createDomainStream<WorkflowEvent>('workflow')
+  agent$ = this.createDomainStream<AgentEvent>('agent')
+  llm$ = this.createDomainStream<LLMEvent>('llm')
+  error$ = this.createDomainStream<ErrorEvent>('error')
+  storage$ = this.createDomainStream<StorageEvent>('storage')
+  system$ = this.createDomainStream<SystemInfoEvent>('system')
 
   /**
    * Emit an event to all subscribers
