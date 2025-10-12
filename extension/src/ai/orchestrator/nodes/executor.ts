@@ -65,7 +65,8 @@ export async function executorNode(
     llm: new ChatOpenAI({
       apiKey,
       model: modelName,
-      temperature: 0.1
+      temperature: 0.1,
+      streaming: false  // Executor works silently - no token streaming to user
     }),
     tools: executorTools,
     messageModifier: systemPrompt

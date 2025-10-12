@@ -43,7 +43,7 @@ export async function plannerNode(
   }
 
   session?.log('Starting plan generation', { messageCount: state.messages.length })
-  
+
   // Agent lifecycle events are automatically emitted by LangGraph bridge
   // (on_chain_start → emitAgentStarted('planner', 'planning'))
 
@@ -61,7 +61,8 @@ export async function plannerNode(
     llm: new ChatOpenAI({
       apiKey,
       model: modelName,
-      temperature: 0.2
+      temperature: 0.2,
+      streaming: false  // Planner works silently - no token streaming to user
     }),
     tools: [...plannerTools, validatorTool],
     messageModifier: systemPrompt
@@ -88,7 +89,7 @@ export async function plannerNode(
   if (!parsed.success || !parsed.data)
   {
     session?.log('Loom parsing failed', { errors: parsed.errors })
-    
+
     // Emit validation error event
     systemEvents.emit({
       domain: 'error',
@@ -115,7 +116,7 @@ export async function plannerNode(
     nodeCount: plan.workflow.nodes?.length || 0,
     credentialsNeeded: plan.credentialsNeeded?.length || 0
   })
-  
+
   // Agent completion event automatically emitted by LangGraph bridge
   // (on_chain_end → emitAgentCompleted('planner'))
 
