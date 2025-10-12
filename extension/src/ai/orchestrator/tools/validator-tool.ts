@@ -35,7 +35,7 @@ export const validateWorkflowTool = tool(
         apiKey: args.apiKey,
         model: 'gpt-4o-mini',
         temperature: 0.1,
-        streaming: false
+        streaming: true  // Enable streaming for tool calls to work
       }),
       tools: [fetchNodeTypesTool],  // Validator can fetch node types as needed
       messageModifier: systemPrompt
