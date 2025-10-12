@@ -1,10 +1,41 @@
 # n8n Integration
 
-Client libraries for interacting with n8n.
+Unified client library for interacting with n8n.
 
-## Two Client Types
+## Quick Start (Recommended)
 
-### 1. Public API Client (`N8nClient`)
+Use the unified `N8N` class for all n8n interactions:
+
+```typescript
+import { N8N } from '@n8n'
+
+const n8n = new N8N({ apiKey: 'n8n_api_xxxxx' })
+
+// Public API methods (API key auth)
+const workflows = await n8n.getWorkflows()
+const workflow = await n8n.getWorkflow('workflow-id')
+const created = await n8n.createWorkflow(workflowData)
+
+// Internal REST methods (cookie auth, content scripts only)
+const nodeTypes = await n8n.getNodeTypes()
+const communityNodes = await n8n.getCommunityNodes()
+
+// Convenience methods
+const hasGmail = await n8n.hasNodeType('n8n-nodes-base.gmail')
+const slackNodes = await n8n.searchNodeTypes('slack')
+```
+
+**Benefits:**
+- ✅ Single import, unified API
+- ✅ Clean method names
+- ✅ Handles both API key and cookie auth internally
+- ✅ Type-safe with full TypeScript support
+
+## Advanced: Specialized Clients
+
+For specific use cases, you can use the underlying clients directly:
+
+### Public API Client (`N8nClient`)
 
 For documented public API endpoints (`/api/v1/*`):
 
@@ -16,18 +47,12 @@ const client = new N8nClient({
   apiKey: 'n8n_api_xxxxx'
 })
 
-// Public API methods
 const workflows = await client.getWorkflows()
-const workflow = await client.getWorkflow('workflow-id')
-const created = await client.createWorkflow(workflowData)
-const updated = await client.updateWorkflow('workflow-id', workflowData)
 ```
 
-**Authentication:** API key (X-N8N-API-KEY header)
-**Usage:** Background scripts, any context with API key
-**Endpoints:** `/api/v1/*`
+**Use when:** You only need public API access, no internal endpoints
 
-### 2. Internal REST Client (`N8nInternalClient`)
+### Internal REST Client (`N8nInternalClient`)
 
 For internal undocumented endpoints (`/rest/*`):
 
@@ -38,14 +63,10 @@ const client = new N8nInternalClient({
   baseUrl: 'http://localhost:5678'
 })
 
-// Internal REST methods (cookie-based auth)
-const communityNodes = await client.getCommunityNodeTypes()
-const allNodes = await client.getNodeTypes()
+const nodeTypes = await client.getNodeTypes()
 ```
 
-**Authentication:** Cookie-based (browser session)
-**Usage:** Content scripts only (shares cookies with n8n page)
-**Endpoints:** `/rest/*`
+**Use when:** You only need internal REST access (content scripts only)
 
 ## Cookie Extraction Utilities
 
@@ -102,17 +123,21 @@ const specific = extractSpecificCookies(['n8n-auth', 'browser-id'])
 
 ## When to Use Which
 
-### Use `N8nClient` (Public API) when:
-- ✅ You have an n8n API key
-- ✅ Working in background scripts
-- ✅ Need to create/update/read workflows
-- ✅ Want predictable, documented API
+### Use `N8N` (Unified Client) - Recommended ⭐
+- ✅ For all general n8n interactions
+- ✅ When you need both API and internal REST methods
+- ✅ Simplest, cleanest API
+- ✅ One import, consistent interface
 
-### Use `N8nInternalClient` (Internal REST) when:
-- ✅ Working in content scripts (same origin as n8n)
-- ✅ Need access to UI-specific data (community nodes, node types)
-- ✅ No API key available but have browser session
-- ⚠️ **Warning:** Internal endpoints may change without notice
+### Use `N8nClient` (Public API Only)
+- When you ONLY need public API methods
+- When working in background scripts without cookie access
+- When you want to avoid any internal endpoint dependencies
+
+### Use `N8nInternalClient` (Internal REST Only)
+- When you ONLY need internal REST methods
+- When working in content scripts without API key
+- When you want explicit control over cookie-based requests
 
 ## Node Types
 
@@ -129,12 +154,15 @@ const exists = nodeTypeExists(nodeTypes, 'n8n-nodes-base.gmail')
 
 ## Examples
 
-### Create Workflow (Public API)
+### Unified Client (Recommended)
 
 ```typescript
-const client = new N8nClient({ apiKey: 'n8n_api_xxx' })
+import { N8N } from '@n8n'
 
-const workflow = await client.createWorkflow({
+const n8n = new N8N({ apiKey: 'n8n_api_xxx' })
+
+// Create a workflow
+const workflow = await n8n.createWorkflow({
   name: 'Daily Joke Email',
   nodes: [
     {
@@ -146,15 +174,29 @@ const workflow = await client.createWorkflow({
   ],
   connections: {}
 })
+
+// Check if a node type is available
+const hasGmail = await n8n.hasNodeType('n8n-nodes-base.gmail')
+
+// Search for nodes
+const emailNodes = await n8n.searchNodeTypes('email')
+
+// Get all community nodes
+const communityNodes = await n8n.getCommunityNodes()
 ```
 
-### Fetch Community Nodes (Internal REST)
+### Specialized Clients (Advanced)
 
 ```typescript
-const client = new N8nInternalClient()
+// Public API only
+import { N8nClient } from '@n8n'
+const api = new N8nClient({ apiKey: 'n8n_api_xxx' })
+const workflows = await api.getWorkflows()
 
-const communityNodes = await client.getCommunityNodeTypes()
-console.log('Installed community nodes:', communityNodes)
+// Internal REST only
+import { N8nInternalClient } from '@n8n'
+const internal = new N8nInternalClient()
+const nodeTypes = await internal.getNodeTypes()
 ```
 
 ## References
