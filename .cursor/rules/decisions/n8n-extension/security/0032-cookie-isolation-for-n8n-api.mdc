@@ -9,9 +9,9 @@ The extension creates workflows by calling a local n8n instance. Clicking "Apply
 - Default base URL is `http://127.0.0.1:5678` instead of `http://localhost:5678` to decouple from any `localhost` cookie scope behavior.
 
 ## Implementation Details
-- `extension/src/lib/api/fetch.ts`: Set `credentials: 'omit'` on all requests.
-- `extension/src/lib/n8n/index.ts`: Change `DEFAULT_BASE_URL` to `http://127.0.0.1:5678`.
-- Background continues to inject `X-N8N-API-KEY` when available.
+- `extension/src/platform/api-fetch.ts`: Set `credentials: 'omit'` on all requests.
+- `extension/src/n8n/client.ts`: Use `http://127.0.0.1:5678` as default base URL.
+- Background worker continues to inject `X-N8N-API-KEY` when available.
 
 ## Alternatives Considered
 - Keep using `localhost` and rely on cookies never being sent (default). Rejected for explicitness and to avoid user/environment variability.
@@ -22,4 +22,4 @@ The extension creates workflows by calling a local n8n instance. Clicking "Apply
 - More predictable behavior across browsers.
 
 ## References
-- Files: `extension/src/lib/api/fetch.ts`, `extension/src/lib/n8n/index.ts`
+- Files: `extension/src/platform/api-fetch.ts`, `extension/src/n8n/client.ts`

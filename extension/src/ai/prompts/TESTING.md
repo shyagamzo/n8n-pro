@@ -104,7 +104,7 @@ declare module '*.md?raw' {
 **Problem:** `validatePrompts()` returns missing prompts
 
 **Solution:**
-1. Check that markdown files exist in `src/lib/prompts/agents/` and `src/lib/prompts/shared/`
+1. Check that markdown files exist in `src/ai/prompts/agents/` and `src/ai/prompts/shared/`
 2. Verify file names match imports in `index.ts`
 3. Rebuild the extension: `yarn build`
 

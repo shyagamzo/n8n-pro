@@ -14,16 +14,16 @@ This is a Chrome/Edge browser extension that provides AI-powered assistance for 
 ## Core Architecture
 
 ### Entry Points
-- **Content Script**: [src/content/index.tsx](mdc:src/content/index.tsx) - Main React app injected into n8n pages
-- **Background Worker**: [src/background/index.ts](mdc:src/background/index.ts) - Service worker for AI orchestration
-- **Popup Interface**: [src/popup/index.tsx](mdc:src/popup/index.tsx) - Extension popup UI
-- **Options Page**: [src/options/index.tsx](mdc:src/options/index.tsx) - Settings and configuration
-- **Panel**: [src/panel/index.tsx](mdc:src/panel/index.tsx) - Standalone panel component (legacy)
+- **Content Script**: [src/entries/content/index.ts](mdc:src/entries/content/index.ts) - Content script that injects chat UI into n8n pages
+- **Background Worker**: [src/entries/background/index.ts](mdc:src/entries/background/index.ts) - Service worker for AI orchestration
+- **Options Page**: [src/entries/options/index.html](mdc:src/entries/options/index.html) - Settings and configuration page
+- **Chat Panel**: [src/entries/content/chat/ChatPanel.tsx](mdc:src/entries/content/chat/ChatPanel.tsx) - Chat UI component
 
 ### Key Services
-- **Orchestrator**: [src/lib/services/orchestrator.ts](mdc:src/lib/services/orchestrator.ts) - Central message routing and AI coordination
-- **n8n Client**: [src/lib/services/n8n-api-service.ts](mdc:src/lib/services/n8n-api-service.ts) - n8n API client management
-- **Panel Injector**: [src/lib/services/panel-injector.ts](mdc:src/lib/services/panel-injector.ts) - Legacy panel injection (now handled by React)
+- **AI Orchestrator**: [src/ai/orchestrator/index.ts](mdc:src/ai/orchestrator/index.ts) - LangGraph-based AI agent orchestration
+- **n8n Client**: [src/n8n/client.ts](mdc:src/n8n/client.ts) - n8n API client
+- **OpenAI Service**: [src/ai/openai.ts](mdc:src/ai/openai.ts) - OpenAI integration
+- **Chat Service**: [src/services/chat.ts](mdc:src/services/chat.ts) - Chat message coordination
 
 ### Configuration Files
 - **Build Config**: [vite.config.ts](mdc:vite.config.ts) - Vite build configuration with multiple entry points
@@ -41,17 +41,25 @@ Panel UI ← Background Worker ← AI Response ← LLM Provider
 ## File Structure
 ```
 src/
-├── background/     # Service worker
-├── content/        # Content script (React app)
-├── popup/          # Extension popup
-├── options/        # Options page
-├── panel/          # Standalone panel (legacy)
-└── lib/            # Shared utilities and services
-    ├── api/        # API clients
-    ├── components/ # React components
-    ├── services/   # Business logic
-    ├── types/      # TypeScript definitions
-    └── utils/      # Utility functions
+├── entries/        # Extension entry points
+│   ├── background/ # Service worker
+│   ├── content/    # Content script + chat UI
+│   └── options/    # Options page
+├── ui/             # React components
+│   ├── primitives/ # Basic UI components
+│   ├── feedback/   # Feedback components
+│   ├── chat/       # Chat components
+│   └── agent/      # Agent activity components
+├── ai/             # AI/LLM code
+│   ├── orchestrator/ # LangGraph agent system
+│   ├── prompts/    # Prompt templates
+│   └── openai.ts   # OpenAI service
+├── platform/       # Browser platform APIs
+├── n8n/            # n8n domain (client, types)
+├── loom/           # Loom protocol
+├── events/         # Event bus system
+├── shared/         # Shared utilities, types
+└── services/       # Business logic services
 ```
 
 ## Development Phases

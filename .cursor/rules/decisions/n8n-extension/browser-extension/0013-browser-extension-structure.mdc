@@ -10,7 +10,7 @@ Chrome/Edge extension with three main components working together to provide AI-
 
 ## Core Components
 
-### 1. Content Script (`src/content/`)
+### 1. Content Script (`src/entries/content/`)
 - **Purpose**: Thin injection/mount layer
 - **Responsibilities**:
   - Detect n8n editor canvas presence
@@ -18,20 +18,20 @@ Chrome/Edge extension with three main components working together to provide AI-
   - Keep logic minimal; no platform API calls or business logic
   - Theme reading only; no secrets or API keys
 
-### 2. Background Service Worker (`src/background/`)
+### 2. Background Service Worker (`src/entries/background/`)
 - **Purpose**: Platform/API orchestration
 - **Responsibilities**:
   - Own Chrome APIs (runtime, storage, messaging)
-  - Delegate LLM/n8n calls to services
-  - Stream responses via ports (messaging abstraction)
+  - Delegate LLM/n8n calls to AI orchestrator
+  - Stream responses via event bus
   - No UI logic here
 
-### 3. Panel UI (`src/panel/`)
+### 3. Chat UI (`src/entries/content/chat/` + `src/ui/`)
 - **Purpose**: Presentation + container split
 - **Responsibilities**:
-  - Presentational components: pure UI (e.g., `MessageBubble`, `MessagesList`, `ChatComposer`)
-  - Containers: bind services/state to presentational components (e.g., `ChatContainer`)
-  - Shared styles via `styles.ts` to avoid large inline style objects
+  - UI components in `src/ui/`: primitives, feedback, chat, agent
+  - Chat-specific containers in `src/entries/content/chat/`
+  - Shared styles via `src/ui/utilities.css`
 
 ## Communication Flow
 ```

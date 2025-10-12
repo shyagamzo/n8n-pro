@@ -23,14 +23,12 @@ description: State management with Zustand—store design, immutability, typing,
 
 ### Store Organization
 ```
-src/lib/stores/
-├── chat-store.ts          # Chat messages and UI state
-├── agent-store.ts         # AI agent orchestration state
-├── workflow-store.ts      # Workflow creation and management
-├── settings-store.ts      # User preferences and configuration
-├── ui-store.ts           # Panel state, modals, notifications
-└── index.ts              # Store exports and initialization
+src/ui/
+├── chatStore.ts          # Chat messages and UI state (main store)
+└── [Future stores as needed]
 ```
+
+**Note:** Currently using a single Zustand store for simplicity. Additional stores can be added as needed following the same pattern in `src/ui/` or domain-specific directories.
 
 ## Store Implementations
 

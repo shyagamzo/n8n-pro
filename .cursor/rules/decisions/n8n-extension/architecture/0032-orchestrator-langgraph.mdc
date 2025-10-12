@@ -100,10 +100,11 @@ Implement a complete LangGraph-based orchestrator with unified StateGraph, mode-
 - LangGraph graph routing requires type assertions for custom node names
 
 ## References
-- `extension/src/lib/orchestrator/state.ts` - State schema
-- `extension/src/lib/orchestrator/graph.ts` - StateGraph definition
-- `extension/src/lib/orchestrator/nodes/` - Agent node implementations
-- `extension/src/lib/orchestrator/tools/` - Tool definitions
-- `extension/src/background/orchestrator-manager.ts` - Session management
+- `extension/src/ai/orchestrator/state.ts` - State schema
+- `extension/src/ai/orchestrator/graph.ts` - StateGraph definition
+- `extension/src/ai/orchestrator/nodes/` - Agent node implementations
+- `extension/src/ai/orchestrator/tools/` - Tool definitions
+- `extension/src/ai/orchestrator/entrypoint.ts` - Graph execution entry point
+- `extension/src/entries/background/background-worker.ts` - Background orchestration
 - Decisions: 0007, 0025, 0012, 0021, 0011, 0027
 

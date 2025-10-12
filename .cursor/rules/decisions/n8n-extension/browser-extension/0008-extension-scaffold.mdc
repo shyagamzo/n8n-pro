@@ -26,12 +26,16 @@ description: Extension scaffold (Vite + TypeScript + React) and manifest/entry s
 - State: Zustand for lightweight state in panel
 - Theme integration: Read n8n's computed CSS variables and apply to panel root
 
-## Directory Structure (proposed)
-- `src/background/` (service worker, orchestrator entry, messaging)
-- `src/content/` (injection script, panel mount, page integration)
-- `src/panel/` (React UI, chat, diffs, credential guides)
-- `src/lib/` (llm provider iface, n8n client, tools, orchestrator graph)
-- `src/options/` (settings page)
+## Directory Structure
+- `src/entries/background/` (service worker, orchestrator entry, messaging)
+- `src/entries/content/` (injection script, panel mount, page integration)
+- `src/entries/content/chat/` (React chat UI, formerly panel/)
+- `src/entries/options/` (settings page)
+- `src/ai/` (AI orchestration, prompts, OpenAI integration)
+- `src/ui/` (React components: primitives, feedback, chat, agent)
+- `src/platform/` (Browser platform APIs: storage, messaging, settings)
+- `src/n8n/` (n8n client, types, node types)
+- `src/shared/` (shared utilities, types, validation)
 - `public/` (icons, static)
 
 ## n8n Target (MVP)

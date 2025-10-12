@@ -104,7 +104,7 @@ Use n8n's design tokens with fallback values for consistency and theme support:
 - **Borders**: `--border-radius-*`, `--border-width-*`
 - **Shadows**: `--shadow-base`, `--shadow-elevate`, etc.
 
-See [`DESIGN-TOKENS.md`](mdc:../../../DESIGN-TOKENS.md) for complete CSS variable reference and [`utilities.css`](mdc:extension/src/lib/styles/utilities.css) for reusable patterns.
+See [`DESIGN-TOKENS.md`](mdc:../../../DESIGN-TOKENS.md) for complete CSS variable reference and [`utilities.css`](mdc:extension/src/ui/utilities.css) for reusable patterns.
 
 ## Component Styling Pattern
 
