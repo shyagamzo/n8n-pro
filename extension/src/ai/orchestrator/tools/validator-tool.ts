@@ -35,7 +35,7 @@ async function runValidation(
 ): Promise<string> {
   // Use provided node types or fetch from n8n
   let availableNodeTypesList: string[]
-  
+
   if (providedNodeTypes && providedNodeTypes.length > 0)
   {
     availableNodeTypesList = providedNodeTypes.sort()
