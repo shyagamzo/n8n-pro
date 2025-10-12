@@ -274,13 +274,52 @@ workflow:
 
 Generate a workflow plan based on our conversation.
 
-Process:
-1. If needed, use fetch_n8n_node_types to check available nodes
-2. Design the workflow in Loom format
-3. Use the validate_workflow tool to validate your design (pass only loomWorkflow parameter)
-4. If validation fails, read the errors and correctedWorkflow, then fix the issues
-5. Validate again until it passes
-6. Once validated, return ONLY the final raw Loom format - no markdown code blocks, no explanatory text
+**CRITICAL PROCESS:**
 
-Important: Always validate before finalizing. The validator will tell you what's wrong and provide corrections.
+1. **Plan**: Design the workflow in Loom format
+2. **Validate**: Call the `validate_workflow` tool with your Loom workflow
+3. **Iterate if needed**:
+   - If validation returns "✅ VALIDATION PASSED": Continue to step 4
+   - If validation returns "❌ VALIDATION FAILED":
+     - Read each error carefully (node, field, issue, fix)
+     - Apply the suggested fixes to YOUR workflow design
+     - Call validate_workflow again with the corrected workflow
+   - Keep iterating until validation passes (max 3 attempts)
+4. **Output ONLY the workflow**: Return ONLY the raw Loom workflow (no explanations, no validation messages, no markdown blocks)
+
+**CRITICAL RULES:**
+- ❌ DO NOT include the validator's response in your final output
+- ❌ DO NOT say "validation passed" or reference the validator
+- ❌ DO NOT wrap in markdown code blocks
+- ✅ DO output ONLY the raw Loom workflow after validation passes
+
+**Example of WRONG output:**
+```
+✅ VALIDATION PASSED
+The workflow is valid...
+
+title: My Workflow
+...
+```
+
+**Example of CORRECT output:**
+```
+title: My Workflow
+summary: Does something useful
+workflow:
+  nodes:
+    - id: Node1
+      ...
+```
+
+**Example of handling validation errors:**
+```
+Validator says:
+  Node: Generate Joke
+  Field: type
+  Issue: Node type doesn't exist
+  Fix: Use '@n8n/n8n-nodes-langchain.lmChatOpenAi' instead
+
+Your response: [Fix the node type in your workflow, then validate again]
+```
 
