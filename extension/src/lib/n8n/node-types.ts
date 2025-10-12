@@ -1,6 +1,5 @@
-import { apiFetch } from '../api/fetch'
 import { emitSystemInfo } from '../events/emitters'
-import { DEFAULTS } from '../constants'
+import { getHardcodedNodeTypes, getNodeTypeCount } from './hardcoded-node-types'
 
 export type NodeParameter = {
   displayName: string
@@ -39,73 +38,27 @@ export type NodeTypesResponse = {
 }
 
 /**
- * Cache for node types to avoid repeated API calls
+ * Fetch all available node types.
+ * 
+ * Since n8n doesn't provide a public node-types API endpoint,
+ * we return hardcoded node types based on n8n's source code and documentation.
+ * 
+ * @param _options - Options (unused, kept for API compatibility)
+ * @returns Hardcoded node types
  */
-let nodeTypesCache: NodeTypesResponse | null = null
-let cacheTimestamp: number = 0
-const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
-
-/**
- * Fetch all available node types from n8n API
- */
-export async function fetchNodeTypes(options: {
+export async function fetchNodeTypes(_options?: {
   baseUrl?: string
   apiKey?: string
   forceRefresh?: boolean
 }): Promise<NodeTypesResponse>
 {
-  const now = Date.now()
+  const nodeTypes = getHardcodedNodeTypes()
+  const count = getNodeTypeCount()
 
-  // Return cached data if available and not expired
-  if (!options.forceRefresh && nodeTypesCache && (now - cacheTimestamp < CACHE_TTL_MS))
-  {
-    return nodeTypesCache
-  }
+  emitSystemInfo('node-types', 'Using hardcoded node types (n8n has no public API endpoint)', { count })
 
-  const baseUrl = (options.baseUrl ?? DEFAULTS.N8N_BASE_URL).replace(/\/$/, '')
-  const authHeaders: Record<string, string> | undefined = options.apiKey
-    ? {
-        'X-N8N-API-KEY': options.apiKey,
-        'Authorization': `Bearer ${options.apiKey}`
-      }
-    : undefined
-
-  const url = `${baseUrl}/api/v1/node-types`
-
-  try
-  {
-    const nodeTypes = await apiFetch<NodeTypesResponse>(url, {
-      method: 'GET',
-      headers: authHeaders,
-      timeoutMs: 15_000,
-    })
-
-    // Cache the result
-    nodeTypesCache = nodeTypes
-    cacheTimestamp = now
-
-    emitSystemInfo('node-types', 'Node types fetched from n8n API', { count: Object.keys(nodeTypes).length })
-    return nodeTypes
-  }
-  catch (error)
-  {
-    // Deep validation requires node types API, which may not be available in all n8n versions
-    // This is not a critical error - we fall back to structural validation
-    emitSystemInfo('node-types', 'Node types API unavailable (deep validation disabled)', {
-      endpoint: url,
-      error: error instanceof Error ? error.message : String(error)
-    })
-
-    // If we have stale cache, return it as fallback
-    if (nodeTypesCache)
-    {
-      emitSystemInfo('node-types', 'Using cached node types from previous fetch', {})
-      return nodeTypesCache
-    }
-
-    // Re-throw to let caller handle gracefully
-    throw error
-  }
+  // Return as promise for API compatibility
+  return Promise.resolve(nodeTypes)
 }
 
 /**
@@ -152,12 +105,11 @@ export function getCredentialTypes(nodeTypes: NodeTypesResponse, nodeType: strin
 }
 
 /**
- * Clear the node types cache (useful for testing)
+ * Clear the node types cache (no-op for hardcoded types, kept for API compatibility)
  */
 export function clearNodeTypesCache(): void
 {
-  nodeTypesCache = null
-  cacheTimestamp = 0
+  // No-op: hardcoded types don't need cache clearing
 }
 
 /**
