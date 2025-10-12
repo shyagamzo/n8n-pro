@@ -50,9 +50,13 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorag
 const graph = new StateGraph(OrchestratorState)
 
 // Add nodes
-graph.addNode('orchestrator', orchestratorNode)  // Pure routing function (no LLM)
+graph.addNode('orchestrator', orchestratorNode, {
+  ends: ['enrichment', 'planner', '__end__']  // Potential destinations for Command routing
+})
 graph.addNode('enrichment', enrichmentNode)      // LLM agent with tools
-graph.addNode('planner', plannerNode)            // LLM agent with tools
+graph.addNode('planner', plannerNode, {
+  ends: ['executor', '__end__']  // Planner can route to executor or end
+})
 graph.addNode('executor', executorNode)          // LLM agent
 
 // Routing edges
