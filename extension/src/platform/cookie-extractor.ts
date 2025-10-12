@@ -38,7 +38,7 @@ export async function extractUrlCookies(url: string): Promise<string>
   }
 
   const cookies = await chrome.cookies.getAll({ url })
-  
+
   return cookies
     .map(cookie => `${cookie.name}=${cookie.value}`)
     .join('; ')
@@ -81,7 +81,7 @@ export function extractN8nSessionCookies(): string
 {
   const n8nCookieNames = [
     'n8n-auth',
-    'n8n-session', 
+    'n8n-session',
     'browser-id',
     '_ga',
     '_ga_',

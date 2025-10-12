@@ -70,7 +70,7 @@ export class N8nInternalClient
   async getCommunityNodeTypes(): Promise<CommunityNodeType[]>
   {
     const url = `${this.baseUrl}/rest/community-node-types`
-    
+
     return internalFetch<CommunityNodeType[]>(url, {
       method: 'GET',
       headers: this.buildHeaders(),
@@ -90,7 +90,7 @@ export class N8nInternalClient
   async getNodeTypes(): Promise<NodeTypeInfo[]>
   {
     const url = `${this.baseUrl}/rest/node-types`
-    
+
     return internalFetch<NodeTypeInfo[]>(url, {
       method: 'GET',
       headers: this.buildHeaders(),
