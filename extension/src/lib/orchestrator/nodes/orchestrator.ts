@@ -17,7 +17,7 @@
 import { Command } from '@langchain/langgraph'
 import type { OrchestratorStateType } from '../state'
 import type { RunnableConfig } from '@langchain/core/runnables'
-import { emitAgentHandoff, emitSystemDebug } from '../../events/emitters'
+import { emitAgentHandoff } from '../../events/emitters'
 
 // ==========================================
 // Constants
@@ -60,10 +60,7 @@ function routeToPlanner(confidence: number): Command
     `requirements complete (confidence: ${confidence})`
   )
 
-  return new Command({
-    goto: 'planner',
-    update: { mode: 'workflow' }
-  })
+  return new Command({ goto: 'planner', update: { mode: 'workflow' } })
 }
 
 /**
@@ -77,27 +74,21 @@ function routeToEnrichment(confidence: number): Command
     `more info needed (confidence: ${confidence})`
   )
 
-  return new Command({
-    goto: 'enrichment',
-    update: { mode: 'chat' }
-  })
+  return new Command({ goto: 'enrichment', update: { mode: 'chat' } })
 }
 
 /**
- * Route to enrichment (initial state, no tool calls yet)
+ * Route to enrichment (initial state, no requirements status yet)
  */
-function routeToEnrichmentInitial(messageCount: number): Command
+function routeToEnrichmentInitial(): Command
 {
-  emitSystemDebug(
+  emitAgentHandoff(
     'orchestrator',
-    'No tool calls found, routing to enrichment',
-    { messageCount }
+    'enrichment',
+    'initial state, starting requirements gathering'
   )
 
-  return new Command({
-    goto: 'enrichment',
-    update: { mode: 'chat' }
-  })
+  return new Command({ goto: 'enrichment', update: { mode: 'chat' } })
 }
 
 // ==========================================
@@ -129,28 +120,17 @@ export function orchestratorNode(
   // No requirements status yet - initial state
   if (!requirementsStatus)
   {
-    emitSystemDebug(
-      'orchestrator',
-      'No requirements status, routing to enrichment',
-      { messageCount: state.messages.length }
-    )
-
-    return routeToEnrichmentInitial(state.messages.length)
+    return routeToEnrichmentInitial()
   }
 
-  // Log the status for debugging
-  emitSystemDebug('orchestrator', 'Requirements status available', {
-    hasAllRequiredInfo: requirementsStatus.hasAllRequiredInfo,
-    confidence: requirementsStatus.confidence,
-    missingInfo: requirementsStatus.missingInfo
-  })
+  const { hasAllRequiredInfo, confidence } = requirementsStatus
 
   // Make routing decision based on readiness
-  if (isReadyForPlanning(requirementsStatus.hasAllRequiredInfo, requirementsStatus.confidence))
+  if (isReadyForPlanning(hasAllRequiredInfo, confidence))
   {
-    return routeToPlanner(requirementsStatus.confidence)
+    return routeToPlanner(confidence)
   }
 
-  return routeToEnrichment(requirementsStatus.confidence)
+  return routeToEnrichment(confidence)
 }
 
