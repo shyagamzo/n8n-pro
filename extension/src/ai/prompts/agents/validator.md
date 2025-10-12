@@ -163,7 +163,7 @@ For each node in workflow.nodes:
 For each source in workflow.connections:
   If source not in node names:
     Add critical error with category "connection"
-  
+
   For each target in connections[source]:
     If target.node not in node names:
       Add critical error with category "connection"
