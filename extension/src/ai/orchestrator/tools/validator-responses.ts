@@ -1,6 +1,5 @@
 import validatorPromptMd from '@ai/prompts/agents/validator-prompt.md?raw'
 import validResponseMd from '@ai/prompts/agents/validator-responses/valid.md?raw'
-import invalidWithCorrectionMd from '@ai/prompts/agents/validator-responses/invalid-with-correction.md?raw'
 import invalidNoCorrectionMd from '@ai/prompts/agents/validator-responses/invalid-no-correction.md?raw'
 import unexpectedMd from '@ai/prompts/agents/validator-responses/unexpected.md?raw'
 
@@ -17,10 +16,18 @@ import unexpectedMd from '@ai/prompts/agents/validator-responses/unexpected.md?r
 
 /**
  * Build validation prompt from markdown template.
- * Injects the Loom workflow into the template.
+ * Injects the Loom workflow and available node types into the template.
  */
-export function buildValidationPrompt(loomWorkflow: string): string {
-  return validatorPromptMd.replace('{LOOM_WORKFLOW}', loomWorkflow)
+export function buildValidationPrompt(
+  loomWorkflow: string,
+  availableNodeTypes: string[]
+): string {
+  // Format node types as a bulleted list
+  const nodeTypesList = availableNodeTypes.map(type => `- ${type}`).join('\n')
+
+  return validatorPromptMd
+    .replace('{LOOM_WORKFLOW}', loomWorkflow)
+    .replace('{AVAILABLE_NODE_TYPES}', nodeTypesList)
 }
 
 // ============================================================================
@@ -31,14 +38,8 @@ export function formatValidResponse(): string {
   return validResponseMd
 }
 
-export function formatInvalidResponse(errors: string, correctedLoom: string | null): string {
-  if (!correctedLoom) {
-    return invalidNoCorrectionMd.replace('{ERRORS}', errors)
-  }
-
-  return invalidWithCorrectionMd
-    .replace('{ERRORS}', errors)
-    .replace('{CORRECTED_LOOM}', correctedLoom)
+export function formatInvalidResponse(errors: string): string {
+  return invalidNoCorrectionMd.replace('{ERRORS}', errors)
 }
 
 export function formatUnexpectedResponse(content: string): string {

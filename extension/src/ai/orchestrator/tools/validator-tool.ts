@@ -4,8 +4,9 @@ import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
 import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import { buildPrompt } from '@ai/prompts'
-import { parse as parseLoom, format as formatLoom } from '@loom'
+import { parse as parseLoom } from '@loom'
 import { stripCodeFences } from '@shared/utils/markdown'
+import { getHardcodedNodeTypes } from '@n8n/hardcoded-node-types'
 import {
   buildValidationPrompt,
   formatValidResponse,
@@ -30,6 +31,10 @@ async function runValidation(
   apiKey: string,
   modelName: string
 ): Promise<string> {
+  // Fetch available node types for validation
+  const nodeTypes = getHardcodedNodeTypes()
+  const availableNodeTypesList = Object.keys(nodeTypes).sort()
+
   // Create ReAct agent for validation
   const systemPrompt = buildPrompt('validator', {
     includeNodesReference: true,
@@ -40,13 +45,17 @@ async function runValidation(
     llm: new ChatOpenAI({
       apiKey,
       model: modelName,
-      temperature: 0.1  // Low temperature for consistent validation
+      temperature: 0.1,  // Low temperature for consistent validation
+      streaming: false   // Validator works silently - no token streaming
     }),
     tools: [],  // No tools needed for validation
     messageModifier: new SystemMessage(systemPrompt)
   })
 
-  const validationPrompt = new HumanMessage(buildValidationPrompt(loomWorkflow))
+  // Build validation prompt with node types list
+  const validationPrompt = new HumanMessage(
+    buildValidationPrompt(loomWorkflow, availableNodeTypesList)
+  )
 
   // Run validation
   const result = await agent.invoke({
@@ -75,16 +84,20 @@ function processValidationResult(content: string): string {
   }
 
   if (validationData.validation?.status === 'invalid') {
-    // Extract errors
+    // Extract errors with suggestions
     const errors = validationData.validation.errors
-      ?.map((e: any) => `- ${e.error}`)
-      .join('\n') || 'No specific errors provided'
+      ?.map((e: any) => {
+        const parts = [
+          `**Node:** ${e.nodeName || e.nodeId || 'Unknown'}`,
+          `**Field:** ${e.field || 'Unknown'}`,
+          `**Issue:** ${e.issue || 'Unknown error'}`,
+          `**Fix:** ${e.suggestion || 'No suggestion provided'}`
+        ]
+        return parts.join('\n  ')
+      })
+      .join('\n\n') || 'No specific errors provided'
 
-    // Extract corrected workflow (it's a Loom object, need to convert back to string)
-    const correctedWorkflowObj = validationData.validation.correctedWorkflow
-    const correctedLoom = correctedWorkflowObj ? formatLoom(correctedWorkflowObj) : null
-
-    return formatInvalidResponse(errors, correctedLoom)
+    return formatInvalidResponse(errors)
   }
 
   // Unexpected status or missing validation field
