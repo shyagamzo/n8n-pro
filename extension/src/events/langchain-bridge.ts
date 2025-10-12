@@ -102,11 +102,23 @@ export function emitLangGraphEvent(event: StreamEvent): void {
       break
 
     case 'on_tool_start':
-      emitToolStarted(
-        extractAgentFromMetadata(metadata),
-        name || 'unknown',
-        { input: data?.input, ...sanitizeMetadata(metadata) }
-      )
+      {
+        const agent = extractAgentFromMetadata(metadata)
+        // Debug: log metadata to diagnose missing planner tool events
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[DEBUG] tool_start:', {
+            tool: name,
+            agent,
+            langgraph_node: metadata?.langgraph_node,
+            checkpoint_ns: metadata?.checkpoint_ns
+          })
+        }
+        emitToolStarted(
+          agent,
+          name || 'unknown',
+          { input: data?.input, ...sanitizeMetadata(metadata) }
+        )
+      }
       break
 
     case 'on_tool_end':
