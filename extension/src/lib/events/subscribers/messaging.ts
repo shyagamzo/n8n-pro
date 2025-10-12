@@ -17,21 +17,38 @@ import type { BackgroundMessage } from '../../types/messaging'
 const destroy$ = new Subject<void>()
 
 /**
+ * Create workflow created message
+ *
+ * @param workflowId - ID of the created workflow
+ * @param baseUrl - n8n base URL
+ * @returns Workflow created message for content script
+ */
+function createWorkflowCreatedMessage(
+  workflowId: string,
+  baseUrl: string
+): BackgroundMessage
+{
+  return {
+    type: 'workflow_created' as const,
+    workflowId,
+    workflowUrl: `${baseUrl}/workflow/${workflowId}`
+  }
+}
+
+/**
  * Setup messaging bridge with a post function
  * @param post - Function to send messages to content script
  */
-export function setup(post: (msg: BackgroundMessage) => void): void {
+export function setup(post: (msg: BackgroundMessage) => void): void
+{
   // Bridge workflow events → content script
   systemEvents.workflow$
     .pipe(
       filter(e => e.type === 'created'),
-      switchMap(async e => {
+      switchMap(async e =>
+      {
         const baseUrl = await getBaseUrlOrDefault()
-        return {
-          type: 'workflow_created' as const,
-          workflowId: e.payload.workflowId!,
-          workflowUrl: `${baseUrl}/workflow/${e.payload.workflowId}`
-        }
+        return createWorkflowCreatedMessage(e.payload.workflowId!, baseUrl)
       }),
       takeUntil(destroy$),
       finalize(() => emitSystemInfo('messaging', 'Workflow messaging subscription cleaned up', {}))
