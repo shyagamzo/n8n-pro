@@ -188,7 +188,25 @@ Validate this workflow:
 
 Use the fetch_n8n_node_types tool to get available node types, then check if each node's type exists in that list.
 
-Respond in same format as input with validation status.
+**Output Format:**
+
+If ALL nodes are valid, respond with EXACTLY:
+```
+✅ VALIDATION PASSED
+```
+
+If ANY node type is invalid, respond with EXACTLY:
+```
+❌ VALIDATION FAILED
+
+Errors:
+- Node: [nodeName]
+  Field: type
+  Issue: Node type '[invalidType]' not in available types list
+  Suggestion: Use '[correctType]' instead
+```
+
+**CRITICAL:** Return ONLY these exact formats. No additional text, no JSON, no markdown blocks.
 
 ### Example 1: Invalid Node Type (AI Agent)
 

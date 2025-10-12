@@ -277,15 +277,17 @@ Generate a workflow plan based on our conversation.
 **CRITICAL PROCESS:**
 
 1. **Plan**: Design the workflow in Loom format
-2. **Validate**: Call the `validate_workflow` tool with your Loom workflow
-3. **Iterate if needed**:
-   - If validation returns "✅ VALIDATION PASSED": Continue to step 4
+2. **Validate ONCE**: Call the `validate_workflow` tool with your Loom workflow
+3. **Fix if needed**:
+   - If validation returns "✅ VALIDATION PASSED": Go to step 4
    - If validation returns "❌ VALIDATION FAILED":
-     - Read each error carefully (node, field, issue, fix)
-     - Apply the suggested fixes to YOUR workflow design
-     - Call validate_workflow again with the corrected workflow
-   - Keep iterating until validation passes (max 3 attempts)
+     - Read the errors
+     - Fix YOUR workflow
+     - Call validate_workflow ONE more time (max 2 validation calls total)
+     - If it still fails, output the best workflow you have
 4. **Output ONLY the workflow**: Return ONLY the raw Loom workflow (no explanations, no validation messages, no markdown blocks)
+
+**STOP RULE:** After calling validate_workflow twice (once + one retry), you MUST output the workflow whether validation passed or not.
 
 **CRITICAL RULES:**
 - ❌ DO NOT include the validator's response in your final output
