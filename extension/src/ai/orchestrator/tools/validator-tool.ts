@@ -4,15 +4,8 @@ import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
 import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import { buildPrompt } from '@ai/prompts'
-import { parse as parseLoom } from '@loom'
-import { stripCodeFences } from '@shared/utils/markdown'
 import { fetchNodeTypes } from '@n8n/node-types'
-import {
-  buildValidationPrompt,
-  formatValidResponse,
-  formatInvalidResponse,
-  formatUnexpectedResponse
-} from './validator-responses'
+import { buildValidationPrompt } from './validator-responses'
 
 // ============================================================================
 // Schema
@@ -79,44 +72,6 @@ async function runValidation(
   return lastMessage.content as string
 }
 
-function processValidationResult(content: string): string {
-  // Parse the validation result as Loom format
-  const cleaned = stripCodeFences(content)
-  const parsed = parseLoom(cleaned)
-
-  if (!parsed.success || !parsed.data) {
-    // If we can't parse as Loom, return as unexpected response
-    return formatUnexpectedResponse(content)
-  }
-
-  const validationData = parsed.data as any
-
-  // Check validation status
-  if (validationData.validation?.status === 'valid') {
-    return formatValidResponse()
-  }
-
-  if (validationData.validation?.status === 'invalid') {
-    // Extract errors with suggestions
-    const errors = validationData.validation.errors
-      ?.map((e: any) => {
-        const parts = [
-          `**Node:** ${e.nodeName || e.nodeId || 'Unknown'}`,
-          `**Field:** ${e.field || 'Unknown'}`,
-          `**Issue:** ${e.issue || 'Unknown error'}`,
-          `**Fix:** ${e.suggestion || 'No suggestion provided'}`
-        ]
-        return parts.join('\n  ')
-      })
-      .join('\n\n') || 'No specific errors provided'
-
-    return formatInvalidResponse(errors)
-  }
-
-  // Unexpected status or missing validation field
-  return formatUnexpectedResponse(content)
-}
-
 // ============================================================================
 // Tool Factory
 // ============================================================================
@@ -131,17 +86,17 @@ export function createValidatorTool(apiKey: string, modelName: string = 'gpt-4o-
   return tool(
     async (input) => {
       const args = input as z.infer<typeof validateWorkflowSchema>
-      const validationResult = await runValidation(
+      // Validator agent returns validation result directly - no post-processing needed
+      return runValidation(
         args.loomWorkflow,
         apiKey,
         modelName,
         args.availableNodeTypes
       )
-      return processValidationResult(validationResult)
     },
     {
       name: 'validate_workflow',
-      description: 'Validate a workflow plan using LLM knowledge of n8n schemas. Returns validation result with errors and suggestions if invalid. Optionally accepts availableNodeTypes array to skip fetching.',
+      description: 'Validate a workflow plan using LLM knowledge of n8n schemas. Returns validation result in same format as input with status and errors if invalid.',
       schema: validateWorkflowSchema
     }
   )

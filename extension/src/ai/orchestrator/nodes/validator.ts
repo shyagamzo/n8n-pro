@@ -54,7 +54,7 @@ export async function validatorNode(
   session?.log('Starting workflow validation', {
     nodeCount: state.plan.workflow.nodes?.length || 0
   })
-  
+
   // Agent lifecycle events automatically emitted by LangGraph bridge
 
   // Create ReAct agent (no tools, pure LLM validation)
@@ -105,7 +105,7 @@ export async function validatorNode(
   if (content.includes('[INVALID]'))
   {
     session?.log('Workflow validation failed, attempting auto-fix')
-    
+
     // Emit validation error event
     emitValidationError(
       new Error('Workflow validation failed'),
@@ -128,7 +128,7 @@ export async function validatorNode(
           originalNodeCount: state.plan.workflow.nodes?.length || 0,
           correctedNodeCount: correctedPlan.workflow.nodes?.length || 0
         })
-        
+
         emitWorkflowValidated(correctedPlan.workflow)
 
         // Proceed with corrected plan
@@ -141,7 +141,7 @@ export async function validatorNode(
 
     // If we can't parse the corrected version, fail
     session?.log('Validation auto-fix failed')
-    
+
     emitValidationError(
       new Error('Auto-fix failed'),
       'validator',
