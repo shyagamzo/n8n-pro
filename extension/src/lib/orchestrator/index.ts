@@ -6,6 +6,6 @@
  * See ./orchestrator.ts for implementation.
  */
 
-export { runGraph } from './orchestrator'
-export type { GraphInput, GraphResult, StreamTokenHandler } from './orchestrator'
+export { runGraph } from './entrypoint'
+export type { GraphInput, GraphResult, StreamTokenHandler } from './entrypoint'
 
