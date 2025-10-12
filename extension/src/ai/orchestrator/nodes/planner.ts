@@ -11,7 +11,7 @@ import { stripCodeFences } from '@shared/utils/markdown'
 import { loomToPlan } from '@ai/orchestrator/plan-converter'
 import { type DebugSession } from '@shared/utils/debug'
 import { plannerTools } from '@ai/orchestrator/tools/planner'
-import { createValidatorTool } from '@ai/orchestrator/tools/validator-tool'
+import { validateWorkflowTool } from '@ai/orchestrator/tools/validator-tool'
 import { systemEvents } from '@events'
 
 /**
@@ -47,15 +47,12 @@ export async function plannerNode(
   // Agent lifecycle events are automatically emitted by LangGraph bridge
   // (on_chain_start → emitAgentStarted('planner', 'planning'))
 
-  // Create ReAct agent with planner tools (including validator tool with API key from closure)
+  // Create ReAct agent with planner tools (including validator tool)
   const systemPrompt = buildPrompt('planner', {
     includeNodesReference: true,
     includeWorkflowPatterns: true,
     includeConstraints: true
   })
-
-  // Create validator tool with API key from closure (secure, not passed as parameter)
-  const validatorTool = createValidatorTool(apiKey, modelName)
 
   const agent = createReactAgent({
     llm: new ChatOpenAI({
@@ -64,7 +61,7 @@ export async function plannerNode(
       temperature: 0.2,
       streaming: false  // Planner works silently - no token streaming to user
     }),
-    tools: [...plannerTools, validatorTool],
+    tools: [...plannerTools, validateWorkflowTool],
     messageModifier: systemPrompt
   })
 
