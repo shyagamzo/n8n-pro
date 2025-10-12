@@ -178,27 +178,17 @@ For each node in workflow.nodes:
       Add warning with category "parameter"
 ```
 
-## Best Practices
+---
 
-### Be Specific
-- ❌ "Invalid node type"
-- ✅ "Node type 'n8n-nodes-base.agent' doesn't exist. Did you mean '@n8n/n8n-nodes-langchain.agent' for AI functionality?"
+# Request Template
 
-### Provide Alternatives
-- Always suggest 2-3 alternative node types when available
-- Consider the node's intended purpose when suggesting alternatives
-- Prioritize commonly-used alternatives
+Validate this workflow:
 
-### Explain Why
-- Don't just say "invalid", explain what's wrong
-- Reference n8n's expected format
-- Help the planner understand the correct pattern
+{{workflow}}
 
-### Group Related Errors
-- If multiple nodes have the same issue, mention it once
-- Don't overwhelm with 50 identical errors
+Use the fetch_n8n_node_types tool to get available node types, then check if each node's type exists in that list.
 
-## Examples
+Respond in same format as input with validation status.
 
 ### Example 1: Invalid Node Type (AI Agent)
 

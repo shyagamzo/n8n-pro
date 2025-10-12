@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
 import { HumanMessage } from '@langchain/core/messages'
-import { buildPrompt } from '@ai/prompts'
+import { buildPrompt, buildRequest } from '@ai/prompts'
 import { fetchNodeTypesTool } from './planner'
 
 const validateWorkflowSchema = z.object({
@@ -13,7 +13,7 @@ const validateWorkflowSchema = z.object({
 
 /**
  * Tool for planner to validate workflow.
- * 
+ *
  * Creates a validator agent that:
  * - Has access to fetchNodeTypesTool to get available node types
  * - Validates the workflow schema
@@ -40,14 +40,10 @@ export const validateWorkflowTool = tool(
       messageModifier: systemPrompt
     })
 
-    // Ask validator agent to validate the workflow
-    const validationRequest = new HumanMessage(`Validate this workflow:
-
-${args.loomWorkflow}
-
-Use the fetch_n8n_node_types tool to get available node types, then check if each node's type exists in that list.
-
-Respond in same format as input with validation status.`)
+    // Build request from template
+    const validationRequest = new HumanMessage(
+      buildRequest('validator', { workflow: args.loomWorkflow })
+    )
 
     const result = await agent.invoke({
       messages: [validationRequest]
