@@ -42,23 +42,20 @@ export type NodeTypesResponse = {
 let cachedNodeTypes: NodeTypesResponse | null = null
 
 /**
- * Fetch all available node types.
+ * Fetch all available node types from n8n internal REST endpoint.
  *
- * Strategy:
- * 1. Try fetching from n8n internal REST endpoint (/rest/node-types or similar)
- * 2. Fall back to hardcoded types from source code (517 nodes)
+ * Fetches real-time node types from the running n8n instance via /rest/node-types.
+ * This includes all built-in nodes, community nodes, and custom nodes.
  *
  * @param options - Fetch options
- * @param options.baseUrl - n8n instance URL
+ * @param options.baseUrl - n8n instance URL (default: http://localhost:5678)
  * @param options.forceRefresh - Skip cache and fetch fresh data
- * @param options.tryInternal - Try internal REST endpoint first (default: true, content scripts only)
  * @returns Node types dictionary
+ * @throws Error if n8n REST endpoint is unavailable (requires n8n page context)
  */
 export async function fetchNodeTypes(options?: {
   baseUrl?: string
-  apiKey?: string
   forceRefresh?: boolean
-  tryInternal?: boolean
 }): Promise<NodeTypesResponse>
 {
   // Return cached if available and not forcing refresh
@@ -68,176 +65,39 @@ export async function fetchNodeTypes(options?: {
     return cachedNodeTypes
   }
 
-  // Try internal REST endpoint if enabled (content scripts only)
-  if (options?.tryInternal !== false)
+  // Fetch from internal REST endpoint (content scripts only)
+  try
   {
-    try
+    const client = new N8nInternalClient({ baseUrl: options?.baseUrl })
+    const internalNodes = await client.getNodeTypes()
+    
+    if (internalNodes && internalNodes.length > 0)
     {
-      const client = new N8nInternalClient({ baseUrl: options?.baseUrl })
-      const internalNodes = await client.getNodeTypes()
-
-      if (internalNodes && internalNodes.length > 0)
-      {
-        // Convert internal format to our format
-        const converted = convertInternalNodesToTypes(internalNodes)
-        cachedNodeTypes = converted
-
-        emitSystemInfo('node-types', 'Fetched node types from n8n internal REST API', {
-          count: Object.keys(converted).length,
-          source: 'internal-rest'
-        })
-
-        return converted
-      }
-    }
-    catch (error)
-    {
-      emitSystemError(
-        error instanceof Error ? error : new Error(String(error)),
-        'node-types'
-      )
+      // Convert internal format to our format
+      const converted = convertInternalNodesToTypes(internalNodes)
+      cachedNodeTypes = converted
+      
+      emitSystemInfo('node-types', 'Fetched node types from n8n internal REST API', { 
+        count: Object.keys(converted).length,
+        source: 'internal-rest'
+      })
+      
+      return converted
     }
   }
-
-  // Fall back to minimal essential types if REST fails
-  const nodeTypes = getMinimalNodeTypes()
-  cachedNodeTypes = nodeTypes
-
-  emitSystemInfo('node-types', 'Using minimal fallback node types (REST endpoint unavailable)', { 
-    count: Object.keys(nodeTypes).length,
-    source: 'minimal-fallback'
-  })
-
-  return nodeTypes
-}
-
-/**
- * Minimal fallback node types
- *
- * Used only when internal REST endpoint is unavailable.
- * Contains essential nodes for basic workflow creation.
- */
-function getMinimalNodeTypes(): NodeTypesResponse
-{
-  return {
-    // Triggers
-    'n8n-nodes-base.manualTrigger': {
-      name: 'n8n-nodes-base.manualTrigger',
-      displayName: 'Manual Trigger',
-      description: 'Trigger workflow manually',
-      group: ['trigger'],
-      version: 1,
-      defaults: { name: 'When clicking "Test workflow"' },
-      inputs: [],
-      outputs: ['main'],
-      properties: []
-    },
-    'n8n-nodes-base.scheduleTrigger': {
-      name: 'n8n-nodes-base.scheduleTrigger',
-      displayName: 'Schedule Trigger',
-      description: 'Trigger workflow on a schedule',
-      group: ['trigger'],
-      version: 1,
-      defaults: { name: 'Schedule Trigger' },
-      inputs: [],
-      outputs: ['main'],
-      properties: []
-    },
-    'n8n-nodes-base.webhook': {
-      name: 'n8n-nodes-base.webhook',
-      displayName: 'Webhook',
-      description: 'Trigger via HTTP webhook',
-      group: ['trigger'],
-      version: 1,
-      defaults: { name: 'Webhook' },
-      inputs: [],
-      outputs: ['main'],
-      properties: []
-    },
-    
-    // Core nodes
-    'n8n-nodes-base.httpRequest': {
-      name: 'n8n-nodes-base.httpRequest',
-      displayName: 'HTTP Request',
-      description: 'Make HTTP API calls',
-      group: ['core'],
-      version: 3,
-      defaults: { name: 'HTTP Request' },
-      inputs: ['main'],
-      outputs: ['main'],
-      properties: []
-    },
-    'n8n-nodes-base.code': {
-      name: 'n8n-nodes-base.code',
-      displayName: 'Code',
-      description: 'Execute custom JavaScript',
-      group: ['core'],
-      version: 2,
-      defaults: { name: 'Code' },
-      inputs: ['main'],
-      outputs: ['main'],
-      properties: []
-    },
-    'n8n-nodes-base.set': {
-      name: 'n8n-nodes-base.set',
-      displayName: 'Set',
-      description: 'Set field values',
-      group: ['core'],
-      version: 3,
-      defaults: { name: 'Set' },
-      inputs: ['main'],
-      outputs: ['main'],
-      properties: []
-    },
-    
-    // Common services
-    'n8n-nodes-base.gmail': {
-      name: 'n8n-nodes-base.gmail',
-      displayName: 'Gmail',
-      description: 'Consume Gmail API',
-      group: ['communication'],
-      version: 2,
-      defaults: { name: 'Gmail' },
-      inputs: ['main'],
-      outputs: ['main'],
-      properties: []
-    },
-    'n8n-nodes-base.slack': {
-      name: 'n8n-nodes-base.slack',
-      displayName: 'Slack',
-      description: 'Send messages to Slack',
-      group: ['communication'],
-      version: 2,
-      defaults: { name: 'Slack' },
-      inputs: ['main'],
-      outputs: ['main'],
-      properties: []
-    },
-    
-    // AI/LangChain nodes
-    '@n8n/n8n-nodes-langchain.agent': {
-      name: '@n8n/n8n-nodes-langchain.agent',
-      displayName: 'AI Agent',
-      description: 'Create AI agents with LangChain',
-      group: ['ai'],
-      version: 1,
-      defaults: { name: 'AI Agent' },
-      inputs: ['main'],
-      outputs: ['main'],
-      properties: []
-    },
-    '@n8n/n8n-nodes-langchain.lmChatOpenAi': {
-      name: '@n8n/n8n-nodes-langchain.lmChatOpenAi',
-      displayName: 'OpenAI Chat Model',
-      description: 'Direct OpenAI chat completions',
-      group: ['ai'],
-      version: 1,
-      defaults: { name: 'OpenAI Chat Model' },
-      inputs: ['main'],
-      outputs: ['main'],
-      properties: []
-    }
+  catch (error)
+  {
+    emitSystemError(
+      error instanceof Error ? error : new Error(String(error)),
+      'node-types'
+    )
   }
+
+  // No fallback - throw error if REST endpoint unavailable
+  throw new Error(
+    'Failed to fetch node types from n8n. ' +
+    'Ensure the extension is running on an n8n page and the n8n instance is accessible.'
+  )
 }
 
 /**
