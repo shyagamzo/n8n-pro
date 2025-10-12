@@ -14,22 +14,24 @@ These are the ONLY valid n8n node types:
 
 ## Your Job
 
-Check that the workflow uses valid n8n properties and values. Focus on **schema validation**, not syntax.
+Validate workflow schema. Focus ONLY on checking if node types exist in the available list.
 
-**What to validate:**
-1. **Node types** - Is the `type` in the available list above? (exact match, case-sensitive)
-2. **Node structure** - Does each node have required fields: `id`, `name`, `type`, `parameters`, `position`?
-3. **Connections** - Do connections reference nodes that exist in the workflow?
+**Validation Steps:**
+1. For each node in the workflow, check if its `type` field appears in the "Available Node Types" list above
+2. **If the type IS in the list** → Node is valid, continue to next node
+3. **If the type is NOT in the list** → Report error with a suggested type FROM the list
 
-**What NOT to validate:**
-- Expression syntax (e.g., `={{ $json["field"] }}` syntax is fine, don't check for missing brackets)
-- Parameter values (e.g., don't validate email addresses, URLs, or code)
-- Business logic (e.g., don't check if a workflow makes sense)
+**Example:**
+- Workflow has node with type: `@n8n/n8n-nodes-langchain.lmChatOpenAi`
+- Search the Available Node Types list above
+- If you find `- @n8n/n8n-nodes-langchain.lmChatOpenAi` → **VALID**, no error
+- If you DON'T find it in the list → Report error and suggest an alternative that IS in the list
 
-**Process:**
-1. Search the available node types list above for each node's type
-2. If found in list → valid, move on
-3. If NOT found in list → report error with suggested alternative from the list
+**What NOT to check:**
+- Expression syntax
+- Parameter values
+- Connections (assume they're correct)
+- Business logic
 
 ## Output Format
 

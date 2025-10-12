@@ -36,9 +36,10 @@ async function runValidation(
   const availableNodeTypesList = Object.keys(nodeTypes).sort()
 
   // Create ReAct agent for validation
+  // Don't include nodes reference or constraints - keep it simple and focused
   const systemPrompt = buildPrompt('validator', {
-    includeNodesReference: true,
-    includeConstraints: true
+    includeNodesReference: false,
+    includeConstraints: false
   })
 
   const agent = createReactAgent({
