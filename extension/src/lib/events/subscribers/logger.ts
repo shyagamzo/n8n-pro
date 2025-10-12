@@ -24,25 +24,31 @@ const destroy$ = new Subject<void>()
 /**
  * Shared logging utilities for consistent formatting
  */
-function createLogGroup(title: string, color: string, collapsed: boolean): void {
+function createLogGroup(title: string, color: string, collapsed: boolean): void
+{
   const style = `color: ${color}; font-weight: bold`
-  if (collapsed) {
+  if (collapsed)
+  {
     console.groupCollapsed(`%c${title}`, style)
-  } else {
+  } else
+  {
     console.group(`%c${title}`, style)
   }
 }
 
-function logCleanup(): void {
+function logCleanup(): void
+{
   console.log('[logger] Subscription cleaned up')
 }
 
-function formatTitle(domain: string, type: string, details: string[], timestamp: number): string {
+function formatTitle(domain: string, type: string, details: string[], timestamp: number): string
+{
   const prefix = `[${domain}]`
   const time = new Date(timestamp).toLocaleTimeString()
   let title = `${prefix} ${type}`
 
-  if (details.length > 0) {
+  if (details.length > 0)
+  {
     title += ` - ${details.join(' ')}`
   }
 
@@ -59,15 +65,18 @@ function logEventWithPayload<T extends SystemEvent>(
   collapsed: boolean,
   extractDetails: (payload: T['payload']) => string[],
   logContent?: (payload: T['payload']) => void
-): void {
+): void
+{
   const details = extractDetails(event.payload)
   const title = formatTitle(event.domain, event.type, details, event.timestamp)
 
   createLogGroup(title, color, collapsed)
 
-  if (logContent) {
+  if (logContent)
+  {
     logContent(event.payload)
-  } else if (event.payload && Object.keys(event.payload).length > 0) {
+  } else if (event.payload && Object.keys(event.payload).length > 0)
+  {
     console.log('Payload:', event.payload)
   }
 
@@ -77,12 +86,14 @@ function logEventWithPayload<T extends SystemEvent>(
 /**
  * Log workflow events (created, updated, validated, failed)
  */
-function logWorkflowEvent(event: WorkflowEvent): void {
+function logWorkflowEvent(event: WorkflowEvent): void
+{
   logEventWithPayload(
     event,
     '#6366f1',
     true,
-    (p) => {
+    (p) =>
+    {
       const details: string[] = []
       if (p.workflow?.name) details.push(`"${p.workflow.name}"`)
       if (p.workflowId) details.push(`id: ${p.workflowId}`)
@@ -94,12 +105,14 @@ function logWorkflowEvent(event: WorkflowEvent): void {
 /**
  * Log agent events (started, completed, tool_started, tool_completed)
  */
-function logAgentEvent(event: AgentEvent): void {
+function logAgentEvent(event: AgentEvent): void
+{
   logEventWithPayload(
     event,
     '#8b5cf6',
     true,
-    (p) => {
+    (p) =>
+    {
       const details: string[] = []
       if (p.agent) details.push(p.agent)
       if (p.action) details.push(p.action)
@@ -112,12 +125,14 @@ function logAgentEvent(event: AgentEvent): void {
 /**
  * Log LLM events (started, completed, streaming)
  */
-function logLLMEvent(event: LLMEvent): void {
+function logLLMEvent(event: LLMEvent): void
+{
   logEventWithPayload(
     event,
     '#10b981',
     true,
-    (p) => {
+    (p) =>
+    {
       const details: string[] = []
       if (p.model) details.push(p.model)
       if (p.provider) details.push(`(${p.provider})`)
@@ -135,18 +150,21 @@ function logLLMEvent(event: LLMEvent): void {
  * Log error events (validation, api, llm, subscriber, unhandled)
  * Always expanded (not collapsed) for visibility
  */
-function logErrorEvent(event: ErrorEvent): void {
+function logErrorEvent(event: ErrorEvent): void
+{
   logEventWithPayload(
     event,
     '#ef4444',
     false, // Always expanded for errors
-    (p) => {
+    (p) =>
+    {
       const details: string[] = []
       if (p.source) details.push(p.source)
       if (p.error?.message) details.push(p.error.message.slice(0, 50))
       return details
     },
-    (p) => {
+    (p) =>
+    {
       console.error('Error:', p.error)
       if (p.source) console.log('Source:', p.source)
       if (p.context) console.log('Context:', p.context)
@@ -157,12 +175,14 @@ function logErrorEvent(event: ErrorEvent): void {
 /**
  * Log storage events (saved, loaded, deleted)
  */
-function logStorageEvent(event: StorageEvent): void {
+function logStorageEvent(event: StorageEvent): void
+{
   logEventWithPayload(
     event,
     '#f59e0b',
     true,
-    (p) => {
+    (p) =>
+    {
       const details: string[] = []
       if (p.key) details.push(`key: ${p.key}`)
       return details
@@ -173,7 +193,8 @@ function logStorageEvent(event: StorageEvent): void {
 /**
  * Log system info events (init, info, debug)
  */
-function logSystemInfoEvent(event: SystemInfoEvent): void {
+function logSystemInfoEvent(event: SystemInfoEvent): void
+{
   // Use different colors for different levels
   const color = event.payload.level === 'debug' ? '#6b7280' : '#3b82f6'
 
@@ -181,14 +202,17 @@ function logSystemInfoEvent(event: SystemInfoEvent): void {
     event,
     color,
     true,
-    (p) => {
+    (p) =>
+    {
       const details: string[] = []
       if (p.component) details.push(p.component)
       if (p.message) details.push(p.message)
       return details
     },
-    (p) => {
-      if (p.data && Object.keys(p.data).length > 0) {
+    (p) =>
+    {
+      if (p.data && Object.keys(p.data).length > 0)
+      {
         console.log('Data:', p.data)
       }
     }
@@ -196,28 +220,28 @@ function logSystemInfoEvent(event: SystemInfoEvent): void {
 }
 
 /**
+ * Map event domains to their logging functions
+ * Type assertion is safe because domain string guarantees correct event type at runtime
+ */
+const eventLoggers: Record<SystemEvent['domain'], (event: any) => void> = {
+  workflow: logWorkflowEvent,
+  agent: logAgentEvent,
+  llm: logLLMEvent,
+  error: logErrorEvent,
+  storage: logStorageEvent,
+  system: logSystemInfoEvent
+}
+
+/**
  * Route events to appropriate logging function
  */
-function logEvent(event: SystemEvent): void {
-  switch (event.domain) {
-    case 'workflow':
-      logWorkflowEvent(event)
-      break
-    case 'agent':
-      logAgentEvent(event)
-      break
-    case 'llm':
-      logLLMEvent(event)
-      break
-    case 'error':
-      logErrorEvent(event)
-      break
-    case 'storage':
-      logStorageEvent(event)
-      break
-    case 'system':
-      logSystemInfoEvent(event)
-      break
+function logEvent(event: SystemEvent): void
+{
+  const logger = eventLoggers[event.domain]
+
+  if (logger)
+  {
+    logger(event)
   }
 }
 
@@ -229,7 +253,8 @@ const logEvents$ = systemEvents.eventStream.pipe(
 /**
  * Start logging all events
  */
-export function setup(): void {
+export function setup(): void
+{
   logEvents$
     .pipe(
       takeUntil(destroy$),
@@ -241,7 +266,8 @@ export function setup(): void {
 /**
  * Stop logging and cleanup
  */
-export function cleanup(): void {
+export function cleanup(): void
+{
   destroy$.next()
   destroy$.complete()
 }
