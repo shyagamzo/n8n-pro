@@ -16,6 +16,22 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@ui/*": ["src/ui/*"],
+      "@ai/*": ["src/ai/*"],
+      "@n8n": ["src/n8n/index.ts"],
+      "@n8n/*": ["src/n8n/*"],
+      "@platform/*": ["src/platform/*"],
+      "@events": ["src/events/index.ts"],
+      "@events/*": ["src/events/*"],
+      "@shared/*": ["src/shared/*"],
+      "@loom": ["src/loom/index.ts"],
+      "@loom/*": ["src/loom/*"],
+      "@services/*": ["src/services/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

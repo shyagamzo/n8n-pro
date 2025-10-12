@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx } from '@crxjs/vite-plugin'
 import manifest from './manifest.config'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -19,9 +20,18 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      // Path aliases for clean imports
+      '@ui': path.resolve(__dirname, './src/ui'),
+      '@ai': path.resolve(__dirname, './src/ai'),
+      '@n8n': path.resolve(__dirname, './src/n8n'),
+      '@platform': path.resolve(__dirname, './src/platform'),
+      '@events': path.resolve(__dirname, './src/events'),
+      '@shared': path.resolve(__dirname, './src/shared'),
+      '@loom': path.resolve(__dirname, './src/loom'),
+      '@services': path.resolve(__dirname, './src/services'),
       // Stub out Node.js modules that LangGraph tries to use
       // These aren't needed for browser/extension environment
-      'node:async_hooks': new URL('./src/lib/stubs/async_hooks.ts', import.meta.url).pathname,
+      'node:async_hooks': new URL('./src/shared/stubs/async_hooks.ts', import.meta.url).pathname,
     },
   },
   build: {
