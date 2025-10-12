@@ -33,7 +33,7 @@ async function runValidation(
   modelName: string,
   providedNodeTypes?: string[]
 ): Promise<string> {
-  // Use provided node types or fetch from n8n (content script context only)
+  // Use provided node types or fetch from n8n
   let availableNodeTypesList: string[]
   
   if (providedNodeTypes && providedNodeTypes.length > 0)
@@ -42,17 +42,9 @@ async function runValidation(
   }
   else
   {
-    // Try to fetch (will fail in background worker - needs content script context)
-    try
-    {
-      const nodeTypes = await fetchNodeTypes()
-      availableNodeTypesList = Object.keys(nodeTypes).sort()
-    }
-    catch (error)
-    {
-      // Fallback to essential node types for validation
-      availableNodeTypesList = getEssentialNodeTypes()
-    }
+    // Fetch from n8n (requires content script context with cookies)
+    const nodeTypes = await fetchNodeTypes()
+    availableNodeTypesList = Object.keys(nodeTypes).sort()
   }
 
   // Create ReAct agent for validation
@@ -154,43 +146,3 @@ export function createValidatorTool(apiKey: string, modelName: string = 'gpt-4o-
     }
   )
 }
-
-/**
- * Essential node types for fallback validation
- * 
- * Used when REST endpoint is unavailable (e.g., background worker context).
- * Contains most commonly used node types.
- */
-function getEssentialNodeTypes(): string[]
-{
-  return [
-    // Triggers
-    'n8n-nodes-base.manualTrigger',
-    'n8n-nodes-base.scheduleTrigger',
-    'n8n-nodes-base.webhook',
-    'n8n-nodes-base.cronTrigger',
-    
-    // Core nodes
-    'n8n-nodes-base.httpRequest',
-    'n8n-nodes-base.code',
-    'n8n-nodes-base.set',
-    'n8n-nodes-base.if',
-    'n8n-nodes-base.merge',
-    'n8n-nodes-base.splitInBatches',
-    
-    // Common services
-    'n8n-nodes-base.gmail',
-    'n8n-nodes-base.slack',
-    'n8n-nodes-base.notion',
-    'n8n-nodes-base.airtable',
-    'n8n-nodes-base.googleSheets',
-    'n8n-nodes-base.discord',
-    
-    // AI/LangChain nodes
-    '@n8n/n8n-nodes-langchain.agent',
-    '@n8n/n8n-nodes-langchain.lmChatOpenAi',
-    '@n8n/n8n-nodes-langchain.chainLlm'
-  ]
-}
-
-
