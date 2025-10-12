@@ -1,10 +1,19 @@
 /**
- * n8n API Client - Public API
+ * n8n Integration - Public API
  *
- * N8nClient class for authenticated n8n API interactions.
- * See ./client.ts for implementation.
+ * Exports both public API client and internal REST client:
+ * - N8nClient: Public API endpoints (/api/v1/*) with API key auth
+ * - N8nInternalClient: Internal REST endpoints (/rest/*) with cookie auth
  */
 
 export { N8nClient } from './client'
 export type { N8nClientOptions } from './client'
+
+export { N8nInternalClient } from './internal-client'
+export type { InternalClientOptions, CommunityNodeType, NodeTypeInfo } from './internal-client'
+
+export { fetchNodeTypes, nodeTypeExists } from './node-types'
+export { getHardcodedNodeTypes, getNodeTypeCount } from './hardcoded-node-types'
+export type { NodeType, NodeTypesResponse } from './node-types'
+
 export type { WorkflowSummary, Workflow, WorkflowNode, WorkflowConnections } from './types'
