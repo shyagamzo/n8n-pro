@@ -22,7 +22,7 @@ import type {
 const destroy$ = new Subject<void>()
 
 /**
- * Shared logging utility for consistent formatting
+ * Shared logging utilities for consistent formatting
  */
 function createLogGroup(title: string, color: string, collapsed: boolean): void {
   const style = `color: ${color}; font-weight: bold`
@@ -51,68 +51,84 @@ function formatTitle(domain: string, type: string, details: string[], timestamp:
 }
 
 /**
- * Log workflow events (created, updated, validated, failed)
+ * Generic event logger that handles the common pattern
  */
-function logWorkflowEvent(event: WorkflowEvent): void {
-  const details: string[] = []
-  const p = event.payload
-
-  if (p.workflow?.name) details.push(`"${p.workflow.name}"`)
-  if (p.workflowId) details.push(`id: ${p.workflowId}`)
-
+function logEventWithPayload<T extends SystemEvent>(
+  event: T,
+  color: string,
+  collapsed: boolean,
+  extractDetails: (payload: T['payload']) => string[],
+  logContent?: (payload: T['payload']) => void
+): void {
+  const details = extractDetails(event.payload)
   const title = formatTitle(event.domain, event.type, details, event.timestamp)
-  createLogGroup(title, '#6366f1', true)
 
-  if (event.payload && Object.keys(event.payload).length > 0) {
+  createLogGroup(title, color, collapsed)
+
+  if (logContent) {
+    logContent(event.payload)
+  } else if (event.payload && Object.keys(event.payload).length > 0) {
     console.log('Payload:', event.payload)
   }
 
   console.groupEnd()
+}
+
+/**
+ * Log workflow events (created, updated, validated, failed)
+ */
+function logWorkflowEvent(event: WorkflowEvent): void {
+  logEventWithPayload(
+    event,
+    '#6366f1',
+    true,
+    (p) => {
+      const details: string[] = []
+      if (p.workflow?.name) details.push(`"${p.workflow.name}"`)
+      if (p.workflowId) details.push(`id: ${p.workflowId}`)
+      return details
+    }
+  )
 }
 
 /**
  * Log agent events (started, completed, tool_started, tool_completed)
  */
 function logAgentEvent(event: AgentEvent): void {
-  const details: string[] = []
-  const p = event.payload
-
-  if (p.agent) details.push(p.agent)
-  if (p.action) details.push(p.action)
-  if (p.tool) details.push(`tool: ${p.tool}`)
-
-  const title = formatTitle(event.domain, event.type, details, event.timestamp)
-  createLogGroup(title, '#8b5cf6', true)
-
-  if (event.payload && Object.keys(event.payload).length > 0) {
-    console.log('Payload:', event.payload)
-  }
-
-  console.groupEnd()
+  logEventWithPayload(
+    event,
+    '#8b5cf6',
+    true,
+    (p) => {
+      const details: string[] = []
+      if (p.agent) details.push(p.agent)
+      if (p.action) details.push(p.action)
+      if (p.tool) details.push(`tool: ${p.tool}`)
+      return details
+    }
+  )
 }
 
 /**
  * Log LLM events (started, completed, streaming)
  */
 function logLLMEvent(event: LLMEvent): void {
-  const details: string[] = []
-  const p = event.payload
+  logEventWithPayload(
+    event,
+    '#10b981',
+    true,
+    (p) => {
+      const details: string[] = []
+      if (p.model) details.push(p.model)
+      if (p.provider) details.push(`(${p.provider})`)
 
-  if (p.model) details.push(p.model)
-  if (p.provider) details.push(`(${p.provider})`)
+      // Calculate total tokens from prompt + completion
+      const totalTokens = (p.tokens?.prompt ?? 0) + (p.tokens?.completion ?? 0)
+      if (totalTokens > 0) details.push(`${totalTokens} tokens`)
 
-  // Calculate total tokens from prompt + completion
-  const totalTokens = (p.tokens?.prompt ?? 0) + (p.tokens?.completion ?? 0)
-  if (totalTokens > 0) details.push(`${totalTokens} tokens`)
-
-  const title = formatTitle(event.domain, event.type, details, event.timestamp)
-  createLogGroup(title, '#10b981', true)
-
-  if (event.payload && Object.keys(event.payload).length > 0) {
-    console.log('Payload:', event.payload)
-  }
-
-  console.groupEnd()
+      return details
+    }
+  )
 }
 
 /**
@@ -120,68 +136,63 @@ function logLLMEvent(event: LLMEvent): void {
  * Always expanded (not collapsed) for visibility
  */
 function logErrorEvent(event: ErrorEvent): void {
-  const details: string[] = []
-  const p = event.payload
-
-  if (p.source) details.push(p.source)
-  if (p.error?.message) details.push(p.error.message.slice(0, 50))
-
-  const title = formatTitle(event.domain, event.type, details, event.timestamp)
-  createLogGroup(title, '#ef4444', false) // Always expanded
-
-  console.error('Error:', event.payload.error)
-
-  if (event.payload.source) {
-    console.log('Source:', event.payload.source)
-  }
-
-  if (event.payload.context) {
-    console.log('Context:', event.payload.context)
-  }
-
-  console.groupEnd()
+  logEventWithPayload(
+    event,
+    '#ef4444',
+    false, // Always expanded for errors
+    (p) => {
+      const details: string[] = []
+      if (p.source) details.push(p.source)
+      if (p.error?.message) details.push(p.error.message.slice(0, 50))
+      return details
+    },
+    (p) => {
+      console.error('Error:', p.error)
+      if (p.source) console.log('Source:', p.source)
+      if (p.context) console.log('Context:', p.context)
+    }
+  )
 }
 
 /**
  * Log storage events (saved, loaded, deleted)
  */
 function logStorageEvent(event: StorageEvent): void {
-  const details: string[] = []
-  const p = event.payload
-
-  if (p.key) details.push(`key: ${p.key}`)
-
-  const title = formatTitle(event.domain, event.type, details, event.timestamp)
-  createLogGroup(title, '#f59e0b', true)
-
-  if (event.payload && Object.keys(event.payload).length > 0) {
-    console.log('Payload:', event.payload)
-  }
-
-  console.groupEnd()
+  logEventWithPayload(
+    event,
+    '#f59e0b',
+    true,
+    (p) => {
+      const details: string[] = []
+      if (p.key) details.push(`key: ${p.key}`)
+      return details
+    }
+  )
 }
 
 /**
  * Log system info events (init, info, debug)
  */
 function logSystemInfoEvent(event: SystemInfoEvent): void {
-  const details: string[] = []
-  const p = event.payload
-
-  if (p.component) details.push(p.component)
-  if (p.message) details.push(p.message)
-
-  const title = formatTitle(event.domain, event.type, details, event.timestamp)
-
   // Use different colors for different levels
-  const color = p.level === 'debug' ? '#6b7280' : '#3b82f6'
-  createLogGroup(title, color, true)
+  const color = event.payload.level === 'debug' ? '#6b7280' : '#3b82f6'
 
-  if (p.data && Object.keys(p.data).length > 0) {
-    console.log('Data:', p.data)
-  }
-
-  console.groupEnd()
+  logEventWithPayload(
+    event,
+    color,
+    true,
+    (p) => {
+      const details: string[] = []
+      if (p.component) details.push(p.component)
+      if (p.message) details.push(p.message)
+      return details
+    },
+    (p) => {
+      if (p.data && Object.keys(p.data).length > 0) {
+        console.log('Data:', p.data)
+      }
+    }
+  )
 }
 
 /**
