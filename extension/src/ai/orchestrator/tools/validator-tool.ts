@@ -19,7 +19,8 @@ import {
 // ============================================================================
 
 const validateWorkflowSchema = z.object({
-  loomWorkflow: z.string().describe('The workflow in Loom format to validate')
+  loomWorkflow: z.string().describe('The workflow in Loom format to validate'),
+  availableNodeTypes: z.array(z.string()).optional().describe('List of available node types (optional, will fetch if not provided)')
 })
 
 // ============================================================================
@@ -29,11 +30,30 @@ const validateWorkflowSchema = z.object({
 async function runValidation(
   loomWorkflow: string,
   apiKey: string,
-  modelName: string
+  modelName: string,
+  providedNodeTypes?: string[]
 ): Promise<string> {
-  // Fetch available node types for validation from n8n internal REST endpoint
-  const nodeTypes = await fetchNodeTypes()
-  const availableNodeTypesList = Object.keys(nodeTypes).sort()
+  // Use provided node types or fetch from n8n (content script context only)
+  let availableNodeTypesList: string[]
+  
+  if (providedNodeTypes && providedNodeTypes.length > 0)
+  {
+    availableNodeTypesList = providedNodeTypes.sort()
+  }
+  else
+  {
+    // Try to fetch (will fail in background worker - needs content script context)
+    try
+    {
+      const nodeTypes = await fetchNodeTypes()
+      availableNodeTypesList = Object.keys(nodeTypes).sort()
+    }
+    catch (error)
+    {
+      // Fallback to essential node types for validation
+      availableNodeTypesList = getEssentialNodeTypes()
+    }
+  }
 
   // Create ReAct agent for validation
   // Don't include nodes reference or constraints - keep it simple and focused
@@ -119,15 +139,58 @@ export function createValidatorTool(apiKey: string, modelName: string = 'gpt-4o-
   return tool(
     async (input) => {
       const args = input as z.infer<typeof validateWorkflowSchema>
-      const validationResult = await runValidation(args.loomWorkflow, apiKey, modelName)
+      const validationResult = await runValidation(
+        args.loomWorkflow,
+        apiKey,
+        modelName,
+        args.availableNodeTypes
+      )
       return processValidationResult(validationResult)
     },
     {
       name: 'validate_workflow',
-      description: 'Validate a workflow plan in Loom format using LLM knowledge of n8n schemas. Returns validation result with errors and corrections if invalid. Use this to check if your workflow design is correct before finalizing.',
+      description: 'Validate a workflow plan using LLM knowledge of n8n schemas. Returns validation result with errors and suggestions if invalid. Optionally accepts availableNodeTypes array to skip fetching.',
       schema: validateWorkflowSchema
     }
   )
+}
+
+/**
+ * Essential node types for fallback validation
+ * 
+ * Used when REST endpoint is unavailable (e.g., background worker context).
+ * Contains most commonly used node types.
+ */
+function getEssentialNodeTypes(): string[]
+{
+  return [
+    // Triggers
+    'n8n-nodes-base.manualTrigger',
+    'n8n-nodes-base.scheduleTrigger',
+    'n8n-nodes-base.webhook',
+    'n8n-nodes-base.cronTrigger',
+    
+    // Core nodes
+    'n8n-nodes-base.httpRequest',
+    'n8n-nodes-base.code',
+    'n8n-nodes-base.set',
+    'n8n-nodes-base.if',
+    'n8n-nodes-base.merge',
+    'n8n-nodes-base.splitInBatches',
+    
+    // Common services
+    'n8n-nodes-base.gmail',
+    'n8n-nodes-base.slack',
+    'n8n-nodes-base.notion',
+    'n8n-nodes-base.airtable',
+    'n8n-nodes-base.googleSheets',
+    'n8n-nodes-base.discord',
+    
+    // AI/LangChain nodes
+    '@n8n/n8n-nodes-langchain.agent',
+    '@n8n/n8n-nodes-langchain.lmChatOpenAi',
+    '@n8n/n8n-nodes-langchain.chainLlm'
+  ]
 }
 
 
