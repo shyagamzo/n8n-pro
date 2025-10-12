@@ -43,7 +43,7 @@ export async function enrichmentNode(
 
   // Agent lifecycle events automatically emitted by LangGraph bridge
   // (on_chain_start → emitAgentStarted('enrichment', 'enriching'))
-  
+
   // Create ReAct agent with enrichment tools
   const systemPrompt = buildPrompt('enrichment', {
     includeNodesReference: true,

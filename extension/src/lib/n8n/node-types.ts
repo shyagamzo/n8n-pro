@@ -39,10 +39,10 @@ export type NodeTypesResponse = {
 
 /**
  * Fetch all available node types.
- * 
+ *
  * Since n8n doesn't provide a public node-types API endpoint,
  * we return hardcoded node types based on n8n's source code and documentation.
- * 
+ *
  * @param _options - Options (unused, kept for API compatibility)
  * @returns Hardcoded node types
  */
