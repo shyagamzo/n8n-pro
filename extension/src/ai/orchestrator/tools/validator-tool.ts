@@ -6,7 +6,7 @@ import { SystemMessage, HumanMessage } from '@langchain/core/messages'
 import { buildPrompt } from '@ai/prompts'
 import { parse as parseLoom } from '@loom'
 import { stripCodeFences } from '@shared/utils/markdown'
-import { getHardcodedNodeTypes } from '@n8n/hardcoded-node-types'
+import { fetchNodeTypes } from '@n8n/node-types'
 import {
   buildValidationPrompt,
   formatValidResponse,
@@ -32,7 +32,8 @@ async function runValidation(
   modelName: string
 ): Promise<string> {
   // Fetch available node types for validation
-  const nodeTypes = getHardcodedNodeTypes()
+  // This will try internal REST endpoint first, then fall back to minimal types
+  const nodeTypes = await fetchNodeTypes({ tryInternal: true })
   const availableNodeTypesList = Object.keys(nodeTypes).sort()
 
   // Create ReAct agent for validation

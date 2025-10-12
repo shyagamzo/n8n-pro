@@ -12,8 +12,7 @@ export type { N8nClientOptions } from './client'
 export { N8nInternalClient } from './internal-client'
 export type { InternalClientOptions, CommunityNodeType, NodeTypeInfo } from './internal-client'
 
-export { fetchNodeTypes, nodeTypeExists } from './node-types'
-export { getHardcodedNodeTypes, getNodeTypeCount } from './hardcoded-node-types'
+export { fetchNodeTypes, nodeTypeExists, clearNodeTypesCache } from './node-types'
 export type { NodeType, NodeTypesResponse } from './node-types'
 
 export type { WorkflowSummary, Workflow, WorkflowNode, WorkflowConnections } from './types'
