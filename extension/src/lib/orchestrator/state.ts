@@ -48,6 +48,16 @@ export const OrchestratorState = Annotation.Root({
     setupLinks: Array<{ name: string; url: string }>;
   } | undefined>(),
 
+  /**
+   * Requirements gathering status from enrichment agent.
+   * Used by orchestrator to determine when to transition to planning.
+   */
+  requirementsStatus: Annotation<{
+    hasAllRequiredInfo: boolean;
+    confidence: number;
+    missingInfo?: string[];
+  } | undefined>(),
+
 })
 
 /**

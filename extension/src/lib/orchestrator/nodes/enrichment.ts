@@ -67,12 +67,50 @@ export async function enrichmentNode(
     config
   )
 
-  // Agent events (response, tool calls) automatically captured by LangGraph bridge
-  // Let the conditional edge handle routing based on tool calls
+  // Extract requirements status from tool calls and update state
+  const requirementsStatus = extractRequirementsStatus(result.messages)
+
+  // Update state with messages and requirements status
   return new Command({
     update: {
-      messages: result.messages
+      messages: result.messages,
+      requirementsStatus
     }
   })
+}
+
+/**
+ * Extract requirements status from agent messages
+ *
+ * Searches through the agent's messages for a reportRequirementsStatus tool call
+ * and extracts the arguments to update state.
+ */
+function extractRequirementsStatus(
+  messages: any[]
+): { hasAllRequiredInfo: boolean; confidence: number; missingInfo?: string[] } | undefined
+{
+  // Search backwards for the most recent AI message with tool calls
+  for (let i = messages.length - 1; i >= 0; i--)
+  {
+    const msg = messages[i] as any
+
+    if (msg.tool_calls && msg.tool_calls.length > 0)
+    {
+      // Find reportRequirementsStatus tool call
+      for (const toolCall of msg.tool_calls)
+      {
+        if (toolCall.name === 'reportRequirementsStatus')
+        {
+          return {
+            hasAllRequiredInfo: toolCall.args.hasAllRequiredInfo,
+            confidence: toolCall.args.confidence,
+            missingInfo: toolCall.args.missingInfo
+          }
+        }
+      }
+    }
+  }
+
+  return undefined
 }
 
