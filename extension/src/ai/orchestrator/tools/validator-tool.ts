@@ -5,6 +5,7 @@ import { ChatOpenAI } from '@langchain/openai'
 import { HumanMessage } from '@langchain/core/messages'
 import { buildPrompt, buildRequest } from '@ai/prompts'
 import { fetchNodeTypesTool } from './planner'
+import { emitAgentStarted, emitAgentCompleted } from '@events/emitters'
 
 const validateWorkflowSchema = z.object({
   loomWorkflow: z.string().describe('The workflow to validate'),
@@ -45,9 +46,15 @@ export const validateWorkflowTool = tool(
       buildRequest('validator', { workflow: args.loomWorkflow })
     )
 
+    // Manually emit validator agent lifecycle events
+    // (nested agents don't auto-emit through LangGraph streamEvents)
+    emitAgentStarted('validator', 'validating', {})
+
     const result = await agent.invoke({
       messages: [validationRequest]
     })
+
+    emitAgentCompleted('validator', {})
 
     const lastMessage = result.messages[result.messages.length - 1]
     return lastMessage.content as string

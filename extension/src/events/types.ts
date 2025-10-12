@@ -6,7 +6,7 @@
 
 import type { Workflow } from '@n8n/types'
 
-export type AgentType = 'planner' | 'executor' | 'enrichment' | 'orchestrator'
+export type AgentType = 'planner' | 'executor' | 'enrichment' | 'orchestrator' | 'validator'
 
 export type SystemEvent =
   | WorkflowEvent
