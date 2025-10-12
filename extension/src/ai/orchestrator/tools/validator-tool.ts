@@ -31,9 +31,8 @@ async function runValidation(
   apiKey: string,
   modelName: string
 ): Promise<string> {
-  // Fetch available node types for validation
-  // This will try internal REST endpoint first, then fall back to minimal types
-  const nodeTypes = await fetchNodeTypes({ tryInternal: true })
+  // Fetch available node types for validation from n8n internal REST endpoint
+  const nodeTypes = await fetchNodeTypes()
   const availableNodeTypesList = Object.keys(nodeTypes).sort()
 
   // Create ReAct agent for validation
