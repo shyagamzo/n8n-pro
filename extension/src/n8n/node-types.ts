@@ -44,7 +44,7 @@ let cachedNodeTypes: NodeTypesResponse | null = null
 /**
  * Fetch all available node types from n8n internal REST endpoint.
  *
- * Fetches real-time node types from the running n8n instance via /rest/node-types.
+ * Fetches real-time node types from the running n8n instance via /rest/community-node-types.
  * This includes all built-in nodes, community nodes, and custom nodes.
  *
  * @param options - Fetch options
@@ -70,18 +70,18 @@ export async function fetchNodeTypes(options?: {
   {
     const client = new N8nInternalClient({ baseUrl: options?.baseUrl })
     const internalNodes = await client.getNodeTypes()
-    
+
     if (internalNodes && internalNodes.length > 0)
     {
       // Convert internal format to our format
       const converted = convertInternalNodesToTypes(internalNodes)
       cachedNodeTypes = converted
-      
-      emitSystemInfo('node-types', 'Fetched node types from n8n internal REST API', { 
+
+      emitSystemInfo('node-types', 'Fetched node types from n8n internal REST API', {
         count: Object.keys(converted).length,
         source: 'internal-rest'
       })
-      
+
       return converted
     }
   }

@@ -81,7 +81,7 @@ export class N8nInternalClient
   /**
    * Fetch available node types (all nodes)
    *
-   * Endpoint: GET /rest/node-types
+   * Endpoint: GET /rest/community-node-types
    * Auth: Cookie-based (browser session)
    *
    * This may return all available nodes including built-in and community.
@@ -89,7 +89,7 @@ export class N8nInternalClient
    */
   async getNodeTypes(): Promise<NodeTypeInfo[]>
   {
-    const url = `${this.baseUrl}/rest/node-types`
+    const url = `${this.baseUrl}/rest/community-node-types`
 
     return internalFetch<NodeTypeInfo[]>(url, {
       method: 'GET',

@@ -19,7 +19,7 @@ export const fetchNodeTypesTool = tool(
     })
 
     // Return simplified list of node types with basic info
-    const simplified = Array.isArray(nodeTypes) ? nodeTypes.map((nt: any) => ({
+    const simplified = Array.isArray(nodeTypes) ? nodeTypes.map((nt) => ({
       name: nt.name,
       displayName: nt.displayName,
       description: nt.description,
