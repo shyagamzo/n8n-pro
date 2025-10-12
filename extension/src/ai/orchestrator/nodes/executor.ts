@@ -66,7 +66,7 @@ export async function executorNode(
       apiKey,
       model: modelName,
       temperature: 0.1,
-      streaming: false  // Executor works silently - no token streaming to user
+      streaming: true  // Enable streaming for tool event emission (tokens not sent to UI)
     }),
     tools: executorTools,
     messageModifier: systemPrompt

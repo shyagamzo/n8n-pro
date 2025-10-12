@@ -48,7 +48,7 @@ export function extractAgentFromMetadata(metadata?: Record<string, any>): AgentT
 
   // Try langgraph_node first (most reliable)
   const node = metadata.langgraph_node
-  
+
   if (node && typeof node === 'string') {
     // Handle tool nodes by looking at checkpoint_ns
     if (node === 'tools' && metadata.checkpoint_ns) {
@@ -102,23 +102,11 @@ export function emitLangGraphEvent(event: StreamEvent): void {
       break
 
     case 'on_tool_start':
-      {
-        const agent = extractAgentFromMetadata(metadata)
-        // Debug: log metadata to diagnose missing planner tool events
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[DEBUG] tool_start:', {
-            tool: name,
-            agent,
-            langgraph_node: metadata?.langgraph_node,
-            checkpoint_ns: metadata?.checkpoint_ns
-          })
-        }
-        emitToolStarted(
-          agent,
-          name || 'unknown',
-          { input: data?.input, ...sanitizeMetadata(metadata) }
-        )
-      }
+      emitToolStarted(
+        extractAgentFromMetadata(metadata),
+        name || 'unknown',
+        { input: data?.input, ...sanitizeMetadata(metadata) }
+      )
       break
 
     case 'on_tool_end':

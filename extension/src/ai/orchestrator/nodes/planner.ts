@@ -59,7 +59,7 @@ export async function plannerNode(
       apiKey,
       model: modelName,
       temperature: 0.2,
-      streaming: false  // Planner works silently - no token streaming to user
+      streaming: true  // Enable streaming for tool event emission (tokens not sent to UI)
     }),
     tools: [...plannerTools, validateWorkflowTool],
     messageModifier: systemPrompt
