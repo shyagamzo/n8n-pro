@@ -22,11 +22,20 @@ export function orchestratorNode(
   state: OrchestratorStateType,
   _config?: RunnableConfig
 ): Command {
-  const lastMessage = state.messages[state.messages.length - 1] as any
+  // Find the most recent AI message with tool calls
+  // (ReAct agents append ToolMessages after AIMessages, so last message might be a ToolMessage)
+  let lastAIMessageWithTools: any = null
+  for (let i = state.messages.length - 1; i >= 0; i--) {
+    const msg = state.messages[i] as any
+    if (msg.tool_calls && msg.tool_calls.length > 0) {
+      lastAIMessageWithTools = msg
+      break
+    }
+  }
 
   // Check if enrichment called reportRequirementsStatus tool
-  if (lastMessage?.tool_calls && lastMessage.tool_calls.length > 0) {
-    for (const toolCall of lastMessage.tool_calls) {
+  if (lastAIMessageWithTools) {
+    for (const toolCall of lastAIMessageWithTools.tool_calls) {
       if (toolCall.name === 'reportRequirementsStatus') {
         const args = toolCall.args as {
           hasAllRequiredInfo: boolean
@@ -34,8 +43,11 @@ export function orchestratorNode(
           missingInfo?: string[]
         }
 
+        console.log('[orchestrator] reportRequirementsStatus:', args)
+
         // Ready to plan: high confidence + has all info
         if (args.hasAllRequiredInfo && args.confidence > 0.8) {
+          console.log('[orchestrator] Routing to planner (ready)')
           return new Command({
             goto: 'planner',
             update: { mode: 'workflow' }  // Update state to workflow mode
@@ -43,6 +55,7 @@ export function orchestratorNode(
         }
 
         // Not ready: continue gathering requirements
+        console.log('[orchestrator] Routing back to enrichment (not ready)')
         return new Command({
           goto: 'enrichment',
           update: { mode: 'chat' }  // Keep in chat mode
@@ -53,6 +66,7 @@ export function orchestratorNode(
 
   // No tool calls yet (initial state or pure conversation)
   // Route to enrichment to start gathering requirements
+  console.log('[orchestrator] No tool calls found, routing to enrichment (initial)')
   return new Command({
     goto: 'enrichment',
     update: { mode: 'chat' }
