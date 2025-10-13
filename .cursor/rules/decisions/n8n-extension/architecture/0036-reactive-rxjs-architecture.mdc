@@ -19,7 +19,7 @@ Implement a reactive, event-driven architecture using **RxJS 7.8.2** as the foun
 
 1. **SystemEvents** (Event Bus)
    - Central RxJS `Subject` that all events flow through
-   - Pre-filtered observables by domain (`workflow$`, `agent$`, `error$`, `llm$`)
+   - Pre-filtered observables by domain (`workflow$`, `agent$`, `graph$`, `llm$`, `error$`, `storage$`, `system$`)
    - Uses `shareReplay()` to prevent duplicate executions
    - Singleton instance used throughout extension
 
@@ -124,6 +124,62 @@ window.addEventListener('unhandledrejection', (event) => {
 })
 ```
 
+## Critical Rules
+
+### NO Manual Logging in Nodes
+
+**❌ NEVER do this:**
+```typescript
+import { type DebugSession } from '@shared/utils/debug'
+
+export async function agentNode(state, config) {
+  const session = config?.metadata?.session as DebugSession | undefined
+
+  session?.log('Starting work')        // ❌ Manual logging
+  const result = await doWork()
+  session?.log('Work complete')        // ❌ Bypasses reactive system
+
+  return result
+}
+```
+
+**✅ ALWAYS rely on reactive events:**
+```typescript
+export async function agentNode(state, config) {
+  // No manual logging!
+  // LangGraph bridge automatically emits:
+  // - [agent] started - { agent: 'agentName', action: 'working' }
+  // - [llm] started - { model: 'gpt-4o-mini' }
+  // - [agent] completed - { agent: 'agentName' }
+
+  const result = await doWork()
+  return result
+}
+```
+
+**Why this matters:**
+- LangGraph bridge already captures ALL agent/LLM/tool events
+- Manual logging duplicates functionality
+- Bypasses centralized logger subscriber
+- Creates inconsistent logging patterns
+- Violates reactive architecture
+
+### What Gets Logged Automatically
+
+**Via LangGraph Bridge:**
+- Agent lifecycle (started, completed)
+- LLM calls (started, tokens, completed)
+- Tool executions (started, completed)
+- All errors with context
+
+**Via Event Emitters:**
+- Workflow operations (created, updated, failed)
+- Graph transitions (handoff, started, completed)
+- Storage operations (save, load, clear)
+- System info (init, debug messages)
+
+**Result:** Complete observability without manual logging!
+
 ## Benefits
 
 1. **Decoupled Concerns** - Services don't know about UI/logging
@@ -133,6 +189,7 @@ window.addEventListener('unhandledrejection', (event) => {
 5. **Composable** - RxJS operators enable powerful transformations
 6. **Reduced Code** - Remove repetitive logging/UI patterns
 7. **Better Debugging** - Full event history available via tracing
+8. **Automatic Instrumentation** - No manual logging needed
 
 ## RxJS Operators Used
 

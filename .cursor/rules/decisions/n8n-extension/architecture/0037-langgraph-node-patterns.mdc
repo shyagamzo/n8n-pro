@@ -1,0 +1,348 @@
+---
+alwaysApply: false
+description: LangGraph node implementation patterns and standards for n8n extension agents.
+---
+
+# Decision: LangGraph Node Patterns
+
+## Context
+
+Through iterative development, we learned that consistent node patterns improve maintainability, testability, and clarity. Initial implementations were monolithic, tightly coupled, and inconsistent.
+
+## Decision
+
+Establish strict patterns for LangGraph node implementation in the n8n extension.
+
+## Node Architecture Principles
+
+### 1. All Agents as Nodes (Not Tools)
+
+**✅ CORRECT: Uniform architecture**
+```
+orchestrator (routing)
+  ├─ enrichment (node)
+  ├─ planner (node)
+  ├─ validator (node)
+  └─ executor (node)
+```
+
+**❌ WRONG: Mixed architecture**
+```
+orchestrator
+  ├─ enrichment (node)
+  ├─ planner (node with validator tool)
+  │    └─ validator (agent inside tool) ❌
+  └─ executor (node)
+```
+
+**Why:**
+- Consistency: All agents follow same pattern
+- Events: LangGraph bridge captures all node events
+- Debugging: Flat structure easier to trace
+- Extensibility: Easy to add/remove/reorder nodes
+
+### 2. Orchestrator Owns State Transitions
+
+**✅ CORRECT: Orchestrator sets currentStep**
+```typescript
+// Orchestrator
+export function orchestratorNode(state) {
+  const nextStep = Steps[currentStep](state)
+
+  return new Command({
+    goto: nextStep,
+    update: {
+      currentStep: nextStep,     // ✅ Orchestrator sets this
+      stepHistory: [currentStep]
+    }
+  })
+}
+
+// Node
+export async function validatorNode(state, config) {
+  const validatedPlan = await validate(state.plan)
+
+  return new Command({
+    goto: 'orchestrator',
+    update: {
+      plan: validatedPlan,
+      validationStatus: { valid: true }
+      // ✅ NO currentStep here!
+    }
+  })
+}
+```
+
+**❌ WRONG: Nodes setting currentStep**
+```typescript
+return new Command({
+  goto: 'orchestrator',
+  update: {
+    plan: validatedPlan,
+    currentStep: 'validator'  // ❌ Node shouldn't do this!
+  }
+})
+```
+
+**Why:**
+- Single source of truth for state transitions
+- Orchestrator controls the flow completely
+- Nodes don't need to know their position
+- Easier to reorder flow without touching nodes
+
+### 3. All Nodes Return to Orchestrator
+
+**✅ CORRECT: Orchestrator makes routing decisions**
+```typescript
+export async function plannerNode(state, config) {
+  const plan = await generatePlan(state.messages)
+
+  return new Command({
+    goto: 'orchestrator',  // ✅ Always back to orchestrator
+    update: { plan }
+  })
+}
+```
+
+**❌ WRONG: Node with hardcoded routing**
+```typescript
+return new Command({
+  goto: 'executor',  // ❌ Node knows graph structure!
+  update: { plan }
+})
+```
+
+**Why:**
+- Centralized routing logic
+- Easy to change flow without modifying nodes
+- Nodes are self-contained
+- Clear separation of concerns
+
+### 4. Nodes Own Their Business Logic
+
+**✅ CORRECT: Validator applies its own fixes**
+```typescript
+export async function validatorNode(state, config) {
+  const result = await validatePlan(state.plan)
+
+  const updates = {
+    validationStatus: { valid: result.valid, errors: result.errors }
+  }
+
+  // Apply fixes ourselves
+  if (!result.valid && result.fixedPlan) {
+    updates.plan = { ...state.plan, workflow: result.fixedPlan }
+  }
+
+  return new Command({ goto: 'orchestrator', update: updates })
+}
+```
+
+**❌ WRONG: Orchestrator applying node's work**
+```typescript
+// Orchestrator
+if (validationStatus && !validationStatus.valid && validationStatus.fixedWorkflow) {
+  // ❌ Orchestrator doing validator's job!
+  state.plan = { ...state.plan, workflow: validationStatus.fixedWorkflow }
+}
+```
+
+**Why:**
+- Each node responsible for its own work
+- Orchestrator stays pure (routing only)
+- Easier to test and maintain
+- Clear ownership of logic
+
+## Standard Node Structure
+
+### Template
+```typescript
+// ==========================================
+// Imports
+// ==========================================
+
+import { Command } from '@langchain/langgraph'
+import { createReactAgent } from '@langchain/langgraph/prebuilt'
+import { ChatOpenAI } from '@langchain/openai'
+import type { RunnableConfig } from '@langchain/core/runnables'
+
+import type { OrchestratorStateType } from '@ai/orchestrator/state'
+import { buildPrompt, buildRequest } from '@ai/prompts'
+import { agentTools } from '@ai/orchestrator/tools/agent'
+
+// ==========================================
+// Constants
+// ==========================================
+
+const DEFAULT_MODEL = 'gpt-4o-mini'
+const AGENT_TEMPERATURE = 0.2
+
+// ==========================================
+// Main Node
+// ==========================================
+
+/**
+ * Agent node - does specific work
+ *
+ * Flow:
+ * 1. Extract config
+ * 2. Create and invoke agent
+ * 3. Process results
+ * 4. Return to orchestrator
+ */
+export async function agentNode(
+  state: OrchestratorStateType,
+  config?: RunnableConfig
+): Promise<Command>
+{
+  // Variable declarations grouped together
+  const { apiKey, modelName } = extractConfig(config)
+
+  // Empty line before next code block
+  const agent = createAgent(apiKey, modelName)
+  const result = await invokeAgent(agent, state, config)
+  const processed = processResult(result)
+
+  // Empty line before return
+  return new Command({
+    goto: 'orchestrator',
+    update: processed
+  })
+}
+
+// ==========================================
+// Configuration
+// ==========================================
+
+function extractConfig(config?: RunnableConfig) {
+  const apiKey = config?.configurable?.openai_api_key
+  const modelName = config?.configurable?.model || DEFAULT_MODEL
+
+  if (!apiKey) {
+    throw new Error('OpenAI API key not provided')
+  }
+
+  return { apiKey, modelName }
+}
+
+// ==========================================
+// Agent Creation
+// ==========================================
+
+function createAgent(apiKey: string, modelName: string) {
+  return createReactAgent({
+    llm: new ChatOpenAI({
+      apiKey,
+      model: modelName,
+      temperature: AGENT_TEMPERATURE,
+      streaming: true
+    }),
+    tools: agentTools,
+    messageModifier: buildPrompt('agentName')
+  })
+}
+
+// ==========================================
+// Agent Invocation
+// ==========================================
+
+async function invokeAgent(
+  agent: ReturnType<typeof createReactAgent>,
+  state: OrchestratorStateType,
+  config?: RunnableConfig
+) {
+  const request = new HumanMessage(buildRequest('agentName'))
+
+  return await agent.invoke(
+    { messages: [...state.messages, request] },
+    config
+  )
+}
+
+// ==========================================
+// Response Processing
+// ==========================================
+
+function processResult(result) {
+  // Extract and return node-specific state updates
+  return {
+    messages: result.messages,
+    nodeSpecificField: extractData(result)
+  }
+}
+```
+
+## Node Implementation Rules
+
+### DO
+- ✅ Use clear sections (Imports, Constants, Main, Helpers)
+- ✅ Extract constants (models, temperatures, thresholds)
+- ✅ Main function 10-20 lines (orchestrate helpers)
+- ✅ Helper functions 5-40 lines each
+- ✅ Return to orchestrator with work results
+- ✅ Handle own business logic
+- ✅ Use existing tools (formatLoom, parseLoom, etc.)
+- ✅ Rely on reactive events (no manual logging)
+
+### DON'T
+- ❌ Set `currentStep` in nodes (orchestrator's job)
+- ❌ Hardcode routing (`goto: 'nextNode'`)
+- ❌ Apply other nodes' fixes/work
+- ❌ Use manual logging (`session?.log()`)
+- ❌ Import `DebugSession`
+- ❌ Create monolithic functions (100+ lines)
+- ❌ Bypass type system (`as any`)
+- ❌ Solve future problems (keep it simple)
+
+## Validator Node Example
+
+### Simple and Clean (189 lines)
+```typescript
+export async function validatorNode(state, config) {
+  // Variable declarations grouped
+  const { apiKey, modelName } = extractConfig(config)
+
+  // Empty line before next code block
+  const agent = createValidatorAgent(apiKey, modelName)
+  const loomInput = formatLoom(state.plan)
+  const response = await invokeValidator(agent, loomInput, config)
+  const result = parseValidationResponse(response)
+
+  // Empty line before return
+  return buildValidationCommand(result)
+}
+
+// 5 helper functions:
+// - extractConfig
+// - createValidatorAgent
+// - invokeValidator
+// - parseValidationResponse
+// - buildValidationCommand
+```
+
+### What We Don't Do
+- ❌ No manual logging
+- ❌ No complex error/suggestion parsing
+- ❌ No setting `currentStep`
+- ❌ No hardcoded routing
+- ❌ No orchestrator concerns
+
+## Consequences
+
+### Positive
+- ✅ Consistent patterns across all nodes
+- ✅ Easy to understand and maintain
+- ✅ Self-contained nodes
+- ✅ Type-safe throughout
+- ✅ Testable helper functions
+- ✅ Clear separation of concerns
+
+### Negative
+- Requires discipline to follow patterns
+- More files/functions (but each is simpler)
+
+## References
+- Orchestrator: `extension/src/ai/orchestrator/nodes/orchestrator.ts`
+- Node examples: `extension/src/ai/orchestrator/nodes/*.ts`
+- Tools: `extension/src/ai/orchestrator/tools/*.ts`
+- Related: 0032-orchestrator-langgraph.mdc, 0036-reactive-rxjs-architecture.mdc

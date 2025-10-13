@@ -1,110 +1,338 @@
-# Decision: Orchestrator and Agents (LangGraph) - Full Implementation
+---
+alwaysApply: false
+description: LangGraph orchestrator architecture—state-driven routing, explicit state machine, and node patterns.
+---
+
+# Decision: LangGraph Orchestrator - State-Driven Architecture
 
 ## Context
-The extension required a full multi-agent orchestrator using LangGraph for stateful, session-based workflow assistance. Initial implementation used manual orchestration without proper LangGraph patterns (StateGraph, checkpointers, tools, interrupts).
+The extension required a multi-agent orchestrator for workflow creation. Initial implementation had:
+- Validator as a tool (not a node)
+- Implicit state machine (inferred from property existence)
+- Nodes with hardcoded routing decisions
+- Orchestrator with business logic (applying fixes)
+- Manual logging bypassing reactive events
 
 ## Decision
-Implement a complete LangGraph-based orchestrator with unified StateGraph, mode-based routing, LLM-based validation, and session persistence via checkpointers.
+Implement a **state-driven LangGraph orchestrator** with:
+- Explicit state machine (`currentStep`, `stepHistory`)
+- Declarative step flow map
+- All agents as nodes (uniform architecture)
+- Orchestrator owns state transitions
+- Pure routing logic (no business logic in orchestrator)
 
-## Implementation Details
+## Core Architecture
 
-### Core Architecture
-- **Unified StateGraph**: Single graph handles both chat and workflow modes
-- **Mode-based routing**: Entry routing based on `state.mode` ('chat' | 'workflow')
-- **Session persistence**: MemorySaver checkpointer with thread_id per session
-- **Command-based control**: Nodes return `Command` for explicit routing
+### Graph Structure
+```
+START → orchestrator (pure routing)
+  ↓
+enrichment → orchestrator
+  ↓
+planner → orchestrator
+  ↓
+validator → orchestrator
+  ↓
+executor → orchestrator
+  ↓
+END
+```
 
-### Nodes (Agents)
-1. **Enrichment Node** (`nodes/enrichment.ts`)
-   - Conversational chat and requirement gathering
-   - Uses `interrupt()` for clarification (one question at a time)
-   - No tools - pure LLM interaction
-   - Token streaming via callbacks
-   - Markers: `[NEEDS_INPUT]`, `[READY]`, `[CHAT]`
+**Key Principles:**
+- All nodes return to orchestrator
+- Orchestrator sets `currentStep` when routing
+- Single source of truth for state transitions
 
-2. **Planner Node** (`nodes/planner.ts`)
-   - Generates workflow plans in Loom format
-   - Tools: `fetch_n8n_node_types`, `get_node_docs`
-   - Preserves Loom protocol for efficient communication
-   - Events automatically captured by reactive event system
+### State Schema
+```typescript
+{
+  // Explicit state tracking
+  currentStep: 'enrichment' | 'planner' | 'validator' | 'executor' | undefined
+  stepHistory: string[]  // ['enrichment', 'planner', 'validator']
 
-3. **Planner Tools Node** (`nodes/planner-tools.ts`)
-   - Dedicated tool execution for planner
-   - Uses `ToolNode` from prebuilt
-   - Loops back to planner with results
+  // Node results
+  requirementsStatus: { hasAllRequiredInfo, confidence }
+  plan: Plan
+  validationStatus: { valid, errors }
+  workflowId: string
+}
+```
 
-4. **Validator Node** (`nodes/validator.ts`)
-   - **Pure LLM-based validation** (no custom schemas)
-   - Leverages LLM's knowledge of n8n
-   - Auto-fixes errors by extracting corrected Loom
-   - No tools - relies on LLM expertise
+### Step Flow Map (Declarative Routing)
+```typescript
+const Steps: Record<Step, NextStepFn> = {
+  enrichment: (state) => state.requirementsStatus?.ready ? 'planner' : 'enrichment',
+  planner: () => 'validator',
+  validator: () => 'executor',
+  executor: () => END
+}
 
-5. **Executor Node** (`nodes/executor.ts`)
-   - Creates workflows in n8n via API tools
-   - Tools: `create_n8n_workflow`, `check_credentials`
-   - Non-blocking credential guidance
-   - Paused via `interruptBefore: ['executor']` for approval
+export function orchestratorNode(state) {
+  const currentStep = state.currentStep || 'enrichment'
+  const nextStep = Steps[currentStep](state)
 
-6. **Executor Tools Node** (`nodes/executor-tools.ts`)
-   - Dedicated tool execution for executor
-   - n8n API interactions
-   - Loops back to executor with results
+  return new Command({
+    goto: nextStep,
+    update: {
+      currentStep: nextStep,
+      stepHistory: [currentStep]
+    }
+  })
+}
+```
 
-### Tool Architecture
-- Each agent has dedicated tools (separation of concerns)
-- Planner: n8n knowledge discovery
-- Executor: n8n API operations
-- Tool nodes use `ToolNode` from prebuilt
-- Tools loop back to parent agent
+## Node Architecture
 
-### Callback System
-- **TokenStreamHandler**: Letter-by-letter streaming for UI
-- **DebugCallbackHandler**: Integration with DebugSession for detailed tracing
-- **Reactive Event System**: Activity updates via SystemEvents and RxJS subscribers (see 0036-reactive-rxjs-architecture.mdc)
+### All Agents as Nodes
+Every agent follows the same pattern:
 
-### Session Management
-- **OrchestratorManager**: Maps session IDs to orchestrator instances
-- Thread IDs: `chat-${sessionId}` and `workflow-${sessionId}`
-- Cleanup on port disconnect
-- Separate sessions per tab/chat panel
+```typescript
+export async function agentNode(state, config): Promise<Command> {
+  const { apiKey, modelName } = extractConfig(config)
+  const agent = createAgent(apiKey, modelName)
+  const result = await invokeAgent(agent, state, config)
+  const processed = processResult(result)
 
-### Interrupts
-1. **Enrichment**: `interrupt()` for clarification (conditional)
-2. **Executor**: `interruptBefore` for workflow approval (always)
+  return new Command({
+    goto: 'orchestrator',
+    update: {
+      // Node-specific results (NO currentStep)
+      ...processed
+    }
+  })
+}
+```
 
-### Configuration
-- `config.configurable`: API keys, model selection, base URLs
-- `config.metadata`: Narrator, debug session (non-configurable context)
-- `config.callbacks`: Token streaming, debug tracing
+### Node Responsibilities
+
+**Enrichment Node:**
+- Gather requirements via conversation
+- Use tools: `reportRequirementsStatus`, `setConfidence`
+- Return: `requirementsStatus`
+
+**Planner Node:**
+- Generate workflow plan in Loom format
+- Use tools: `fetch_n8n_node_types`, `get_node_docs`
+- Return: `plan`
+
+**Validator Node:**
+- Validate and correct workflow plans
+- Use tools: `fetch_n8n_node_types`
+- Input: Loom-formatted plan via `formatLoom()`
+- Output: Loom response via `parseLoom()`
+- Return: Updated `plan` (corrected if invalid)
+
+**Executor Node:**
+- Create workflow in n8n
+- Use tools: `create_n8n_workflow`, `check_credentials`
+- Return: `workflowId`, `credentialGuidance`
+
+### Orchestrator Responsibilities
+
+**ONLY Routing:**
+- ✅ Read `currentStep` from state
+- ✅ Look up next step from flow map
+- ✅ Set `currentStep` when routing
+- ✅ Record `stepHistory`
+- ✅ Emit `graph` domain events
+- ❌ NO business logic (no applying fixes, parsing, etc.)
+- ❌ NO node-specific knowledge
+
+## Key Patterns
+
+### 1. Orchestrator Owns State Transitions
+```typescript
+// ✅ CORRECT: Orchestrator sets currentStep
+return new Command({
+  goto: nextStep,
+  update: {
+    currentStep: nextStep,  // Orchestrator's job!
+    stepHistory: [currentStep]
+  }
+})
+
+// ❌ WRONG: Node setting currentStep
+return new Command({
+  goto: 'orchestrator',
+  update: {
+    plan: validatedPlan,
+    currentStep: 'validator'  // Node shouldn't do this!
+  }
+})
+```
+
+### 2. Nodes Return Work Results Only
+```typescript
+// ✅ CORRECT: Node returns its work
+return new Command({
+  goto: 'orchestrator',
+  update: {
+    plan: validatedPlan,
+    validationStatus: { valid: true }
+  }
+})
+
+// ❌ WRONG: Node knows graph structure
+return new Command({
+  goto: 'executor',  // Hardcoded next step!
+  update: { plan }
+})
+```
+
+### 3. Nodes Handle Their Own Business Logic
+```typescript
+// ✅ CORRECT: Validator applies its own fixes
+const updates = {
+  validationStatus: { valid, errors },
+  plan: valid ? state.plan : fixedPlan  // Validator fixes it!
+}
+
+// ❌ WRONG: Orchestrator applies node's fixes
+if (validationStatus && validationStatus.fixedWorkflow) {
+  updates.plan = { ...plan, workflow: fixedWorkflow }  // Orchestrator shouldn't!
+}
+```
+
+### 4. Use Reactive Events (No Manual Logging)
+```typescript
+// ✅ CORRECT: Events automatically captured by LangGraph bridge
+// No manual logging needed!
+
+// ❌ WRONG: Manual logging
+import { type DebugSession } from '@shared/utils/debug'
+session?.log('Starting validation')
+session?.log('Validation complete')
+```
+
+## Implementation Standards
+
+### Node File Structure
+```typescript
+// ==========================================
+// Imports
+// ==========================================
+
+// ==========================================
+// Constants
+// ==========================================
+const DEFAULT_MODEL = 'gpt-4o-mini'
+const AGENT_TEMPERATURE = 0.1
+
+// ==========================================
+// Main Node
+// ==========================================
+export async function agentNode(state, config) {
+  // 10-20 lines orchestrating helpers
+}
+
+// ==========================================
+// Configuration
+// ==========================================
+function extractConfig(config) { ... }
+
+// ==========================================
+// Agent Creation
+// ==========================================
+function createAgent(apiKey, modelName) { ... }
+
+// ==========================================
+// Agent Invocation
+// ==========================================
+async function invokeAgent(agent, state, config) { ... }
+
+// ==========================================
+// Response Processing
+// ==========================================
+function processResponse(messages) { ... }
+```
+
+### Orchestrator File Structure
+```typescript
+// ==========================================
+// Type Definitions
+// ==========================================
+type NextStepFn = (state) => Step | typeof END
+
+// ==========================================
+// Step Flow Map (Declarative)
+// ==========================================
+const Steps: Record<Step, NextStepFn> = {
+  enrichment: (state) => ...,
+  planner: () => ...,
+  validator: () => ...,
+  executor: () => ...
+}
+
+// ==========================================
+// Main Orchestrator Node
+// ==========================================
+export function orchestratorNode(state) {
+  const nextStep = Steps[currentStep](state)
+  emitGraphHandoff(currentStep, nextStep)
+  return new Command({ goto: nextStep, update: { currentStep: nextStep } })
+}
+```
+
+## Event System Integration
+
+### Graph Domain Events
+```typescript
+// New 'graph' domain for orchestrator events
+emitGraphStarted(sessionId)
+emitGraphHandoff(fromStep, toStep, reason)
+emitGraphCompleted(sessionId)
+
+// Events emitted automatically:
+// [graph] handoff - { fromStep: 'planner', toStep: 'validator', reason: 'planner → validator' }
+```
+
+### Reactive Event Architecture
+- ✅ LangGraph bridge auto-captures agent/LLM/tool events
+- ✅ Logger subscriber automatically logs all events
+- ❌ Never use manual `session?.log()` calls
+- ❌ Don't bypass reactive architecture
 
 ## Alternatives Considered
-- **Two separate graphs** (chat + workflow): Rejected for unified state management
-- **Supervisor node with LLM routing**: Rejected for performance (use state-based routing instead)
-- **Structural validation code**: Rejected in favor of LLM-based validation
-- **askHuman tool**: Rejected for direct `interrupt()` (simpler)
+
+### Validator as Tool
+**Rejected**: Creates nested agent pattern, breaks uniformity
+
+**Chosen**: All agents as nodes for consistency
+
+### Implicit State Machine
+**Rejected**: Hard to debug, complex conditionals
+
+**Chosen**: Explicit `currentStep` with flow map
+
+### Nodes with Routing Knowledge
+**Rejected**: Tight coupling, hard to reorder flow
+
+**Chosen**: All nodes return to orchestrator, orchestrator routes
+
+### Manual Logging
+**Rejected**: Bypasses reactive architecture, duplicates functionality
+
+**Chosen**: Rely on reactive event system (LangGraph bridge + subscribers)
 
 ## Consequences
 
 ### Positive
-- ✅ ~1,100 lines of legacy code removed
-- ✅ Proper LangGraph patterns (StateGraph, checkpointers, tools)
-- ✅ Session persistence across messages
-- ✅ Two interrupt points for human-in-the-loop
-- ✅ LLM-based validation (no schema maintenance)
-- ✅ Non-blocking credential guidance
-- ✅ Backward-compatible API
+- ✅ Simple, debuggable flow (`currentStep` + `stepHistory`)
+- ✅ Declarative routing (step flow map)
+- ✅ Loose coupling (nodes don't know about each other)
+- ✅ Single responsibility (orchestrator routes, nodes do work)
+- ✅ Uniform architecture (all agents as nodes)
+- ✅ Type-safe (no `any`, proper inference)
+- ✅ Reactive events (no manual logging)
 
-### Challenges
-- Vite bundling requires Node.js module stubs for browser compatibility
-- Tool typing requires casting input to avoid `unknown` type errors
-- LangGraph graph routing requires type assertions for custom node names
+### Negative
+- State schema slightly larger (`currentStep`, `stepHistory`)
+- One extra hop through orchestrator (minimal overhead)
 
 ## References
-- `extension/src/ai/orchestrator/state.ts` - State schema
-- `extension/src/ai/orchestrator/graph.ts` - StateGraph definition
-- `extension/src/ai/orchestrator/nodes/` - Agent node implementations
-- `extension/src/ai/orchestrator/tools/` - Tool definitions
-- `extension/src/ai/orchestrator/entrypoint.ts` - Graph execution entry point
-- `extension/src/entries/background/background-worker.ts` - Background orchestration
-- Decisions: 0007, 0025, 0012, 0021, 0011, 0027
-
+- State: `extension/src/ai/orchestrator/state.ts`
+- Graph: `extension/src/ai/orchestrator/graph.ts`
+- Orchestrator: `extension/src/ai/orchestrator/nodes/orchestrator.ts`
+- Nodes: `extension/src/ai/orchestrator/nodes/*.ts`
+- Tools: `extension/src/ai/orchestrator/tools/*.ts`
+- Events: `extension/src/events/` (see 0036-reactive-rxjs-architecture.mdc)

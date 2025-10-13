@@ -24,6 +24,47 @@ Establish code quality standards and linting rules specifically for the n8n exte
 - **No console.log** - Use `console.warn` or `console.error` instead; never log secrets
 - **Max line length** - 120 characters with exceptions for URLs and strings
 
+### Vertical Spacing Rules
+
+**Core Rules:**
+1. Group related `const`/`let`/`var` declarations (no empty lines between them)
+2. Empty line after variable group before next code block (assignments, conditions, loops, etc.)
+3. Empty line before return statement (except when return is only statement in block)
+4. Empty line between distinct logical operations
+
+**Variable Declarations:**
+- Group related declarations together (no empty lines between them)
+- Add empty line after variable group before next code block
+- Exception: Group by category with empty lines when many variables
+
+```typescript
+// ✅ CORRECT
+const apiKey = config?.configurable?.openai_api_key
+const modelName = config?.configurable?.model || DEFAULT_MODEL
+
+const agent = createAgent(apiKey, modelName)
+```
+
+**Return Statements:**
+- Always have empty line before return statement
+- Exception: When return is the only statement in a block (if/loop)
+
+```typescript
+// ✅ CORRECT: Empty line before return
+const result = await doWork()
+
+return new Command({ update: result })
+
+// ✅ CORRECT: No empty line when only statement
+if (nextStep === END) {
+  return new Command({ goto: END })
+}
+```
+
+**Code Blocks:**
+- Empty line between variable declarations and next code block
+- Empty line between distinct logical operations
+
 ## Code Style Pattern
 ```typescript
 // Good
@@ -76,6 +117,44 @@ function handleClick() {
 - **Use TODO comments** for future improvements
 
 ## n8n Extension Specific Considerations
+
+### LangGraph Node Patterns
+- **All agents as nodes** - Uniform architecture (no nested tool-agents)
+- **Orchestrator owns state transitions** - Only orchestrator sets `currentStep`
+- **All nodes return to orchestrator** - No hardcoded routing decisions
+- **Nodes handle own logic** - Each node applies its own fixes/transformations
+- **No manual logging** - Rely on reactive event system (see 0036-reactive-rxjs-architecture.mdc)
+
+### Node File Structure (Required)
+```typescript
+// ==========================================
+// Imports
+// ==========================================
+
+// ==========================================
+// Constants
+// ==========================================
+
+// ==========================================
+// Main Node
+// ==========================================
+
+// ==========================================
+// Helper Functions (Configuration, Agent Creation, etc.)
+// ==========================================
+```
+
+### Critical Rules for Nodes
+- ✅ Use `formatLoom()` for Loom data (not JSON.stringify)
+- ✅ Return to orchestrator (not other nodes)
+- ✅ Update own state fields only (not `currentStep`)
+- ✅ Extract helper functions (main function 10-20 lines)
+- ❌ Never import `DebugSession` in nodes
+- ❌ Never set `currentStep` in node updates
+- ❌ Never use `session?.log()` calls
+- ❌ Never bypass type system with `any`
+
+### Type Safety for n8n
 - **Type safety** for n8n API responses and workflow data
 - **Error handling** for n8n API failures and network issues
 - **Performance optimization** for content script injection
