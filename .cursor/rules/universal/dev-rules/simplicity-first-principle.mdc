@@ -1,0 +1,251 @@
+---
+alwaysApply: true
+description: Core principle of starting simple and questioning complexity before adding code
+---
+
+# Simplicity-First Principle
+
+## Core Philosophy
+
+**Start with the simplest solution that could work, then only add complexity when proven necessary.**
+
+## The Simplicity Question
+
+Before writing any code, ask:
+1. **What's the simplest version that could work?**
+2. **What existing patterns/tools can I use?**
+3. **Am I solving a real problem or imagining edge cases?**
+4. **Can this be a 10-line function instead of 100?**
+5. **Do I actually need this code?**
+
+## Red Flags (Signs of Over-Complication)
+
+### Premature Abstraction
+```typescript
+// ❌ WRONG: Over-engineered before knowing requirements
+class ValidationService {
+  private validators: Map<string, Validator>
+  private cache: ValidationCache
+  private strategies: ValidationStrategy[]
+
+  async validate(data: unknown, options: ValidationOptions) {
+    // 200 lines of abstraction
+  }
+}
+
+// ✅ CORRECT: Start simple
+function validate(data: MyType): boolean {
+  return data.field !== null
+}
+```
+
+### Feature Creep in Initial Implementation
+```typescript
+// ❌ WRONG: Adding features that aren't used
+return {
+  valid: boolean,
+  errors?: string[],
+  warnings?: string[],      // Not used
+  suggestions?: string[],   // Not used
+  metadata?: unknown,       // Not used
+  fixedData?: Data         // Duplicate
+}
+
+// ✅ CORRECT: Only what's needed
+return {
+  valid: boolean,
+  errors?: string[]
+}
+```
+
+### Complex Conditionals
+```typescript
+// ❌ WRONG: Inferring state from side effects
+if (workflowId) return END
+if (validationStatus) {
+  if (validationStatus.valid) return executor
+  if (validationStatus.fixedWorkflow) {
+    // Apply fixes
+    return executor
+  }
+  throw error
+}
+if (plan) return validator
+if (requirementsStatus?.ready) return planner
+return enrichment
+
+// ✅ CORRECT: Explicit state machine
+const nextStep = STEP_FLOW[currentStep](state)
+return new Command({ goto: nextStep })
+```
+
+## Simplification Strategies
+
+### 1. Delete Before Adding
+When faced with complexity:
+- ✅ Ask "what can we remove?" first
+- ✅ Delete unnecessary code
+- ✅ Simplify existing logic
+- ❌ Don't add more code to "fix" complexity
+
+### 2. Question Every Line
+For each function/feature ask:
+- **Is this necessary?** - Does it solve a real, current problem?
+- **Is this simple enough?** - Could it be simpler?
+- **Does this belong here?** - Is it in the right place?
+
+### 3. Avoid Future Problem Solving
+```typescript
+// ❌ WRONG: Solving future problems
+interface Config {
+  retry?: RetryOptions           // Not needed yet
+  timeout?: number              // Not needed yet
+  cache?: CacheOptions          // Not needed yet
+  fallback?: FallbackStrategy   // Not needed yet
+}
+
+// ✅ CORRECT: Solve current problems only
+interface Config {
+  apiKey: string
+}
+```
+
+### 4. Resist Abstraction Until Needed
+**Three strikes rule**: Create abstraction after third duplication, not before.
+
+```typescript
+// ❌ WRONG: Premature abstraction
+class DataProcessor<T> {
+  private pipeline: ProcessingStep<T>[]
+  process(data: T): ProcessedData<T> { ... }
+}
+
+// ✅ CORRECT: Direct implementation first
+function processData(data: MyData): ProcessedData {
+  return { ...data, processed: true }
+}
+
+// Only abstract when you have 3+ similar implementations
+```
+
+## Iterative Simplification
+
+### Start-Simple-Then-Refine Pattern
+
+**Phase 1: Make it work (simplest version)**
+```typescript
+function validate(plan) {
+  const response = await agent.invoke(plan)
+  const parsed = parseLoom(response)
+  return parsed.success ? { valid: true, plan: parsed.data } : { valid: false }
+}
+```
+
+**Phase 2: Make it right (only when needed)**
+```typescript
+function validate(plan) {
+  const response = await runValidator(plan)  // Extract only when repeated
+  const result = parseResponse(response)     // Extract only when complex
+  return buildResult(result)                 // Extract only when reused
+}
+```
+
+**Phase 3: Make it fast (only when measured)**
+- Only optimize after profiling shows actual bottlenecks
+- Don't optimize for imagined performance issues
+
+## Complexity Budget
+
+### Maximum Complexity Thresholds
+
+**Functions:**
+- ✅ Ideal: 5-20 lines
+- ⚠️ Review: 20-50 lines
+- ❌ Refactor: 50+ lines (break into smaller functions)
+
+**Conditionals:**
+- ✅ Ideal: 1-2 levels of nesting
+- ⚠️ Review: 3 levels
+- ❌ Refactor: 4+ levels (extract to functions or use map/lookup)
+
+**Files:**
+- ✅ Ideal: Under 200 lines
+- ⚠️ Review: 200-400 lines
+- ❌ Refactor: 400+ lines (split into modules)
+
+## Real-World Example from This Codebase
+
+### Before (327 lines, over-complicated)
+```typescript
+export async function validatorNode() {
+  // 115 lines of mixed concerns
+  const agent = createReactAgent(...)
+  const result = await agent.invoke(...)
+  const parsed = parseValidationResponse(...)  // 100+ lines
+  if (!parsed.valid && parsed.correctedWorkflow) {
+    // Parse corrected workflow
+    // Extract errors
+    // Extract suggestions
+    // Apply fixes
+  }
+  return Command(...)
+}
+
+function parseValidationResponse() {
+  // 80 lines of parsing errors, suggestions, workflows
+}
+```
+
+### After (189 lines, simple and clear)
+```typescript
+export async function validatorNode() {
+  // Variable declarations grouped (14 lines total)
+  const { apiKey, modelName } = extractConfig(config)
+
+  // Empty line before next code block
+  const agent = createValidatorAgent(apiKey, modelName)
+  const response = await invokeValidator(agent, plan, config)
+  const result = parseValidationResponse(response)
+
+  // Empty line before return
+  return buildValidationCommand(result)
+}
+
+function parseValidationResponse(content) {
+  // 15 lines - just parse Loom
+  const parsed = parseLoom(stripCodeFences(content))
+
+  // Empty line before return
+  return parsed.success
+    ? { success: true, plan: loomToPlan(parsed.data) }
+    : { success: false, errors: parsed.errors }
+}
+```
+
+**Reduction: 42% fewer lines, 4x simpler logic**
+
+## Key Takeaways
+
+### Always Ask
+- ✅ "Do we actually need this?"
+- ✅ "Can this be simpler?"
+- ✅ "What can we delete?"
+- ✅ "Am I using existing tools/patterns?"
+
+### Red Flags
+- Using `any` or bypassing type system (complexity hiding as escape hatch)
+- Creating abstractions before duplication
+- Adding features "just in case"
+- Functions over 50 lines
+- Nested conditionals over 3 levels
+- Solving future problems
+
+### Remember
+**Complexity is easy to add, hard to remove. Start simple, add complexity only when proven necessary.**
+
+## What NOT to do
+- Add abstraction layers before they're needed
+- Solve future problems that may never occur
+- Create complex parsing logic when simple tools exist
+- Build features "just in case" without requirements
+- Accept initial complexity without questioning it

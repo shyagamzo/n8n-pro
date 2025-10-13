@@ -16,6 +16,96 @@ description: Universal code quality standards and best practices for all program
 - **Keep functions small** - Single responsibility principle
 - **Avoid deep nesting** - Use early returns and guard clauses
 - **Use consistent formatting** - Follow project style guides
+- **Positive path first** - Write success case before error cases
+
+### Vertical Spacing Rules
+
+**Core Rules:**
+1. Group related variable declarations (no empty lines between them)
+2. Empty line after variable group before next code block
+3. Empty line before return statement (except when return is only statement in block)
+4. Empty line between distinct logical operations
+
+**Variable Declaration Grouping:**
+```typescript
+// ✅ CORRECT: Group related declarations (no empty lines between)
+const apiKey = config?.configurable?.openai_api_key
+const modelName = config?.configurable?.model || DEFAULT_MODEL
+const session = config?.metadata?.session
+
+// Empty line before next code block
+const agent = createAgent(apiKey, modelName)
+
+// ❌ WRONG: Empty lines between related declarations
+const apiKey = config?.configurable?.openai_api_key
+
+const modelName = config?.configurable?.model || DEFAULT_MODEL
+
+const session = config?.metadata?.session
+```
+
+**Exception: Group by category when many variables**
+```typescript
+// ✅ CORRECT: Group related variables with empty lines for clarity
+const apiKey = config?.configurable?.openai_api_key
+const modelName = config?.configurable?.model || DEFAULT_MODEL
+
+const n8nApiKey = config?.configurable?.n8n_api_key
+const n8nBaseUrl = config?.configurable?.n8n_base_url
+
+const session = config?.metadata?.session
+const debug = config?.metadata?.debug
+```
+
+**Return Statement Spacing:**
+```typescript
+// ✅ CORRECT: Empty line before return
+const result = processData(input)
+const validated = validate(result)
+
+return new Command({ update: validated })
+
+// ✅ CORRECT: No empty line when return is only statement in block
+if (nextStep === END) {
+  return new Command({ goto: END })
+}
+
+if (parsed.success && parsed.data) {
+  return { success: true, plan: parsed.data }
+}
+
+// ❌ WRONG: No empty line before return
+const result = processData(input)
+return new Command({ update: result })
+```
+
+**Code Block Separation:**
+```typescript
+// ✅ CORRECT: Empty line between variable declarations and next code block
+const apiKey = extractApiKey(config)
+const modelName = config?.model || DEFAULT_MODEL
+
+const agent = createAgent(apiKey, modelName)
+const result = await agent.invoke(input)
+
+return processResult(result)
+```
+
+### Positive Path First Pattern
+```typescript
+// ❌ WRONG: Negative condition first
+if (!parsed.success || !parsed.data) {
+  return { success: false, errors }
+}
+return { success: true, plan: parsed.data }
+
+// ✅ CORRECT: Positive condition first (more readable)
+if (parsed.success && parsed.data) {
+  return { success: true, plan: parsed.data }
+}
+
+return { success: false, errors }
+```
 
 ## Separation of Concerns
 - **Logic vs View**: Separate business logic from presentation components
@@ -37,12 +127,74 @@ description: Universal code quality standards and best practices for all program
 - **Fix Root Causes**: When fixing bugs, treat the source of the problem, even at the cost of refactoring
 - **Patching as Last Resort**: Use patching only as ultra-super-no-other-way last resort
 
+## File Organization
+- **Clear Sections**: Organize files with clear section headers
+- **Consistent Structure**: All files follow same organizational pattern
+- **Group Related Code**: Keep related functions together in sections
+
+### Standard File Structure
+```
+// ==========================================
+// Imports
+// ==========================================
+
+// ==========================================
+// Constants
+// ==========================================
+
+// ==========================================
+// Type Definitions
+// ==========================================
+
+// ==========================================
+// Main Function/Class
+// ==========================================
+
+// ==========================================
+// Helper Functions
+// ==========================================
+```
+
 ## Import Organization
 Imports should follow this order:
 1. **Low-level packages** (e.g., `lodash`, `rxjs`)
 2. **Framework packages** (e.g., `react`, `@types/chrome`)
 3. **Third-party libraries** (e.g., `@langchain/openai`, `zustand`)
 4. **Internal imports** (separated by one empty line)
+
+## Type Safety
+
+### Never Bypass the Type System
+- ✅ **Fix type errors properly** - Use correct types, method chaining, proper imports
+- ❌ **Never use `any`** - Fix the root cause instead
+- ❌ **Never use `@typescript-eslint/no-explicit-any`** - This hides problems
+- ❌ **Never use `as any`** - Find the proper type solution
+
+### Proper Type Solutions
+```typescript
+// ❌ WRONG: Bypassing types
+graph.addEdge(START, 'orchestrator' as any)
+
+// ✅ CORRECT: Method chaining for type inference
+const graph = new StateGraph(State)
+  .addNode('orchestrator', orchestratorNode)
+  .addNode('enrichment', enrichmentNode)
+
+graph.addEdge(START, 'orchestrator')  // Fully typed!
+```
+
+### Type Reuse
+- ✅ Import and reuse existing types
+- ✅ Single source of truth for type definitions
+- ❌ Don't redefine types that already exist
+
+```typescript
+// ❌ WRONG: Redefining existing type
+type Step = 'enrichment' | 'planner' | 'validator' | 'executor'
+
+// ✅ CORRECT: Import existing type
+import type { Step } from '@events/types'
+```
 
 ## Error Handling
 - **Use try-catch** for operations that can fail

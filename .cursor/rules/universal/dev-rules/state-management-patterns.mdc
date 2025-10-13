@@ -34,6 +34,54 @@ Organize stores by business domain:
 - **Computed Values**: Derive computed values from base state rather than storing them
 - **State Validation**: Validate state changes to maintain data integrity
 
+## Explicit State Machine Pattern
+
+### Prefer Explicit over Implicit State
+
+**❌ WRONG: Inferring state from side effects**
+```typescript
+// Implicit state machine (hard to understand)
+function route(state) {
+  if (state.workflowId) return 'end'
+  if (state.validationStatus) return 'execute'
+  if (state.plan) return 'validate'
+  if (state.requirementsReady) return 'plan'
+  return 'gather'
+}
+```
+
+**✅ CORRECT: Explicit state tracking**
+```typescript
+// Explicit state machine (clear and debuggable)
+interface State {
+  currentStep: 'gather' | 'plan' | 'validate' | 'execute' | 'complete'
+  stepHistory: string[]  // ['gather', 'plan', 'validate']
+}
+
+const STEP_FLOW = {
+  gather: (state) => state.ready ? 'plan' : 'gather',
+  plan: () => 'validate',
+  validate: () => 'execute',
+  execute: () => 'complete'
+}
+
+function route(state) {
+  const nextStep = STEP_FLOW[state.currentStep](state)
+  return nextStep
+}
+```
+
+### Benefits of Explicit State
+- **Debuggable**: Just check `currentStep` and `stepHistory`
+- **Predictable**: Clear what state means
+- **Testable**: Easy to test state transitions
+- **Self-documenting**: History shows exact path taken
+
+### State Ownership
+- **Single Owner**: One component owns state transitions
+- **Clear Boundaries**: Components update their own fields, not others
+- **No Side Effects**: Don't infer state from multiple properties
+
 ### UI Boundaries
 - **Presentational components** consume store selectors and props only
 - **Containers** own orchestration and call services/mutations
