@@ -1,5 +1,5 @@
-import { Annotation } from '@langchain/langgraph'
 import type { BaseMessage } from '@langchain/core/messages'
+import { Annotation } from '@langchain/langgraph'
 import type { Plan } from '@shared/types/plan'
 
 /**
@@ -57,6 +57,30 @@ export const OrchestratorState = Annotation.Root({
     confidence: number;
     missingInfo?: string[];
   } | undefined>(),
+
+  /**
+   * Validation status from validator agent.
+   * Simple valid/invalid flag with optional error details.
+   */
+  validationStatus: Annotation<{
+    valid: boolean;
+    errors?: string[];
+  } | undefined>(),
+
+  /**
+   * Current step in the workflow creation process.
+   * Used by orchestrator for explicit state machine routing.
+   */
+  currentStep: Annotation<'enrichment' | 'planner' | 'validator' | 'executor' | undefined>(),
+
+  /**
+   * History of steps taken in this session.
+   * Useful for debugging and understanding the flow.
+   */
+  stepHistory: Annotation<string[]>({
+    reducer: (x, y) => x.concat(y),
+    default: () => []
+  }),
 
 })
 
