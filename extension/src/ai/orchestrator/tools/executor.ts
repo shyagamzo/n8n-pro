@@ -1,17 +1,37 @@
+// ==========================================
+// Imports
+// ==========================================
+
 import { tool } from '@langchain/core/tools'
 import { z } from 'zod'
+
 import { N8nClient } from '@n8n'
 import { DEFAULTS } from '@shared/constants'
 
+// ==========================================
+// Tool Schemas
+// ==========================================
+
 const createWorkflowSchema = z.object({
-  workflow: z.any().describe('The workflow object to create (with nodes, connections, etc.)'),
+  workflow: z.record(z.unknown()).describe('The workflow object to create (with nodes, connections, etc.)'),
   apiKey: z.string().describe('n8n API key for authentication'),
   baseUrl: z.string().default(DEFAULTS.N8N_BASE_URL).describe('n8n instance base URL')
 })
 
+const checkCredentialsSchema = z.object({
+  requiredTypes: z.array(z.string()).describe('Array of required credential types (e.g. ["slackApi", "googleSheetsOAuth2Api"])'),
+  apiKey: z.string().describe('n8n API key for authentication'),
+  baseUrl: z.string().default(DEFAULTS.N8N_BASE_URL).describe('n8n instance base URL')
+})
+
+// ==========================================
+// Create Workflow Tool
+// ==========================================
+
 /**
- * Tool for executor to create a workflow in n8n.
- * Returns the workflow ID and URL for user reference.
+ * Create a workflow in n8n
+ *
+ * Returns workflow ID and URL for user reference.
  */
 export const createWorkflowTool = tool(
   async (input) => {
@@ -21,13 +41,13 @@ export const createWorkflowTool = tool(
       baseUrl: args.baseUrl
     })
 
-    const workflow = await n8n.createWorkflow(args.workflow) as any
+    const workflow = await n8n.createWorkflow(args.workflow) as Record<string, unknown>
 
     return JSON.stringify({
-      id: workflow.id,
-      name: workflow.name || 'Unnamed Workflow',
+      id: workflow.id as string,
+      name: (workflow.name as string) || 'Unnamed Workflow',
       url: `${args.baseUrl}/workflow/${workflow.id}`,
-      active: workflow.active || false
+      active: (workflow.active as boolean) || false
     })
   },
   {
@@ -37,15 +57,15 @@ export const createWorkflowTool = tool(
   }
 )
 
-const checkCredentialsSchema = z.object({
-  requiredTypes: z.array(z.string()).describe('Array of required credential types (e.g. ["slackApi", "googleSheetsOAuth2Api"])'),
-  apiKey: z.string().describe('n8n API key for authentication'),
-  baseUrl: z.string().default('http://localhost:5678').describe('n8n instance base URL')
-})
+// ==========================================
+// Check Credentials Tool
+// ==========================================
 
 /**
- * Tool for executor to check which credentials exist in n8n.
+ * Check which credentials exist in n8n
+ *
  * Identifies missing credentials without blocking workflow creation.
+ * TODO: Implement actual credential checking via n8n API.
  */
 export const checkCredentialsTool = tool(
   async (input) => {
@@ -85,8 +105,12 @@ export const checkCredentialsTool = tool(
   }
 )
 
+// ==========================================
+// Tool Exports
+// ==========================================
+
 /**
- * All tools available to the executor agent.
+ * All tools available to the executor agent
  */
 export const executorTools = [createWorkflowTool, checkCredentialsTool]
 

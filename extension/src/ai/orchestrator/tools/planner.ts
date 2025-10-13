@@ -1,15 +1,33 @@
+// ==========================================
+// Imports
+// ==========================================
+
 import { tool } from '@langchain/core/tools'
 import { z } from 'zod'
+
 import { fetchNodeTypes } from '@n8n/node-types'
 import { DEFAULTS } from '@shared/constants'
+
+// ==========================================
+// Tool Schemas
+// ==========================================
 
 const fetchNodeTypesSchema = z.object({
   baseUrl: z.string().default(DEFAULTS.N8N_BASE_URL).describe('n8n base URL')
 })
 
+const getNodeDocsSchema = z.object({
+  nodeType: z.string().describe('The node type, e.g. "n8n-nodes-base.slack"')
+})
+
+// ==========================================
+// Fetch Node Types Tool
+// ==========================================
+
 /**
- * Tool for planner to fetch available n8n node types.
- * Helps the planner understand what nodes are available when designing workflows.
+ * Fetch available n8n node types
+ *
+ * Helps planner/validator understand what nodes are available.
  */
 export const fetchNodeTypesTool = tool(
   async (input) => {
@@ -35,13 +53,15 @@ export const fetchNodeTypesTool = tool(
   }
 )
 
-const getNodeDocsSchema = z.object({
-  nodeType: z.string().describe('The node type, e.g. "n8n-nodes-base.slack"')
-})
+// ==========================================
+// Get Node Docs Tool
+// ==========================================
 
 /**
- * Tool for planner to get detailed documentation for a specific node type.
+ * Get detailed documentation for a specific node type
+ *
  * Provides parameter information and usage examples.
+ * TODO: Implement actual documentation fetching.
  */
 export const getNodeDocsTool = tool(
   async (input) => {
@@ -62,10 +82,12 @@ export const getNodeDocsTool = tool(
   }
 )
 
+// ==========================================
+// Tool Exports
+// ==========================================
+
 /**
- * All tools available to the planner agent.
- *
- * Note: Validator tool is created dynamically in planner node with API key from closure.
+ * All tools available to the planner agent
  */
 export const plannerTools = [fetchNodeTypesTool, getNodeDocsTool]
 
