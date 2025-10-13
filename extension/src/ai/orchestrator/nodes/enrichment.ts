@@ -1,3 +1,7 @@
+// ==========================================
+// Imports
+// ==========================================
+
 import { Command } from '@langchain/langgraph'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
@@ -5,73 +9,47 @@ import { SystemMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '@ai/orchestrator/state'
+import { extractOpenAIConfig } from '@ai/orchestrator/config'
 import { buildPrompt } from '@ai/prompts'
 import { enrichmentCommandTools } from '@ai/orchestrator/tools/enrichment-commands'
+import { findLastToolCall } from '@shared/utils/langchain-messages'
+
+// ==========================================
+// Constants
+// ==========================================
+const ENRICHMENT_TEMPERATURE = 0.7
+
+// ==========================================
+// Main Enrichment Node
+// ==========================================
 
 /**
- * Enrichment node handles conversational chat and requirement gathering.
- *
- * Uses createReactAgent for consistent agent pattern:
- * - Bound tools: reportRequirementsStatus, setConfidence (metadata-only)
- * - ReAct agent for natural conversation flow
- * - Token streaming support via callbacks
- * - Clean content (no markers in streamed output)
+ * Enrichment node - conversational requirement gathering
  *
  * Flow:
- * 1. ReAct agent responds naturally to user message
- * 2. If clarification needed: asks question in chat response
- * 3. Calls reportRequirementsStatus tool when ready
- * 4. Orchestrator routes based on tool call arguments
- *
- * Benefits:
- * - Consistent with other agents (planner, executor)
- * - No markers appear in streamed content
- * - Tool calls are structured and reliable
+ * 1. Create agent with requirement gathering tools
+ * 2. Process user messages
+ * 3. Extract requirements status from tool calls
+ * 4. Return to orchestrator with results
  */
 export async function enrichmentNode(
   state: OrchestratorStateType,
   config?: RunnableConfig
 ): Promise<Command>
 {
-  const apiKey = config?.configurable?.openai_api_key
-  const modelName = config?.configurable?.model || 'gpt-4o-mini'
+  const { apiKey, modelName } = extractOpenAIConfig(config)
 
-  if (!apiKey)
-  {
-    throw new Error('OpenAI API key not provided in config.configurable')
-  }
+  const agent = createEnrichmentAgent(apiKey, modelName)
+  const result = await agent.invoke({ messages: state.messages }, config)
 
-  // Agent lifecycle events automatically emitted by LangGraph bridge
-  // (on_chain_start → emitAgentStarted('enrichment', 'enriching'))
+  const requirementsStatus = findLastToolCall<{
+    hasAllRequiredInfo: boolean
+    confidence: number
+    missingInfo?: string[]
+  }>(result.messages, 'reportRequirementsStatus')
 
-  // Create ReAct agent with enrichment tools
-  const systemPrompt = buildPrompt('enrichment', {
-    includeNodesReference: true,
-    includeConstraints: true
-  })
-
-  const agent = createReactAgent({
-    llm: new ChatOpenAI({
-      apiKey,
-      model: modelName,
-      temperature: 0.7,
-      streaming: true
-    }),
-    tools: enrichmentCommandTools,
-    messageModifier: new SystemMessage(systemPrompt)
-  })
-
-  // ReAct agent handles tool loop internally
-  const result = await agent.invoke(
-    { messages: state.messages },
-    config
-  )
-
-  // Extract requirements status from tool calls and update state
-  const requirementsStatus = extractRequirementsStatus(result.messages)
-
-  // Update state with messages and requirements status
   return new Command({
+    goto: 'orchestrator',
     update: {
       messages: result.messages,
       requirementsStatus
@@ -79,38 +57,30 @@ export async function enrichmentNode(
   })
 }
 
+// ==========================================
+// Agent Creation
+// ==========================================
+
 /**
- * Extract requirements status from agent messages
- *
- * Searches through the agent's messages for a reportRequirementsStatus tool call
- * and extracts the arguments to update state.
+ * Create enrichment agent with requirement gathering tools
  */
-function extractRequirementsStatus(
-  messages: any[]
-): { hasAllRequiredInfo: boolean; confidence: number; missingInfo?: string[] } | undefined
+function createEnrichmentAgent(apiKey: string, modelName: string)
 {
-  // Search backwards for the most recent AI message with tool calls
-  for (let i = messages.length - 1; i >= 0; i--)
-  {
-    const msg = messages[i] as any
+  const systemPrompt = buildPrompt('enrichment', {
+    includeNodesReference: true,
+    includeConstraints: true
+  })
 
-    if (msg.tool_calls && msg.tool_calls.length > 0)
-    {
-      // Find reportRequirementsStatus tool call
-      for (const toolCall of msg.tool_calls)
-      {
-        if (toolCall.name === 'reportRequirementsStatus')
-        {
-          return {
-            hasAllRequiredInfo: toolCall.args.hasAllRequiredInfo,
-            confidence: toolCall.args.confidence,
-            missingInfo: toolCall.args.missingInfo
-          }
-        }
-      }
-    }
-  }
-
-  return undefined
+  return createReactAgent({
+    llm: new ChatOpenAI({
+      apiKey,
+      model: modelName,
+      temperature: ENRICHMENT_TEMPERATURE,
+      streaming: true
+    }),
+    tools: enrichmentCommandTools,
+    messageModifier: new SystemMessage(systemPrompt)
+  })
 }
+
 

@@ -1,28 +1,37 @@
-import { Command, END } from '@langchain/langgraph'
+// ==========================================
+// Imports
+// ==========================================
+
+import { Command } from '@langchain/langgraph'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
 import { HumanMessage } from '@langchain/core/messages'
+import type { BaseMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '@ai/orchestrator/state'
-import { type DebugSession } from '@shared/utils/debug'
+import { extractExecutorConfig } from '@ai/orchestrator/config'
 import { executorTools } from '@ai/orchestrator/tools/executor'
 import { buildPrompt, buildRequest } from '@ai/prompts'
+import { findLastToolResult } from '@shared/utils/langchain-messages'
+
+// ==========================================
+// Constants
+// ==========================================
+const EXECUTOR_TEMPERATURE = 0.1
+
+// ==========================================
+// Main Executor Node
+// ==========================================
 
 /**
- * Executor node creates workflows in n8n via API tools.
- *
- * Uses createReactAgent for automatic tool loop handling:
- * - Bound tools: create_n8n_workflow, check_credentials
- * - ReAct agent handles tool calls internally (no separate tool node needed)
- * - Non-blocking credential checks (workflow created even with missing creds)
- * - Provides setup links for missing credentials
- * - Paused before execution via interruptBefore in graph config
+ * Executor node - creates workflows in n8n via API tools
  *
  * Flow:
- * 1. (User approves via interrupt) → executor resumes
- * 2. ReAct agent checks credentials and creates workflow (calls tools internally)
- * 3. Extract results → goto END
+ * 1. Create agent with n8n API tools (paused before this via interruptBefore)
+ * 2. Create workflow in n8n
+ * 3. Extract workflow ID and credential info
+ * 4. Return to orchestrator with results
  */
 export async function executorNode(
   state: OrchestratorStateType,
@@ -34,122 +43,108 @@ export async function executorNode(
     throw new Error('No plan to execute')
   }
 
-  const apiKey = config?.configurable?.openai_api_key
-  const n8nApiKey = config?.configurable?.n8n_api_key
-  const n8nBaseUrl = config?.configurable?.n8n_base_url  // Already defaulted by runGraph()
-  const modelName = config?.configurable?.model  // Already defaulted by runGraph()
-  const session = config?.metadata?.session as DebugSession | undefined
-
-  if (!apiKey)
-  {
-    throw new Error('OpenAI API key not provided in config.configurable')
-  }
-
-  if (!n8nApiKey)
-  {
-    throw new Error('n8n API key not provided in config.configurable')
-  }
-
-  session?.log('Executing workflow creation', {
-    workflowName: state.plan.workflow.name,
-    nodeCount: state.plan.workflow.nodes?.length || 0
-  })
-
-  // Agent lifecycle events automatically emitted by LangGraph bridge
-  // (on_chain_start → emitAgentStarted('executor', 'executing'))
-
-  // Create ReAct agent with executor tools
-  const systemPrompt = buildPrompt('executor')
-
-  const agent = createReactAgent({
-    llm: new ChatOpenAI({
-      apiKey,
-      model: modelName,
-      temperature: 0.1,
-      streaming: true  // Enable streaming for tool event emission (tokens not sent to UI)
-    }),
-    tools: executorTools,
-    messageModifier: systemPrompt
-  })
-
-  const executionRequest = new HumanMessage(
-    buildRequest('executor', {
-      workflowName: state.plan.workflow.name,
-      nodeCount: state.plan.workflow.nodes?.length || 0,
-      credentialsNeeded: state.plan.credentialsNeeded?.map(c => c.type).join(', ') || 'none',
-      n8nApiKey,
-      n8nBaseUrl
-    })
-  )
-
-  // ReAct agent handles tool loop internally
-  const result = await agent.invoke(
-    { messages: [...state.messages, executionRequest] },
-    config
-  )
-
-  // Extract results from agent response
-  const lastMessage = result.messages[result.messages.length - 1]
-  const content = lastMessage.content as string
-
-  // Try to extract workflow ID and credential info from the message history
-  const workflowId = extractWorkflowId(content, result.messages)
-  const credentialGuidance = extractCredentialGuidance(content)
-
-  session?.log('Workflow created successfully', { workflowId })
-
-  // Agent completion event automatically emitted by LangGraph bridge
-  // (on_chain_end → emitAgentCompleted('executor'))
-  // Workflow created event emitted by background worker after applyWorkflow()
+  const executionConfig = extractExecutorConfig(config)
+  const agent = createExecutorAgent(executionConfig)
+  const result = await invokeExecutor(agent, state, executionConfig, config)
+  const executionResults = extractExecutionResults(result.messages)
 
   return new Command({
-    goto: END,
+    goto: 'orchestrator',
     update: {
-      workflowId,
-      credentialGuidance,
+      workflowId: executionResults.workflowId,
+      credentialGuidance: executionResults.credentialGuidance,
       messages: result.messages
     }
   })
 }
 
-/**
- * Extract workflow ID from tool results in message history.
- */
-function extractWorkflowId(_content: string, messages: any[]): string | undefined
-{
-  // Look for workflow ID in recent tool messages
-  for (let i = messages.length - 1; i >= Math.max(0, messages.length - 10); i--)
-  {
-    const msg = messages[i]
-    if (msg.type === 'tool' && msg.content)
-    {
-      try
-      {
-        const parsed = JSON.parse(msg.content)
-        if (parsed.id)
-        {
-          return parsed.id
-        }
-      }
-      catch
-      {
-        // Not JSON, skip
-      }
-    }
-  }
+// ==========================================
+// Agent Creation
+// ==========================================
 
-  // Fallback: try to extract from _content
-  const idMatch = _content.match(/workflow.*?['"]([\w-]+)['"]|id['"]\s*:\s*['"]([\w-]+)['"]/i)
-  return idMatch?.[1] || idMatch?.[2]
+/**
+ * Create executor agent with n8n API tools
+ */
+function createExecutorAgent(executionConfig: ReturnType<typeof extractExecutorConfig>)
+{
+  return createReactAgent({
+    llm: new ChatOpenAI({
+      apiKey: executionConfig.apiKey,
+      model: executionConfig.modelName,
+      temperature: EXECUTOR_TEMPERATURE,
+      streaming: true
+    }),
+    tools: executorTools,
+    messageModifier: buildPrompt('executor')
+  })
+}
+
+// ==========================================
+// Agent Invocation
+// ==========================================
+
+/**
+ * Invoke executor agent to create workflow in n8n
+ */
+async function invokeExecutor(
+  agent: ReturnType<typeof createReactAgent>,
+  state: OrchestratorStateType,
+  executionConfig: ReturnType<typeof extractExecutorConfig>,
+  config?: RunnableConfig
+)
+{
+  const plan = state.plan!
+
+  const executionRequest = new HumanMessage(
+    buildRequest('executor', {
+      workflowName: plan.workflow.name,
+      nodeCount: plan.workflow.nodes?.length || 0,
+      credentialsNeeded: plan.credentialsNeeded?.map(c => c.type).join(', ') || 'none',
+      n8nApiKey: executionConfig.n8nApiKey,
+      n8nBaseUrl: executionConfig.n8nBaseUrl
+    })
+  )
+
+  return await agent.invoke(
+    { messages: [...state.messages, executionRequest] },
+    config
+  )
+}
+
+// ==========================================
+// Result Extraction
+// ==========================================
+
+type ExecutionResults = {
+  workflowId?: string
+  credentialGuidance?: OrchestratorStateType['credentialGuidance']
 }
 
 /**
- * Extract credential guidance from tool results.
+ * Extract execution results from agent messages
  */
-function extractCredentialGuidance(_content: string): OrchestratorStateType['credentialGuidance']
+function extractExecutionResults(messages: BaseMessage[]): ExecutionResults
 {
-  // This would be populated by the check_credentials tool result
-  // For now, return undefined - the tool messages will have the data
-  return undefined
+  const workflowResult = findLastToolResult<{ id: string; name: string; url: string }>(
+    messages,
+    'create_n8n_workflow'
+  )
+
+  const credentialResult = findLastToolResult<{
+    available: string[]
+    missing: string[]
+    setupLinks?: Array<{ type: string; url: string }>
+  }>(messages, 'check_credentials')
+
+  return {
+    workflowId: workflowResult?.id,
+    credentialGuidance: credentialResult?.setupLinks ? {
+      missing: credentialResult.missing.map(type => ({ name: type, type })),
+      setupLinks: credentialResult.setupLinks.map(link => ({
+        name: link.type,
+        url: link.url
+      }))
+    } : undefined
+  }
 }
 
