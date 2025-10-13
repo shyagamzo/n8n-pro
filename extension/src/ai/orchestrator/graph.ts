@@ -7,6 +7,7 @@ import {
   orchestratorNode,
   enrichmentNode,
   plannerNode,
+  validatorNode,
   executorNode
 } from './nodes'
 
@@ -25,47 +26,52 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorag
  * Graph Structure (Self-Contained):
  *
  * START → orchestrator (pure routing function)
- *   ├─→ enrichment (gather requirements) → orchestrator (loop)
- *   ├─→ planner (create plan) → executor → END
- *   └─→ END (conversation complete)
+ *   ├─→ enrichment (gather requirements) → orchestrator
+ *   ├─→ planner (create plan) → orchestrator
+ *   ├─→ validator (validate plan) → orchestrator
+ *   ├─→ executor (create workflow) → orchestrator
+ *   └─→ END (workflow created)
  *
- * Orchestrator Node Routing Rules:
- * - No tool calls yet → enrichment (initial state)
- * - enrichment called reportRequirementsStatus(ready=false) → enrichment (more info needed)
- * - enrichment called reportRequirementsStatus(ready=true, conf>0.8) → planner (ready!)
- * - Otherwise → END (fallback)
+ * Orchestrator Node Routing Rules (checked in priority order):
+ * 1. If workflowId exists → END
+ * 2. If validationStatus exists → executor
+ * 3. If plan exists (no validation) → validator
+ * 4. If requirementsStatus.ready → planner
+ * 5. Otherwise → enrichment
  *
  * All routing happens INSIDE the graph via orchestrator node.
- * No external orchestration in background-worker needed!
+ * All nodes return to orchestrator - single source of routing logic!
  *
  * Agent Tools:
  * - Enrichment: reportRequirementsStatus, setConfidence
- * - Planner: validateWorkflow (validator as tool)
- * - Executor: (none - creates workflow in n8n)
+ * - Planner: fetch_n8n_node_types, get_node_docs
+ * - Validator: fetch_n8n_node_types
+ * - Executor: create_n8n_workflow, check_credentials
  *
  * Interrupts:
  * - executor: Pauses before execution (interruptBefore config)
  */
 
+// Build graph with proper type inference by chaining addNode calls
 const graph = new StateGraph(OrchestratorState)
+  .addNode('orchestrator', orchestratorNode, {
+    ends: ['enrichment', 'planner', 'validator', 'executor', '__end__']
+  })
+  .addNode('enrichment', enrichmentNode)   // LLM agent with requirement gathering tools
+  .addNode('planner', plannerNode)         // LLM agent with n8n node type tools
+  .addNode('validator', validatorNode)     // LLM agent with n8n node type tools
+  .addNode('executor', executorNode)       // LLM agent with n8n API tools
 
-// Add nodes
-graph.addNode('orchestrator', orchestratorNode, {
-  ends: ['enrichment', 'planner', '__end__']  // Potential destinations for Command routing
-})
-graph.addNode('enrichment', enrichmentNode)      // LLM agent with tools
-graph.addNode('planner', plannerNode, {
-  ends: ['executor', '__end__']  // Planner can route to executor or end
-})
-graph.addNode('executor', executorNode)          // LLM agent
+// Routing edges - all nodes return to orchestrator
+// TypeScript now knows all node names from chained addNode calls
+graph.addEdge(START, 'orchestrator')
+graph.addEdge('enrichment', 'orchestrator')
+graph.addEdge('planner', 'orchestrator')
+graph.addEdge('validator', 'orchestrator')
+graph.addEdge('executor', 'orchestrator')
 
-// Routing edges
-graph.addEdge(START, 'orchestrator' as any)             // Always start at orchestrator
-graph.addEdge('enrichment' as any, 'orchestrator' as any)  // Enrichment loops back for re-evaluation
-
-// Orchestrator routes via Command return value (goto: enrichment/planner/END)
-// Planner → executor transition handled by Command in planner node
-// Executor → END transition handled by Command in executor node
+// Orchestrator makes all routing decisions via Command return values
+// Single source of truth for graph flow control
 
 /**
  * Compile the graph with checkpointer and interrupt configuration.
@@ -77,6 +83,6 @@ const checkpointer = new MemorySaver()
 
 export const workflowGraph = graph.compile({
   checkpointer,
-  interruptBefore: ['executor' as any]  // Pause before creating workflow in n8n
+  interruptBefore: ['executor']  // Pause before creating workflow in n8n
 })
 
