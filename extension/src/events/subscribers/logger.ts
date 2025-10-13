@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Logger Subscriber
  *
@@ -13,6 +14,7 @@ import type {
   SystemEvent,
   WorkflowEvent,
   AgentEvent,
+  GraphEvent,
   LLMEvent,
   ErrorEvent,
   StorageEvent,
@@ -27,10 +29,12 @@ const destroy$ = new Subject<void>()
 function createLogGroup(title: string, color: string, collapsed: boolean): void
 {
   const style = `color: ${color}; font-weight: bold`
+
   if (collapsed)
   {
     console.groupCollapsed(`%c${title}`, style)
-  } else
+  }
+  else
   {
     console.group(`%c${title}`, style)
   }
@@ -75,7 +79,8 @@ function logEventWithPayload<T extends SystemEvent>(
   if (logContent)
   {
     logContent(event.payload)
-  } else if (event.payload && Object.keys(event.payload).length > 0)
+  }
+  else if (event.payload && Object.keys(event.payload).length > 0)
   {
     console.log('Payload:', event.payload)
   }
@@ -117,6 +122,26 @@ function logAgentEvent(event: AgentEvent): void
       if (p.agent) details.push(p.agent)
       if (p.action) details.push(p.action)
       if (p.tool) details.push(`tool: ${p.tool}`)
+      return details
+    }
+  )
+}
+
+/**
+ * Log graph events (started, completed, handoff)
+ */
+function logGraphEvent(event: GraphEvent): void
+{
+  logEventWithPayload(
+    event,
+    '#10b981',
+    true,
+    (p) =>
+    {
+      const details: string[] = []
+      if (p.fromStep) details.push(`from: ${p.fromStep}`)
+      if (p.toStep) details.push(`to: ${p.toStep}`)
+      if (p.reason) details.push(p.reason)
       return details
     }
   )
@@ -226,6 +251,7 @@ function logSystemInfoEvent(event: SystemInfoEvent): void
 const eventLoggers: Record<SystemEvent['domain'], (event: any) => void> = {
   workflow: logWorkflowEvent,
   agent: logAgentEvent,
+  graph: logGraphEvent,
   llm: logLLMEvent,
   error: logErrorEvent,
   storage: logStorageEvent,

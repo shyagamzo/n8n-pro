@@ -11,6 +11,7 @@ export type AgentType = 'planner' | 'executor' | 'enrichment' | 'orchestrator' |
 export type SystemEvent =
   | WorkflowEvent
   | AgentEvent
+  | GraphEvent
   | LLMEvent
   | ErrorEvent
   | StorageEvent
@@ -48,6 +49,22 @@ export type AgentEvent = {
   domain: 'agent'
   type: 'started' | 'completed' | 'handoff' | 'tool_started' | 'tool_completed'
   payload: AgentEventPayload
+  timestamp: number
+}
+
+export type Step = 'enrichment' | 'planner' | 'validator' | 'executor'
+
+export type GraphEventPayload = {
+  fromStep?: Step
+  toStep?: Step
+  reason?: string
+  sessionId?: string
+}
+
+export type GraphEvent = {
+  domain: 'graph'
+  type: 'started' | 'completed' | 'handoff'
+  payload: GraphEventPayload
   timestamp: number
 }
 

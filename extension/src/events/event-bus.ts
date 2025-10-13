@@ -8,7 +8,7 @@
 
 import { Subject, filter, shareReplay } from 'rxjs'
 import type { Observable } from 'rxjs'
-import type { SystemEvent, WorkflowEvent, AgentEvent, LLMEvent, ErrorEvent, StorageEvent, SystemInfoEvent } from './types'
+import type { SystemEvent, WorkflowEvent, AgentEvent, GraphEvent, LLMEvent, ErrorEvent, StorageEvent, SystemInfoEvent } from './types'
 
 export class SystemEvents
 {
@@ -40,6 +40,7 @@ export class SystemEvents
    */
   workflow$ = this.createDomainStream<WorkflowEvent>('workflow')
   agent$    = this.createDomainStream<AgentEvent>('agent')
+  graph$    = this.createDomainStream<GraphEvent>('graph')
   llm$      = this.createDomainStream<LLMEvent>('llm')
   error$    = this.createDomainStream<ErrorEvent>('error')
   storage$  = this.createDomainStream<StorageEvent>('storage')
