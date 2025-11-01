@@ -29,7 +29,7 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorag
  *   ├─→ enrichment (gather requirements) → orchestrator
  *   ├─→ planner (create plan) → orchestrator
  *   ├─→ validator (validate plan) → orchestrator
- *   ├─→ executor (create workflow) → orchestrator
+ *   ├─→ executor (create workflow) → END
  *   └─→ END (workflow created)
  *
  * Orchestrator Node Routing Rules (checked in priority order):
@@ -39,8 +39,9 @@ AsyncLocalStorageProviderSingleton.initializeGlobalInstance(new AsyncLocalStorag
  * 4. If requirementsStatus.ready → planner
  * 5. Otherwise → enrichment
  *
- * All routing happens INSIDE the graph via orchestrator node.
- * All nodes return to orchestrator - single source of routing logic!
+ * Most routing happens via orchestrator node.
+ * Enrichment, planner, and validator return to orchestrator.
+ * Executor is a terminal node that completes the graph (goes directly to END).
  *
  * Agent Tools:
  * - Enrichment: reportRequirementsStatus, setConfidence
@@ -60,15 +61,16 @@ const graph = new StateGraph(OrchestratorState)
   .addNode('enrichment', enrichmentNode)   // LLM agent with requirement gathering tools
   .addNode('planner', plannerNode)         // LLM agent with n8n node type tools
   .addNode('validator', validatorNode)     // LLM agent with n8n node type tools
-  .addNode('executor', executorNode)       // LLM agent with n8n API tools
+  .addNode('executor', executorNode)       // LLM agent with n8n API tools (terminal node)
 
-// Routing edges - all nodes return to orchestrator
+// Routing edges - enrichment/planner/validator return to orchestrator
+// Executor is a terminal node that goes directly to END
 // TypeScript now knows all node names from chained addNode calls
 graph.addEdge(START, 'orchestrator')
 graph.addEdge('enrichment', 'orchestrator')
 graph.addEdge('planner', 'orchestrator')
 graph.addEdge('validator', 'orchestrator')
-graph.addEdge('executor', 'orchestrator')
+// Note: executor returns END via Command, no edge needed
 
 // Orchestrator makes all routing decisions via Command return values
 // Single source of truth for graph flow control
