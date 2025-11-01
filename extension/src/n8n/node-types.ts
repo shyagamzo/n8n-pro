@@ -1,6 +1,5 @@
-import { emitSystemInfo, emitSystemError } from '@events/emitters'
-import { N8nInternalClient } from './internal-client'
-import type { NodeTypeInfo } from './internal-client'
+import { emitSystemInfo } from '@events/emitters'
+import { HARDCODED_NODE_TYPES } from './hardcoded-node-types'
 
 export type NodeParameter = {
   displayName: string
@@ -42,16 +41,18 @@ export type NodeTypesResponse = {
 let cachedNodeTypes: NodeTypesResponse | null = null
 
 /**
- * Fetch all available node types from n8n internal REST endpoint.
+ * Fetch all available node types.
  *
- * Fetches real-time node types from the running n8n instance via /rest/community-node-types.
- * This includes all built-in nodes, community nodes, and custom nodes.
+ * Returns hardcoded node types extracted from n8n source code.
+ * This includes all built-in nodes from n8n-nodes-base package.
+ *
+ * Note: This function simulates an async API call for compatibility,
+ * but actually returns pre-extracted hardcoded data.
  *
  * @param options - Fetch options
- * @param options.baseUrl - n8n instance URL (default: http://localhost:5678)
- * @param options.forceRefresh - Skip cache and fetch fresh data
+ * @param options.baseUrl - Ignored (for API compatibility)
+ * @param options.forceRefresh - Skip cache and return fresh copy
  * @returns Node types dictionary
- * @throws Error if n8n REST endpoint is unavailable (requires n8n page context)
  */
 export async function fetchNodeTypes(options?: {
   baseUrl?: string
@@ -65,64 +66,18 @@ export async function fetchNodeTypes(options?: {
     return cachedNodeTypes
   }
 
-  // Fetch from internal REST endpoint (content scripts only)
-  try
-  {
-    const client = new N8nInternalClient({ baseUrl: options?.baseUrl })
-    const internalNodes = await client.getNodeTypes()
+  // Simulate async API call delay
+  await new Promise(resolve => setTimeout(resolve, 10))
 
-    if (internalNodes && internalNodes.length > 0)
-    {
-      // Convert internal format to our format
-      const converted = convertInternalNodesToTypes(internalNodes)
-      cachedNodeTypes = converted
+  // Cache the hardcoded node types
+  cachedNodeTypes = { ...HARDCODED_NODE_TYPES }
 
-      emitSystemInfo('node-types', 'Fetched node types from n8n internal REST API', {
-        count: Object.keys(converted).length,
-        source: 'internal-rest'
-      })
+  emitSystemInfo('node-types', 'Loaded hardcoded node types', {
+    count: Object.keys(cachedNodeTypes).length,
+    source: 'hardcoded'
+  })
 
-      return converted
-    }
-  }
-  catch (error)
-  {
-    emitSystemError(
-      error instanceof Error ? error : new Error(String(error)),
-      'node-types'
-    )
-  }
-
-  // No fallback - throw error if REST endpoint unavailable
-  throw new Error(
-    'Failed to fetch node types from n8n. ' +
-    'Ensure the extension is running on an n8n page and the n8n instance is accessible.'
-  )
-}
-
-/**
- * Convert internal REST node format to our NodeType format
- */
-function convertInternalNodesToTypes(internalNodes: NodeTypeInfo[]): NodeTypesResponse
-{
-  const result: NodeTypesResponse = {}
-
-  for (const node of internalNodes)
-  {
-    result[node.name] = {
-      name: node.name,
-      displayName: node.displayName,
-      description: node.description,
-      version: node.version,
-      defaults: { name: node.displayName },
-      inputs: node.inputs,
-      outputs: node.outputs,
-      properties: (node.properties as any) || [],
-      group: node.group
-    }
-  }
-
-  return result
+  return cachedNodeTypes
 }
 
 /**

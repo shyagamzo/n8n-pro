@@ -11,9 +11,6 @@
 export { apiFetch } from './api-fetch'
 export type { RequestOptions } from './api-fetch'
 
-export { internalFetch } from './internal-fetch'
-export type { InternalFetchOptions } from './internal-fetch'
-
 export { fetchWithTimeout } from './fetch-timeout'
 
 export {
