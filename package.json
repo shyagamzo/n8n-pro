@@ -1,0 +1,14 @@
+{
+  "name": "n8n-pro",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/shyagamzo/n8n-pro.git",
+  "author": "Shy Agam <us@bespunky.io>",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^24.7.2",
+    "@anthropic-ai/claude-code": "latest"
+  },
+  "scripts": {}
+}

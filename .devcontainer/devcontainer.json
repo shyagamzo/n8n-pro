@@ -16,7 +16,8 @@
                 "formulahendry.auto-rename-tag",
                 "christian-kohler.path-intellisense",
                 "ms-vscode.vscode-git-graph",
-                "eamodio.gitlens"
+                "eamodio.gitlens",
+                "Anthropic.claude-code"
             ],
             "settings": {
                 "typescript.preferences.importModuleSpecifier": "relative",
@@ -65,9 +66,13 @@
     },
     "postCreateCommand": "yarn install",
     "remoteUser": "node",
+    "remoteEnv": {
+        "PATH": "${containerWorkspaceFolder}/node_modules/.bin:${containerEnv:PATH}"
+    },
     "workspaceFolder": "/workspaces/n8n-pro",
     "mounts": [
         "source=${localWorkspaceFolder}/extension/node_modules,target=/workspaces/n8n-pro/extension/node_modules,type=bind,consistency=cached",
-        "source=${localWorkspaceFolder}/extension/dist,target=/workspaces/n8n-pro/extension/dist,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder}/extension/dist,target=/workspaces/n8n-pro/extension/dist,type=bind,consistency=cached",
+        "source=claude-code-auth,target=/home/node/.cursor-server/data/User/globalStorage/anthropic.claude-code,type=volume"
     ]
 }
