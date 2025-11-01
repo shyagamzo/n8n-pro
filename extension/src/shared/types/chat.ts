@@ -16,6 +16,7 @@ export type ChatMessage = {
   plan?: import('./plan').Plan
   error?: ErrorDetails
   streaming?: boolean // Indicates message is still being streamed
+  agent?: 'enrichment' | 'planner' | 'validator' | 'executor' // Which agent created this message
 }
 
 export type ChatStreamMessage =

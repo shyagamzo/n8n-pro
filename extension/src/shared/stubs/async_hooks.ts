@@ -11,14 +11,16 @@
  * - Context is maintained as long as execution stays within the run() callback chain
  */
 
-export class AsyncLocalStorage<T = any> {
+export class AsyncLocalStorage<T = any> 
+{
   private currentStore: T | undefined = undefined
 
   /**
    * Get the current store value.
    * Returns undefined if not within a run() context.
    */
-  getStore(): T | undefined {
+  getStore(): T | undefined 
+{
     return this.currentStore
   }
 
@@ -28,22 +30,27 @@ export class AsyncLocalStorage<T = any> {
    *
    * For async callbacks, the context is maintained through the promise chain.
    */
-  run<R>(store: T, callback: () => R): R {
+  run<R>(store: T, callback: () => R): R 
+{
     const previousStore = this.currentStore
     this.currentStore = store
 
-    try {
+    try 
+{
       const result = callback()
 
       // If callback returns a Promise, chain cleanup to end of promise
-      if (result instanceof Promise) {
+      if (result instanceof Promise) 
+{
         // Don't restore immediately - wait for promise to complete
         return (result as Promise<any>).then(
-          (value) => {
+          (value) => 
+{
             this.currentStore = previousStore
             return value
           },
-          (error) => {
+          (error) => 
+{
             this.currentStore = previousStore
             throw error
           }
@@ -53,7 +60,9 @@ export class AsyncLocalStorage<T = any> {
       // Synchronous execution - restore context immediately
       this.currentStore = previousStore
       return result
-    } catch (error) {
+    }
+ catch (error) 
+{
       this.currentStore = previousStore
       throw error
     }
@@ -63,20 +72,25 @@ export class AsyncLocalStorage<T = any> {
    * Enter a specific store context.
    * Sets the store value for all subsequent operations until exit() or disable() is called.
    */
-  enterWith(store: T): void {
+  enterWith(store: T): void 
+{
     this.currentStore = store
   }
 
   /**
    * Exit the current store context and run a callback.
    */
-  exit<R>(callback: () => R): R {
+  exit<R>(callback: () => R): R 
+{
     const previousStore = this.currentStore
     this.currentStore = undefined
 
-    try {
+    try 
+{
       return callback()
-    } finally {
+    }
+ finally 
+{
       this.currentStore = previousStore
     }
   }
@@ -84,7 +98,8 @@ export class AsyncLocalStorage<T = any> {
   /**
    * Disable and clear the current store.
    */
-  disable(): void {
+  disable(): void 
+{
     this.currentStore = undefined
   }
 }
