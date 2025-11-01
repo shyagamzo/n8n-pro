@@ -138,6 +138,7 @@ export class DebugCallbackHandler extends BaseCallbackHandler
       {
         return data.substring(0, 500) + '... (truncated)'
       }
+
       return data
     }
 
@@ -149,6 +150,7 @@ export class DebugCallbackHandler extends BaseCallbackHandler
     if (data && typeof data === 'object')
     {
       const sanitized: any = {}
+
       for (const [key, value] of Object.entries(data))
       {
         // Skip sensitive fields
@@ -161,6 +163,7 @@ export class DebugCallbackHandler extends BaseCallbackHandler
           sanitized[key] = this.sanitize(value)
         }
       }
+
       return sanitized
     }
 

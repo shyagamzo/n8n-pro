@@ -30,6 +30,7 @@ function sanitize(data: unknown): unknown
     {
       return `sk-***${data.slice(-4)}`
     }
+
     return data
   }
 
@@ -41,6 +42,7 @@ function sanitize(data: unknown): unknown
   if (typeof data === 'object')
   {
     const sanitized: Record<string, unknown> = {}
+
     for (const [key, value] of Object.entries(data as Record<string, unknown>))
     {
       // Mask API key fields
@@ -60,6 +62,7 @@ function sanitize(data: unknown): unknown
         sanitized[key] = sanitize(value)
       }
     }
+
     return sanitized
   }
 
@@ -86,6 +89,7 @@ export function debug(context: LogContext): void
   if (error)
   {
     console.error('%cError:', 'color: #ef4444', error)
+
     if (error instanceof Error && error.stack)
     {
       console.log('%cStack:', 'color: #f97316', error.stack)
@@ -325,6 +329,7 @@ export function debugAgentHandoff(
       'color: #f59e0b; font-weight: bold',
       reason
     )
+
     if (context)
     {
       console.log('%cContext:', 'color: #8b5cf6', sanitize(context))
