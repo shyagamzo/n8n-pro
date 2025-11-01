@@ -7,20 +7,24 @@ import { emitSystemError } from '@events/emitters'
  *
  * Handles connection lifecycle, reconnection, and safe message posting.
  */
-export class ChatPort {
+export class ChatPort 
+{
   private port: chrome.runtime.Port
   private disconnected = false
 
-  constructor() {
+  constructor() 
+{
     this.port = this.connect()
   }
 
   /**
    * Create and setup port connection
    */
-  private connect(): chrome.runtime.Port {
+  private connect(): chrome.runtime.Port 
+{
     const port = chrome.runtime.connect({ name: 'chat' })
-    port.onDisconnect.addListener(() => {
+    port.onDisconnect.addListener(() => 
+{
       this.disconnected = true
     })
     return port
@@ -29,13 +33,17 @@ export class ChatPort {
   /**
    * Ensure port is connected, reconnect if needed
    */
-  private ensureConnected(): void {
+  private ensureConnected(): void 
+{
     if (!this.disconnected) return
 
-    try {
+    try 
+{
       this.port = this.connect()
       this.disconnected = false
-    } catch (error) {
+    }
+ catch (error) 
+{
       // Extension context invalidated or background not available
       emitSystemError(error, 'ChatPort.ensureConnected', { action: 'reconnect' })
     }
@@ -44,17 +52,24 @@ export class ChatPort {
   /**
    * Safely post message with auto-reconnect
    */
-  private safePost(data: Record<string, unknown>): void {
-    try {
+  private safePost(data: Record<string, unknown>): void 
+{
+    try 
+{
       this.port.postMessage(data)
-    } catch (error) {
+    }
+ catch (error) 
+{
       // Reconnect once and retry
       emitSystemError(error, 'ChatPort.safePost', { action: 'post_attempt_1', data })
       this.ensureConnected()
 
-      try {
+      try 
+{
         this.port.postMessage(data)
-      } catch (retryError) {
+      }
+ catch (retryError) 
+{
         // Failed after retry - extension context likely invalidated
         emitSystemError(retryError, 'ChatPort.safePost', { action: 'post_attempt_2_failed', data })
       }
@@ -64,7 +79,8 @@ export class ChatPort {
   /**
    * Send chat message to background worker
    */
-  public sendChat(messages: ChatMessage[]): void {
+  public sendChat(messages: ChatMessage[]): void 
+{
     this.ensureConnected()
     this.safePost({ type: 'chat', messages })
   }
@@ -72,7 +88,8 @@ export class ChatPort {
   /**
    * Send apply plan request to background worker
    */
-  public applyPlan(req: ApplyPlanRequest): void {
+  public applyPlan(req: ApplyPlanRequest): void 
+{
     this.ensureConnected()
     this.safePost(req)
   }
@@ -80,17 +97,22 @@ export class ChatPort {
   /**
    * Register callback for incoming messages
    */
-  public onMessage(callback: (message: BackgroundMessage) => void): void {
+  public onMessage(callback: (message: BackgroundMessage) => void): void 
+{
     this.port.onMessage.addListener((m: BackgroundMessage) => callback(m))
   }
 
   /**
    * Disconnect port
    */
-  public disconnect(): void {
-    try {
+  public disconnect(): void 
+{
+    try 
+{
       this.port.disconnect()
-    } catch (error) {
+    }
+ catch (error) 
+{
       // Port already disconnected or extension context invalidated
       emitSystemError(error, 'ChatPort.disconnect', { action: 'disconnect' })
     }

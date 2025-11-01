@@ -10,6 +10,7 @@ export class ChatService
   private port = new ChatPort()
   private lastSentMessages: ChatMessage[] = []
   private streamingMessageId: string | null = null
+  private currentAgent: string | null = null
 
   private messageHandlers: Record<string, (msg: any) => void> = {
     token: (msg) => this.handleToken(msg),
@@ -17,7 +18,7 @@ export class ChatService
     done: () => this.handleDone(),
     error: (msg) => this.handleError(msg),
     plan: (msg) => this.handlePlan(msg),
-    // Note: agent_activity removed - handled by activity subscriber in content script (future)
+    agent_activity: (msg) => this.handleAgentActivity(msg)
   }
 
   public constructor()
@@ -33,7 +34,12 @@ export class ChatService
     // Update existing streaming message
     if (!this.streamingMessageId) return
 
+    // Don't show tokens for planner/validator agents - their output is Loom format
+    // which is internal communication. The parsed plan will be shown in a nice UI card.
+    if (this.currentAgent === 'planner' || this.currentAgent === 'validator') return
+
     const currentMessage = useChatStore.getState().messages.find(m => m.id === this.streamingMessageId)
+
     if (currentMessage)
     {
       useChatStore.getState().updateMessage(this.streamingMessageId, {
@@ -44,6 +50,9 @@ export class ChatService
 
   private handleWorkflowCreated(message: { type: 'workflow_created'; workflowId: string; workflowUrl: string }): void
   {
+    // Clear pending plan to prevent re-attachment to subsequent messages
+    useChatStore.getState().setPendingPlan(null)
+
     // Show success toast (UI-only feedback, not business logic)
     useChatStore.getState().addToast({
       id: `workflow-${message.workflowId}`,
@@ -59,14 +68,21 @@ export class ChatService
 
   private handleDone(): void
   {
-    const { pendingPlan, updateMessage, setPendingPlan, finishSending } = useChatStore.getState()
+    const { pendingPlan, updateMessage, setPendingPlan, finishSending, messages } = useChatStore.getState()
 
     // Mark the streaming message as complete
     if (this.streamingMessageId)
     {
+      const currentMessage = messages.find(m => m.id === this.streamingMessageId)
+
+      // If we have a plan, clear the text to hide the Loom-formatted internal communication
+      // The plan will be shown in a nice UI format via PlanMessage component
+      const shouldClearText = !!pendingPlan && currentMessage?.text
+
       updateMessage(this.streamingMessageId, {
         streaming: false,
-        plan: pendingPlan || undefined
+        plan: pendingPlan || undefined,
+        ...(shouldClearText ? { text: '' } : {})
       })
       this.streamingMessageId = null
     }
@@ -83,11 +99,13 @@ export class ChatService
     if (this.streamingMessageId)
     {
       const streamingMsg = messages.find(m => m.id === this.streamingMessageId)
+
       if (streamingMsg)
       {
         // Remove the incomplete streaming message
         useChatStore.setState({ messages: messages.filter(m => m.id !== this.streamingMessageId) })
       }
+
       this.streamingMessageId = null
     }
 
@@ -116,6 +134,80 @@ export class ChatService
     useChatStore.getState().setPendingPlan(message.plan)
   }
 
+  private handleAgentActivity(message: { type: 'agent_activity'; agent: string; status: 'started' | 'working' | 'complete' | 'error' }): void
+  {
+    // When a new agent starts, create a new streaming message
+    if (message.status === 'started')
+    {
+      // Finish the current streaming message if it exists
+      if (this.streamingMessageId && this.currentAgent !== message.agent)
+      {
+        const currentMessage = useChatStore.getState().messages.find(m => m.id === this.streamingMessageId)
+
+        // Remove empty messages, except for planner/validator which may get a plan attached later
+        const shouldKeepEmpty = this.currentAgent === 'planner' || this.currentAgent === 'validator'
+
+        if (currentMessage && !currentMessage.text && !shouldKeepEmpty)
+        {
+          useChatStore.setState({
+            messages: useChatStore.getState().messages.filter(m => m.id === this.streamingMessageId)
+          })
+        }
+        else
+        {
+          useChatStore.getState().updateMessage(this.streamingMessageId, {
+            streaming: false
+          })
+        }
+      }
+
+      // Don't create a streaming message for executor - it doesn't produce text output
+      // Success feedback is shown via workflow_created toast
+      if (message.agent === 'executor')
+      {
+        this.currentAgent = 'executor'
+        this.streamingMessageId = null
+        return
+      }
+
+      // Create new streaming message for this agent
+      this.currentAgent = message.agent
+      this.streamingMessageId = generateId()
+      useChatStore.getState().addMessage({
+        id: this.streamingMessageId,
+        role: 'assistant',
+        text: '',
+        streaming: true,
+        agent: message.agent as any // Track which agent is creating this message
+      })
+    }
+    else if (message.status === 'complete' && message.agent === this.currentAgent)
+    {
+      // Agent completed - mark message as done or remove if empty
+      if (this.streamingMessageId)
+      {
+        const currentMessage = useChatStore.getState().messages.find(m => m.id === this.streamingMessageId)
+
+        // Remove empty messages, except for planner/validator which will get a plan attached later
+        const shouldKeepEmpty = this.currentAgent === 'planner' || this.currentAgent === 'validator'
+
+        if (currentMessage && !currentMessage.text && !shouldKeepEmpty)
+        {
+          useChatStore.setState({
+            messages: useChatStore.getState().messages.filter(m => m.id !== this.streamingMessageId)
+          })
+        }
+        else
+        {
+          useChatStore.getState().updateMessage(this.streamingMessageId, {
+            streaming: false
+          })
+        }
+      }
+
+      this.currentAgent = null
+    }
+  }
 
   private getErrorTitle(error: string): string
   {

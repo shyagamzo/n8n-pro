@@ -63,6 +63,7 @@ export function extractSpecificCookies(names: string[]): Record<string, string>
   for (const name of names)
   {
     const match = cookieString.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
+
     if (match)
     {
       cookies[name] = match[1]
