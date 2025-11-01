@@ -8,6 +8,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Status:** MVP Complete (Phase 1) - Ready for user testing
 
+## Working with Claude Code Agents
+
+**CRITICAL: Always check if there are specialized agents available to delegate tasks and questions to before performing them yourself.**
+
+This project has multiple specialized agents configured in Claude Code:
+- **reactive-system-architect** - Event system, RxJS streams, event bus architecture
+- **ux-guardian** - UI/UX implementation, animations, user feedback
+- **error-infrastructure-architect** - Error handling infrastructure, event-driven error propagation
+- **agent-architect** - Multi-agent infrastructure, LangGraph workflows, orchestrator routing
+- **root-cause-enforcer** - Reviewing bug fixes to ensure root causes are addressed
+- **project-documentor** - Documentation creation, architecture decisions, knowledge persistence
+- **Explore** - Fast codebase exploration and search
+
+**Delegation Protocol:**
+1. **Before starting any task**, consider if a specialized agent should handle it
+2. **For complex decisions**, brainstorm with multiple agents in parallel to gather different perspectives
+3. **For architectural changes**, always consult the relevant specialist agent
+4. **For implementation work**, delegate to the appropriate domain expert
+
+**Examples:**
+- UI changes → Use ux-guardian agent
+- Event system modifications → Use reactive-system-architect agent
+- Bug fixes → Use root-cause-enforcer agent after fix
+- Codebase exploration → Use Explore agent
+- New agent development → Use agent-architect agent
+- Documentation updates → Use project-documentor agent after significant changes
+
 ## Core Architecture
 
 ### Multi-Agent System with Reactive Events
