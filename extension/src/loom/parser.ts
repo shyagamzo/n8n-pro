@@ -355,7 +355,8 @@ function parseValue(text: string, options: Required<ParseOptions>): LoomValue
     // Number
     {
       test: (text) => /^-?\d+(\.\d+)?$/.test(text),
-      parse: (text) => {
+      parse: (text) => 
+{
         const num = Number(text)
         return !isNaN(num) ? num : text
       }
