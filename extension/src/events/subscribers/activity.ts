@@ -19,7 +19,8 @@ const destroy$ = new Subject<void>()
 /**
  * Convert system event to agent activity for UI display
  */
-function eventToActivity(event: AgentEvent | LLMEvent): AgentActivity {
+function eventToActivity(event: AgentEvent | LLMEvent): AgentActivity 
+{
   // Extract agent type from payload, defaulting to 'orchestrator' for LLM events
   const agent: AgentActivity['agent'] =
     'agent' in event.payload
@@ -44,7 +45,8 @@ function eventToActivity(event: AgentEvent | LLMEvent): AgentActivity {
 const activityUpdates$ = merge(systemEvents.agent$, systemEvents.llm$).pipe(
   map(eventToActivity),
   debounceTime(50), // Debounce rapid events
-  catchError(err => {
+  catchError(err => 
+{
     emitSubscriberError(err, 'activity-updates')
     return EMPTY
   })
@@ -60,7 +62,8 @@ const activityCleanup$ = systemEvents.agent$.pipe(
 /**
  * Start tracking activities
  */
-export function setup(): void {
+export function setup(): void 
+{
   // Subscribe to activity updates
   activityUpdates$
     .pipe(
@@ -81,7 +84,8 @@ export function setup(): void {
 /**
  * Stop tracking and cleanup
  */
-export function cleanup(): void {
+export function cleanup(): void 
+{
   destroy$.next()
   destroy$.complete()
 }

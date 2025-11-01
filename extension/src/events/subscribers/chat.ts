@@ -23,7 +23,8 @@ const workflowMessages$ = systemEvents.workflow$.pipe(
     role: 'assistant' as const,
     text: `✅ Workflow "${e.payload.workflow.name}" created!`
   })),
-  catchError(err => {
+  catchError(err => 
+{
     emitSubscriberError(err, 'chat-workflow')
     return EMPTY
   })
@@ -41,7 +42,8 @@ const errorMessages$ = systemEvents.error$.pipe(
       retryable: e.payload.source !== 'subscriber' // Subscriber errors aren't retryable
     }
   })),
-  catchError(err => {
+  catchError(err => 
+{
     emitSubscriberError(err, 'chat-error')
     return EMPTY
   })
@@ -50,7 +52,8 @@ const errorMessages$ = systemEvents.error$.pipe(
 /**
  * Start subscribing to events and updating chat
  */
-export function setup(): void {
+export function setup(): void 
+{
   // Subscribe to workflow messages
   workflowMessages$
     .pipe(
@@ -71,7 +74,8 @@ export function setup(): void {
 /**
  * Stop subscribing and cleanup
  */
-export function cleanup(): void {
+export function cleanup(): void 
+{
   destroy$.next()
   destroy$.complete()
 }

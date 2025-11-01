@@ -26,7 +26,8 @@ export type StreamEvent = {
  * Sanitize metadata by removing sensitive information
  * CRITICAL: Prevents API keys from appearing in logs
  */
-export function sanitizeMetadata(metadata?: Record<string, any>): Record<string, any> | undefined {
+export function sanitizeMetadata(metadata?: Record<string, any>): Record<string, any> | undefined 
+{
   if (!metadata) return undefined
 
   const sanitized = { ...metadata }
@@ -43,24 +44,29 @@ export function sanitizeMetadata(metadata?: Record<string, any>): Record<string,
  * Extract agent name from LangGraph metadata
  * Uses langgraph_node or checkpoint_ns to determine which agent is executing
  */
-export function extractAgentFromMetadata(metadata?: Record<string, any>): AgentType {
+export function extractAgentFromMetadata(metadata?: Record<string, any>): AgentType 
+{
   if (!metadata) return 'orchestrator'
 
   // Try langgraph_node first (most reliable)
   const node = metadata.langgraph_node
 
-  if (node && typeof node === 'string') {
+  if (node && typeof node === 'string') 
+{
     // Handle tool nodes by looking at checkpoint_ns
-    if (node === 'tools' && metadata.checkpoint_ns) {
+    if (node === 'tools' && metadata.checkpoint_ns) 
+{
       const ns = metadata.checkpoint_ns as string
       if (ns.includes('enrichment')) return 'enrichment'
       if (ns.includes('planner')) return 'planner'
+      if (ns.includes('validator')) return 'validator'
       if (ns.includes('executor')) return 'executor'
     }
 
     // Direct node name
     if (node.includes('enrichment')) return 'enrichment'
     if (node.includes('planner')) return 'planner'
+    if (node.includes('validator')) return 'validator'
     if (node.includes('executor')) return 'executor'
   }
 
@@ -74,10 +80,12 @@ export function extractAgentFromMetadata(metadata?: Record<string, any>): AgentT
  *
  * @param event - StreamEvent from LangGraph
  */
-export function emitLangGraphEvent(event: StreamEvent): void {
+export function emitLangGraphEvent(event: StreamEvent): void 
+{
   const { event: eventType, name, data, metadata } = event
 
-  switch (eventType) {
+  switch (eventType) 
+{
     case 'on_llm_start':
       emitLLMStarted(
         metadata?.ls_model_name,
@@ -120,27 +128,49 @@ export function emitLangGraphEvent(event: StreamEvent): void {
     case 'on_chain_start':
       {
         const sanitized = sanitizeMetadata(metadata)
-        if (name?.toLowerCase().includes('planner')) {
+
+        if (name?.toLowerCase().includes('planner')) 
+{
           emitAgentStarted('planner', 'planning', sanitized)
-        } else if (name?.toLowerCase().includes('executor')) {
+        }
+ else if (name?.toLowerCase().includes('validator')) 
+{
+          emitAgentStarted('validator', 'validating', sanitized)
+        }
+ else if (name?.toLowerCase().includes('executor')) 
+{
           emitAgentStarted('executor', 'executing', sanitized)
-        } else if (name?.toLowerCase().includes('enrichment')) {
+        }
+ else if (name?.toLowerCase().includes('enrichment')) 
+{
           emitAgentStarted('enrichment', 'enriching', sanitized)
         }
       }
+
       break
 
     case 'on_chain_end':
       {
         const sanitized = sanitizeMetadata(metadata)
-        if (name?.toLowerCase().includes('planner')) {
+
+        if (name?.toLowerCase().includes('planner')) 
+{
           emitAgentCompleted('planner', sanitized)
-        } else if (name?.toLowerCase().includes('executor')) {
+        }
+ else if (name?.toLowerCase().includes('validator')) 
+{
+          emitAgentCompleted('validator', sanitized)
+        }
+ else if (name?.toLowerCase().includes('executor')) 
+{
           emitAgentCompleted('executor', sanitized)
-        } else if (name?.toLowerCase().includes('enrichment')) {
+        }
+ else if (name?.toLowerCase().includes('enrichment')) 
+{
           emitAgentCompleted('enrichment', sanitized)
         }
       }
+
       break
   }
 }
@@ -151,7 +181,8 @@ export function emitLangGraphEvent(event: StreamEvent): void {
  * @param eventStream - AsyncGenerator from workflowGraph.streamEvents()
  * @returns Observable that emits SystemEvents
  */
-export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>): Observable<StreamEvent> {
+export function bridgeLangGraphEvents(eventStream: AsyncGenerator<StreamEvent>): Observable<StreamEvent> 
+{
   return from(eventStream).pipe(
     filter(({ event }) =>
       event === 'on_llm_start' ||

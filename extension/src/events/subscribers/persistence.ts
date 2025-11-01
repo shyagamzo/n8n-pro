@@ -26,7 +26,8 @@ export type WorkflowHistoryEntry = {
 /**
  * Persist workflow creation to history
  */
-async function persistWorkflow(event: WorkflowEvent): Promise<void> {
+async function persistWorkflow(event: WorkflowEvent): Promise<void> 
+{
   if (event.type !== 'created') return
 
   const { workflow, workflowId } = event.payload
@@ -58,13 +59,15 @@ const workflowPersistence$ = systemEvents.workflow$.pipe(
   switchMap(event =>
     persistWorkflow(event)
       .then(() => event)
-      .catch(err => {
+      .catch(err => 
+{
         emitSubscriberError(err, 'workflow-persistence')
         return null
       })
   ),
   filter(event => event !== null),
-  catchError(err => {
+  catchError(err => 
+{
     emitSubscriberError(err, 'workflow-persistence')
     return EMPTY
   })
@@ -73,14 +76,17 @@ const workflowPersistence$ = systemEvents.workflow$.pipe(
 /**
  * Start auto-persisting events
  */
-export function setup(): void {
+export function setup(): void 
+{
   workflowPersistence$
     .pipe(
       takeUntil(destroy$),
       finalize(() => emitSystemInfo('persistence', 'Subscription cleaned up', {}))
     )
-    .subscribe(event => {
-      if (event && process.env.NODE_ENV === 'development') {
+    .subscribe(event => 
+{
+      if (event && process.env.NODE_ENV === 'development') 
+{
         emitSystemInfo('persistence', 'Persisted workflow', {
           workflowName: event.payload.workflow.name
         })
@@ -91,7 +97,8 @@ export function setup(): void {
 /**
  * Stop persisting and cleanup
  */
-export function cleanup(): void {
+export function cleanup(): void 
+{
   destroy$.next()
   destroy$.complete()
 }
@@ -99,7 +106,8 @@ export function cleanup(): void {
 /**
  * Get workflow history from storage
  */
-export async function getWorkflowHistory(): Promise<WorkflowHistoryEntry[]> {
+export async function getWorkflowHistory(): Promise<WorkflowHistoryEntry[]> 
+{
   const history = await storageGet<WorkflowHistoryEntry[]>(STORAGE_KEYS.WORKFLOW_HISTORY)
   return history ?? []
 }
@@ -107,7 +115,8 @@ export async function getWorkflowHistory(): Promise<WorkflowHistoryEntry[]> {
 /**
  * Clear workflow history from storage
  */
-export async function clearWorkflowHistory(): Promise<void> {
+export async function clearWorkflowHistory(): Promise<void> 
+{
   await storageSet(STORAGE_KEYS.WORKFLOW_HISTORY, [])
   emitStorageSave(STORAGE_KEYS.WORKFLOW_HISTORY, [])
 }
