@@ -19,7 +19,8 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   const internalRef = useRef<HTMLTextAreaElement>(null)
   const textareaRef = (ref as React.RefObject<HTMLTextAreaElement>) || internalRef
 
-  const adjustHeight = () => {
+  const adjustHeight = () => 
+{
     const textarea = textareaRef.current
     if (!textarea || !autoResize) return
 
@@ -38,11 +39,13 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   }
 
   // Adjust height on mount and when value changes
-  useEffect(() => {
+  useEffect(() => 
+{
     adjustHeight()
   }, [props.value])
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => 
+{
     adjustHeight()
     props.onChange?.(e)
   }

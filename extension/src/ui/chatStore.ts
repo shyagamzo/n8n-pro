@@ -65,11 +65,13 @@ export const useChatStore = create<ChatState>((set) => ({
     set((s) =>
     {
       const newMessages = [...s.messages, msg]
+
       // Only save non-streaming messages to storage
       if (!msg.streaming)
       {
         saveMessages(newMessages)
       }
+
       return { messages: newMessages }
     })
   },
@@ -78,11 +80,13 @@ export const useChatStore = create<ChatState>((set) => ({
     set((s) =>
     {
       const newMessages = s.messages.map(m => m.id === id ? { ...m, ...updates } : m)
+
       // Only save to storage when message is no longer streaming
       if (updates.streaming === false || updates.streaming === undefined)
       {
         saveMessages(newMessages)
       }
+
       return { messages: newMessages }
     })
   },

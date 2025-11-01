@@ -153,7 +153,8 @@ export default function Panel({ title, onClose, onNewSession, children, showConn
           )}
           <button
             className="panel-control-btn"
-            onClick={(e) => {
+            onClick={(e) => 
+{
               e.stopPropagation()
               setIsMinimized(!isMinimized)
             }}

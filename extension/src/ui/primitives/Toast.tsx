@@ -24,6 +24,7 @@ export default function Toast({ id, message, type, action, duration = 5000, onCl
       const timer = setTimeout(() => onClose(id), duration)
       return () => clearTimeout(timer)
     }
+
     return undefined
   }, [id, duration, onClose])
 
