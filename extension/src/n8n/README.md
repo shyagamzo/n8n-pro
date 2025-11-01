@@ -4,40 +4,32 @@ Unified client library for interacting with n8n.
 
 ## Quick Start (Recommended)
 
-Use the unified `N8N` class for all n8n interactions:
+Use the unified `N8N` class for all n8n workflow operations:
 
 ```typescript
-import { N8N } from '@n8n'
+import { N8N, fetchNodeTypes } from '@n8n'
 
 const n8n = new N8N({ apiKey: 'n8n_api_xxxxx' })
 
-// Public API methods (API key auth)
+// Workflow operations (API key auth)
 const workflows = await n8n.getWorkflows()
 const workflow = await n8n.getWorkflow('workflow-id')
 const created = await n8n.createWorkflow(workflowData)
+const updated = await n8n.updateWorkflow('workflow-id', workflowData)
 
-// Internal REST methods (cookie auth, content scripts only)
-const nodeTypes = await n8n.getNodeTypes()
-const communityNodes = await n8n.getCommunityNodes()
-
-// Convenience methods
-const hasGmail = await n8n.hasNodeType('n8n-nodes-base.gmail')
-const slackNodes = await n8n.searchNodeTypes('slack')
+// Node types (hardcoded from n8n source code)
+const nodeTypes = await fetchNodeTypes()
 ```
 
 **Benefits:**
 - ✅ Single import, unified API
 - ✅ Clean method names
-- ✅ Handles both API key and cookie auth internally
 - ✅ Type-safe with full TypeScript support
+- ✅ No browser security issues (uses public API only)
 
-## Advanced: Specialized Clients
+## Advanced: Direct API Client
 
-For specific use cases, you can use the underlying clients directly:
-
-### Public API Client (`N8nClient`)
-
-For documented public API endpoints (`/api/v1/*`):
+For direct access to the n8n public API:
 
 ```typescript
 import { N8nClient } from '@n8n'
@@ -50,40 +42,42 @@ const client = new N8nClient({
 const workflows = await client.getWorkflows()
 ```
 
-**Use when:** You only need public API access, no internal endpoints
+**Use when:** You need fine-grained control over API requests
 
-### Internal REST Client (`N8nInternalClient`)
+## Node Types
 
-For internal undocumented endpoints (`/rest/*`):
-
-```typescript
-import { N8nInternalClient } from '@n8n'
-
-const client = new N8nInternalClient({
-  baseUrl: 'http://localhost:5678'
-})
-
-const nodeTypes = await client.getNodeTypes()
-```
-
-**Use when:** You only need internal REST access (content scripts only)
-
-## Cookie Extraction Utilities
-
-For extracting cookies from the n8n page:
+All node types are pre-extracted from n8n source code:
 
 ```typescript
-import { extractPageCookies, extractN8nSessionCookies } from '@platform'
+import { fetchNodeTypes, HARDCODED_NODE_TYPES, nodeTypeExists } from '@n8n'
 
-// Get all cookies from current page
-const allCookies = extractPageCookies()
+// Get all node types (async for compatibility with agent tools)
+const nodeTypes = await fetchNodeTypes()
 
-// Get only n8n session cookies
-const sessionCookies = extractN8nSessionCookies()
+// Or access directly (synchronous)
+const nodeTypesSync = HARDCODED_NODE_TYPES
 
-// Get specific cookies by name
-const specific = extractSpecificCookies(['n8n-auth', 'browser-id'])
+// Check if a node type exists
+const hasGmail = nodeTypeExists(nodeTypes, 'n8n-nodes-base.gmail')
+
+// Get node metadata
+const gmailNode = nodeTypes['n8n-nodes-base.gmail']
+console.log(gmailNode.displayName) // "Gmail"
+console.log(gmailNode.description) // "Consume the Gmail API"
 ```
+
+### Regenerating Node Types
+
+To update node types from the latest n8n source:
+
+```bash
+node scripts/extract-n8n-nodes.js
+```
+
+This will:
+1. Clone/update the n8n repository
+2. Extract node metadata from source files
+3. Generate `src/n8n/hardcoded-node-types.ts`
 
 ## Architecture
 
@@ -93,68 +87,56 @@ const specific = extractSpecificCookies(['n8n-auth', 'browser-id'])
 ├─────────────────────────────────────────────┤
 │                                             │
 │  ┌─────────────────┐  ┌─────────────────┐  │
-│  │   N8nClient     │  │ N8nInternal     │  │
-│  │   (API Key)     │  │ Client          │  │
-│  │                 │  │ (Cookies)       │  │
-│  │ /api/v1/*       │  │ /rest/*         │  │
-│  └────────┬────────┘  └────────┬────────┘  │
-│           │                    │           │
-│           v                    v           │
+│  │   N8N Client    │  │ Node Types      │  │
+│  │   (API Key)     │  │ (Hardcoded)     │  │
+│  │                 │  │                 │  │
+│  │ /api/v1/*       │  │ 436 nodes       │  │
+│  └────────┬────────┘  └─────────────────┘  │
+│           │                                 │
+│           v                                 │
 │  ┌─────────────────────────────────────┐   │
-│  │       Fetch Wrappers                │   │
-│  ├─────────────────────────────────────┤   │
-│  │ apiFetch      │ internalFetch       │   │
-│  │ (omit creds)  │ (include creds)     │   │
+│  │       apiFetch (API key auth)       │   │
+│  │       credentials: 'omit'           │   │
 │  └─────────────────────────────────────┘   │
 │                                             │
 └─────────────────────────────────────────────┘
 ```
 
-## Separation of Concerns
+## Design Decisions
 
-| Concern | Public API | Internal REST |
-|---------|------------|---------------|
-| **Auth** | API key in header | Cookies from browser |
-| **Endpoint** | `/api/v1/*` | `/rest/*` |
-| **Usage** | Any context | Content scripts only |
-| **Credentials** | `omit` (prevents cookie leaks) | `include` (requires cookies) |
-| **Client** | `N8nClient` | `N8nInternalClient` |
-| **Fetch** | `apiFetch` | `internalFetch` |
+### Why Hardcoded Node Types?
 
-## When to Use Which
+Initially, we tried to fetch node types from n8n's internal REST endpoints (`/rest/*`), but this approach had security issues:
+- ❌ Browser CORS restrictions
+- ❌ Cookie access limitations in extensions
+- ❌ Inconsistent behavior across different contexts
 
-### Use `N8N` (Unified Client) - Recommended ⭐
-- ✅ For all general n8n interactions
-- ✅ When you need both API and internal REST methods
-- ✅ Simplest, cleanest API
-- ✅ One import, consistent interface
+**Solution:** Pre-extract node types from n8n source code:
+- ✅ No runtime API calls needed
+- ✅ No browser security issues
+- ✅ Works in all contexts (background, content, popup)
+- ✅ Faster (no network latency)
+- ✅ Offline-capable
 
-### Use `N8nClient` (Public API Only)
-- When you ONLY need public API methods
-- When working in background scripts without cookie access
-- When you want to avoid any internal endpoint dependencies
+### When to Use Which
 
-### Use `N8nInternalClient` (Internal REST Only)
-- When you ONLY need internal REST methods
-- When working in content scripts without API key
-- When you want explicit control over cookie-based requests
+**Use `N8N` (Unified Client) - Recommended ⭐**
+- For all workflow CRUD operations
+- When you need API key authentication
+- Simplest, cleanest API
 
-## Node Types
+**Use `N8nClient` (Direct API)**
+- When you need fine-grained control over requests
+- When building custom API integrations
 
-```typescript
-import { fetchNodeTypes, getHardcodedNodeTypes } from '@n8n'
-
-// Get hardcoded node types (517 nodes from source code)
-const nodeTypes = getHardcodedNodeTypes()
-
-// Check if a node type exists
-import { nodeTypeExists } from '@n8n'
-const exists = nodeTypeExists(nodeTypes, 'n8n-nodes-base.gmail')
-```
+**Use `fetchNodeTypes()` (Node Metadata)**
+- When agents need to know available nodes
+- When validating workflow node types
+- When providing autocomplete/suggestions
 
 ## Examples
 
-### Unified Client (Recommended)
+### Workflow Operations
 
 ```typescript
 import { N8N } from '@n8n'
@@ -175,28 +157,35 @@ const workflow = await n8n.createWorkflow({
   connections: {}
 })
 
-// Check if a node type is available
-const hasGmail = await n8n.hasNodeType('n8n-nodes-base.gmail')
+// Update a workflow
+await n8n.updateWorkflow(workflow.id, {
+  active: true,
+  name: 'Updated Workflow Name'
+})
 
-// Search for nodes
-const emailNodes = await n8n.searchNodeTypes('email')
-
-// Get all community nodes
-const communityNodes = await n8n.getCommunityNodes()
+// Get all workflows
+const workflows = await n8n.getWorkflows()
 ```
 
-### Specialized Clients (Advanced)
+### Node Type Utilities
 
 ```typescript
-// Public API only
-import { N8nClient } from '@n8n'
-const api = new N8nClient({ apiKey: 'n8n_api_xxx' })
-const workflows = await api.getWorkflows()
+import { fetchNodeTypes, nodeTypeExists, getNodeDisplayName } from '@n8n'
 
-// Internal REST only
-import { N8nInternalClient } from '@n8n'
-const internal = new N8nInternalClient()
-const nodeTypes = await internal.getNodeTypes()
+// Get all node types
+const nodeTypes = await fetchNodeTypes()
+
+// Check if a node exists
+const hasGmail = nodeTypeExists(nodeTypes, 'n8n-nodes-base.gmail')
+
+// Get node display name
+const displayName = getNodeDisplayName(nodeTypes, 'n8n-nodes-base.slack')
+// Returns: "Slack"
+
+// Check if it's a trigger node
+import { isTriggerNode } from '@n8n'
+const isTrigger = isTriggerNode(nodeTypes, 'n8n-nodes-base.scheduleTrigger')
+// Returns: true
 ```
 
 ## References
