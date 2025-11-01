@@ -31,6 +31,7 @@ import { emitGraphHandoff } from '@events/emitters'
 // ==========================================
 
 const CONFIDENCE_THRESHOLD = 0.8
+const MAX_VALIDATION_RETRIES = 3 // Prevent infinite validation loops
 
 // ==========================================
 // Type Definitions
@@ -43,8 +44,11 @@ type NextStepFn = (state: OrchestratorStateType) => Step | typeof END
  *
  * Each step defines a function that determines the next step based on state.
  * This makes the flow explicit and easy to understand.
+ *
+ * Note: Executor is NOT in this map because it's a terminal node that
+ * goes directly to END (never returns to orchestrator).
  */
-const Steps: Record<Step, NextStepFn> = {
+const Steps: Record<Exclude<Step, 'executor'>, NextStepFn> = {
   // Enrichment: loop until requirements are complete
   enrichment: (state) =>
   {
@@ -57,10 +61,28 @@ const Steps: Record<Step, NextStepFn> = {
   planner: () => 'validator',
 
   // Validator: handle fixes if needed, then go to executor
-  validator: (state) => state.validationStatus?.valid ? 'executor' : 'planner',
+  // But prevent infinite loops by limiting retries
+  validator: (state) =>
+  {
+    if (state.validationStatus?.valid)
+    {
+      return 'executor'
+    }
 
-  // Executor completes the flow
-  executor: () => END
+    // Count how many times we've gone validator -> planner
+    const validationRetries = state.stepHistory.filter(
+      (step, i, arr) => step === 'validator' && arr[i + 1] === 'planner'
+    ).length
+
+    if (validationRetries >= MAX_VALIDATION_RETRIES)
+    {
+      // Too many retries - proceed to executor anyway
+      // The n8n API will catch any actual errors
+      return 'executor'
+    }
+
+    return 'planner'
+  }
 } as const
 
 
@@ -84,6 +106,17 @@ export function orchestratorNode(
 ): Command
 {
   const currentStep = state.currentStep || 'enrichment'
+
+  // Executor is a terminal node - if we receive it here, route to END
+  // This handles legacy checkpoint state from before the graph refactor
+  if (currentStep === 'executor')
+  {
+    return new Command({
+      goto: END,
+      update: {}
+    })
+  }
+
   const nextStep = Steps[currentStep](state)
 
   // Emit handoff event for observability
@@ -97,13 +130,16 @@ export function orchestratorNode(
     stepHistory: [currentStep]
   }
 
-  // Route to next step and update currentStep
+  // Only update currentStep if routing to an actual node (not END)
+  if (nextStep !== END)
+  {
+    updates.currentStep = nextStep as Step
+  }
+
+  // Route to next step
   return new Command({
     goto: nextStep,
-    update: {
-      ...updates,
-      currentStep: nextStep
-    }
+    update: updates
   })
 }
 

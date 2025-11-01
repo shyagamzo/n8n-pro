@@ -5,7 +5,7 @@
 import { Command } from '@langchain/langgraph'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
-import { HumanMessage } from '@langchain/core/messages'
+import { HumanMessage, SystemMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '@ai/orchestrator/state'
@@ -77,7 +77,7 @@ function createPlannerAgent(apiKey: string, modelName: string)
       streaming: true
     }),
     tools: plannerTools,
-    messageModifier: systemPrompt
+    messageModifier: new SystemMessage(systemPrompt)
   })
 }
 

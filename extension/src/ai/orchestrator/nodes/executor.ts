@@ -2,10 +2,10 @@
 // Imports
 // ==========================================
 
-import { Command } from '@langchain/langgraph'
+import { Command, END } from '@langchain/langgraph'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
-import { HumanMessage } from '@langchain/core/messages'
+import { HumanMessage, SystemMessage } from '@langchain/core/messages'
 import type { BaseMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
@@ -31,7 +31,7 @@ const EXECUTOR_TEMPERATURE = 0.1
  * 1. Create agent with n8n API tools (paused before this via interruptBefore)
  * 2. Create workflow in n8n
  * 3. Extract workflow ID and credential info
- * 4. Return to orchestrator with results
+ * 4. Complete the graph (terminal node)
  */
 export async function executorNode(
   state: OrchestratorStateType,
@@ -49,7 +49,7 @@ export async function executorNode(
   const executionResults = extractExecutionResults(result.messages)
 
   return new Command({
-    goto: 'orchestrator',
+    goto: END,
     update: {
       workflowId: executionResults.workflowId,
       credentialGuidance: executionResults.credentialGuidance,
@@ -75,7 +75,7 @@ function createExecutorAgent(executionConfig: ReturnType<typeof extractExecutorC
       streaming: true
     }),
     tools: executorTools,
-    messageModifier: buildPrompt('executor')
+    messageModifier: new SystemMessage(buildPrompt('executor'))
   })
 }
 
@@ -117,6 +117,7 @@ async function invokeExecutor(
 
 type ExecutionResults = {
   workflowId?: string
+  workflowResult?: { id: string; name: string; url: string }
   credentialGuidance?: OrchestratorStateType['credentialGuidance']
 }
 
@@ -138,6 +139,7 @@ function extractExecutionResults(messages: BaseMessage[]): ExecutionResults
 
   return {
     workflowId: workflowResult?.id,
+    workflowResult: workflowResult || undefined,
     credentialGuidance: credentialResult?.setupLinks ? {
       missing: credentialResult.missing.map(type => ({ name: type, type })),
       setupLinks: credentialResult.setupLinks.map(link => ({

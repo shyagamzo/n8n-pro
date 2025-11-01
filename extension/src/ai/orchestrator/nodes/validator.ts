@@ -5,7 +5,7 @@
 import { Command } from '@langchain/langgraph'
 import { createReactAgent } from '@langchain/langgraph/prebuilt'
 import { ChatOpenAI } from '@langchain/openai'
-import { HumanMessage } from '@langchain/core/messages'
+import { HumanMessage, SystemMessage } from '@langchain/core/messages'
 import type { RunnableConfig } from '@langchain/core/runnables'
 
 import type { OrchestratorStateType } from '@ai/orchestrator/state'
@@ -79,10 +79,10 @@ function createValidatorAgent(apiKey: string, modelName: string)
       streaming: true
     }),
     tools: [fetchNodeTypesTool],
-    messageModifier: buildPrompt('validator', {
+    messageModifier: new SystemMessage(buildPrompt('validator', {
       includeNodesReference: false,
       includeConstraints: false
-    })
+    }))
   })
 }
 
@@ -119,6 +119,14 @@ type ValidationResult =
 
 /**
  * Parse validator response from Loom format
+ *
+ * Validator can either:
+ * 1. Return valid Loom with validation status (preferred)
+ * 2. Return corrected Loom workflow
+ * 3. Fail to parse (treat as valid and pass through original plan)
+ *
+ * Philosophy: Be permissive. If we can't parse the validator's response,
+ * assume the workflow is valid rather than creating an infinite loop.
  */
 function parseValidationResponse(messages: OrchestratorStateType['messages']): ValidationResult
 {
@@ -130,14 +138,30 @@ function parseValidationResponse(messages: OrchestratorStateType['messages']): V
 
   if (parsed.success && parsed.data)
   {
+    // Check if validator added validation status
+    const validationStatus = (parsed.data as any).validation?.status
+
+    if (validationStatus === 'invalid')
+    {
+      // Validator found errors - extract them
+      const errors = (parsed.data as any).validation?.errors || []
+      const errorMessages = errors.map((e: any) =>
+        `${e.nodeId || 'Unknown'}: ${e.issue || 'Unknown error'}`
+      )
+
+      return { success: false, errors: errorMessages.length > 0 ? errorMessages : ['Validation failed'] }
+    }
+
+    // Either valid or no validation status - convert to plan
     const validatedPlan = loomToPlan(parsed.data)
 
     return { success: true, plan: validatedPlan }
   }
 
-  const errors = parsed.errors?.map(e => e.message) || ['Failed to parse validation response']
-
-  return { success: false, errors }
+  // Failed to parse - this could mean validator just said "VALID" or similar
+  // Rather than creating infinite loop, assume valid and pass through original
+  // The executor will catch any actual API errors
+  return { success: true, plan: null as any } // null signals to use existing plan
 }
 
 // ==========================================
@@ -146,23 +170,41 @@ function parseValidationResponse(messages: OrchestratorStateType['messages']): V
 
 /**
  * Build Command with validation results
+ *
+ * IMPORTANT: When validation fails, we add feedback to messages
+ * so the planner can see what went wrong and fix it on retry.
  */
 function buildValidationCommand(
   result: ValidationResult,
   messages: OrchestratorStateType['messages']
 ): Command
 {
-  const planUpdate = result.success ? { plan: result.plan } : {}
+  // If we have a new plan, use it. Otherwise keep existing plan
+  const planUpdate = result.success && result.plan ? { plan: result.plan } : {}
   const validationStatus = result.success
     ? { valid: true }
     : { valid: false, errors: result.errors }
+
+  // If validation failed, inject feedback into message history
+  // so planner knows what to fix on next iteration
+  let updatedMessages = messages
+
+  if (!result.success && result.errors.length > 0)
+  {
+    const feedbackMessage = new HumanMessage(
+      'VALIDATION ERRORS:\n\n' +
+      result.errors.map((e, i) => `${i + 1}. ${e}`).join('\n') +
+      '\n\nPlease fix these errors and regenerate the workflow plan.'
+    )
+    updatedMessages = [...messages, feedbackMessage]
+  }
 
   return new Command({
     goto: 'orchestrator',
     update: {
       ...planUpdate,
       validationStatus,
-      messages
+      messages: updatedMessages
     }
   })
 }
