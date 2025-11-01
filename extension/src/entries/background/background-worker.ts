@@ -37,18 +37,22 @@ tracing.setup()
 // Messaging subscriber will be set up per-port connection (needs post function)
 
 // Global error handler
-if (typeof window !== 'undefined') {
-  window.addEventListener('unhandledrejection', (event) => {
+if (typeof window !== 'undefined') 
+{
+  window.addEventListener('unhandledrejection', (event) => 
+{
     emitUnhandledError(event.reason, 'unhandledrejection')
   })
 }
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(() => 
+{
   emitSystemInit('background-worker', 'n8n Pro Extension installed', {})
 })
 
 // Cleanup on extension suspend
-chrome.runtime.onSuspend.addListener(() => {
+chrome.runtime.onSuspend.addListener(() => 
+{
   logger.cleanup()
   persistence.cleanup()
   tracing.cleanup()
@@ -58,16 +62,21 @@ chrome.runtime.onSuspend.addListener(() => {
 /**
  * Create safe message poster that handles port disconnection
  */
-function createSafePost(port: chrome.runtime.Port) {
+function createSafePost(port: chrome.runtime.Port) 
+{
   let disconnected = false
   port.onDisconnect.addListener(() => { disconnected = true })
 
-  return (message: BackgroundMessage): void => {
+  return (message: BackgroundMessage): void => 
+{
     if (disconnected) return
 
-    try {
+    try 
+{
       port.postMessage(message)
-    } catch (error) {
+    }
+ catch (error) 
+{
       // Port disconnected - silently ignore (expected when content script unloads)
     }
   }
@@ -76,17 +85,21 @@ function createSafePost(port: chrome.runtime.Port) {
 /**
  * Handle incoming messages - pure routing to graph
  */
-chrome.runtime.onConnect.addListener((port) => {
+chrome.runtime.onConnect.addListener((port) => 
+{
   if (port.name !== 'chat') return
 
   const sessionId = port.sender?.tab?.id?.toString() || crypto.randomUUID()
   const post = createSafePost(port)
 
   // Set up messaging subscriber to bridge events to this content script
-  messaging.setup(post)
+  // Returns connection handle for cleanup
+  const connection = messaging.setup(post)
 
-  port.onMessage.addListener(async (msg: ChatRequest | ApplyPlanRequest) => {
-    try {
+  port.onMessage.addListener(async (msg: ChatRequest | ApplyPlanRequest) => 
+{
+    try 
+{
       // Get API keys from settings (with defaults applied)
       const [apiKey, n8nApiKey, baseUrl] = await Promise.all([
         getOpenAiKey(),
@@ -95,7 +108,8 @@ chrome.runtime.onConnect.addListener((port) => {
       ])
 
       // Check required API key
-      if (!apiKey) {
+      if (!apiKey) 
+{
         emitApiError(new Error('OpenAI API key not set'), 'message-handler')
         post({ type: 'error', error: 'OpenAI API key not set. Configure it in Options.' })
         post({ type: 'done' })
@@ -117,12 +131,15 @@ chrome.runtime.onConnect.addListener((port) => {
       }, (token) => post({ type: 'token', token }))
 
       // Send results (workflow_created sent automatically via messaging subscriber)
-      if (result.plan) {
+      if (result.plan) 
+{
         post({ type: 'plan', plan: result.plan })
       }
 
       post({ type: 'done' })
-    } catch (err) {
+    }
+ catch (err) 
+{
       emitUnhandledError(err, 'message-handler')
       post({ type: 'error', error: (err as Error).message })
       post({ type: 'done' })
@@ -130,7 +147,8 @@ chrome.runtime.onConnect.addListener((port) => {
   })
 
   // Cleanup messaging subscriber when port disconnects
-  port.onDisconnect.addListener(() => {
-    messaging.cleanup()
+  port.onDisconnect.addListener(() => 
+{
+    connection.cleanup()
   })
 })

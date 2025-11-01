@@ -6,7 +6,8 @@
 /**
  * Create and inject test button
  */
-export function createTestButton(mountId: string): HTMLButtonElement {
+export function createTestButton(mountId: string): HTMLButtonElement 
+{
   // Check if already exists
   const existing = document.getElementById('n8n-pro-test-trigger')
   if (existing) return existing as HTMLButtonElement
@@ -23,7 +24,8 @@ export function createTestButton(mountId: string): HTMLButtonElement {
   addTestButtonEffects(testButton)
 
   // Add click handler
-  testButton.addEventListener('click', async () => {
+  testButton.addEventListener('click', async () => 
+{
     const React = await import('react')
     const { ensureMountRoot, mountReactOnce } = await import('@ui/mount')
     const { default: ChatContainer } = await import('./chat/ChatContainer')
@@ -36,9 +38,11 @@ export function createTestButton(mountId: string): HTMLButtonElement {
     useChatStore.getState().setOpen(true)
 
     // Clear session and send test message
-    setTimeout(() => {
+    setTimeout(() => 
+{
       useChatStore.getState().clearSession()
-      setTimeout(() => {
+      setTimeout(() => 
+{
         chat.send(
           'Create a workflow which will send me a joke email every morning ' +
           '8AM, automatically, send through Gmail to shyagam@gmail.com. Generate both the jokes and the email subject using LLM. ' +
@@ -54,7 +58,8 @@ export function createTestButton(mountId: string): HTMLButtonElement {
 /**
  * Apply styles to test button
  */
-function applyTestButtonStyles(button: HTMLButtonElement): void {
+function applyTestButtonStyles(button: HTMLButtonElement): void 
+{
   const testColor1 = '#a78bfa' // purple-400
   const testColor2 = '#8b5cf6' // purple-500
 
@@ -83,24 +88,29 @@ function applyTestButtonStyles(button: HTMLButtonElement): void {
 /**
  * Add hover and interaction effects to test button
  */
-function addTestButtonEffects(button: HTMLButtonElement): void {
+function addTestButtonEffects(button: HTMLButtonElement): void 
+{
   const testColor2 = '#8b5cf6' // purple-500
 
-  button.addEventListener('mouseenter', () => {
+  button.addEventListener('mouseenter', () => 
+{
     button.style.transform = 'translateY(-4px) scale(1.05)'
     button.style.boxShadow = `0 12px 32px color-mix(in srgb, ${testColor2} 50%, transparent), 0 6px 16px rgba(0, 0, 0, 0.4)`
   })
 
-  button.addEventListener('mouseleave', () => {
+  button.addEventListener('mouseleave', () => 
+{
     button.style.transform = 'translateY(0) scale(1)'
     button.style.boxShadow = `0 8px 24px color-mix(in srgb, ${testColor2} 40%, transparent), 0 4px 12px rgba(0, 0, 0, 0.3)`
   })
 
-  button.addEventListener('mousedown', () => {
+  button.addEventListener('mousedown', () => 
+{
     button.style.transform = 'translateY(-2px) scale(1.02)'
   })
 
-  button.addEventListener('mouseup', () => {
+  button.addEventListener('mouseup', () => 
+{
     button.style.transform = 'translateY(-4px) scale(1.05)'
   })
 }

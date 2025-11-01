@@ -14,7 +14,8 @@ const MOUNT_ID = 'n8n-pro-mount-root'
 /**
  * Initialize extension on n8n pages
  */
-function initialize(): void {
+function initialize(): void 
+{
   // Create and inject buttons
   const trigger = createTriggerButton(MOUNT_ID)
   const testButton = createTestButton(MOUNT_ID)
@@ -26,7 +27,8 @@ function initialize(): void {
 }
 
 // Initialize if on n8n host
-if (isN8nHost()) {
+if (isN8nHost()) 
+{
   initialize()
 }
 
