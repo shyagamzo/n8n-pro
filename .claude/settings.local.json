@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(yarn build)",
+      "Bash(yarn list:*)",
+      "Bash(node:*)",
+      "WebSearch",
+      "Bash(yarn lint:*)",
+      "Bash(yarn why:*)"
     ],
     "deny": [],
     "ask": []
