@@ -30,7 +30,8 @@ const getNodeDocsSchema = z.object({
  * Helps planner/validator understand what nodes are available.
  */
 export const fetchNodeTypesTool = tool(
-  async (input) => {
+  async (input) => 
+{
     const args = input as z.infer<typeof fetchNodeTypesSchema>
     const nodeTypes = await fetchNodeTypes({
       baseUrl: args.baseUrl
@@ -64,7 +65,8 @@ export const fetchNodeTypesTool = tool(
  * TODO: Implement actual documentation fetching.
  */
 export const getNodeDocsTool = tool(
-  async (input) => {
+  async (input) => 
+{
     const args = input as z.infer<typeof getNodeDocsSchema>
     // For now, return a placeholder
     // In the future, this could fetch from n8n API or use built-in documentation

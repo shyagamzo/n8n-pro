@@ -34,7 +34,8 @@ const checkCredentialsSchema = z.object({
  * Returns workflow ID and URL for user reference.
  */
 export const createWorkflowTool = tool(
-  async (input) => {
+  async (input) => 
+{
     const args = input as z.infer<typeof createWorkflowSchema>
     const n8n = new N8nClient({
       apiKey: args.apiKey,
@@ -68,8 +69,10 @@ export const createWorkflowTool = tool(
  * TODO: Implement actual credential checking via n8n API.
  */
 export const checkCredentialsTool = tool(
-  async (input) => {
+  async (input) => 
+{
     const args = input as z.infer<typeof checkCredentialsSchema>
+
     try
     {
       // TODO: Implement listCredentials in n8n client
