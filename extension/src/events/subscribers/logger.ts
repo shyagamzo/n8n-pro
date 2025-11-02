@@ -18,7 +18,8 @@ import type {
   LLMEvent,
   ErrorEvent,
   StorageEvent,
-  SystemInfoEvent
+  SystemInfoEvent,
+  StateTransitionEvent
 } from '@events/types'
 
 const destroy$ = new Subject<void>()
@@ -245,17 +246,40 @@ function logSystemInfoEvent(event: SystemInfoEvent): void
 }
 
 /**
- * Map event domains to their logging functions
- * Type assertion is safe because domain string guarantees correct event type at runtime
+ * Log state transition events (workflow state machine)
  */
-const eventLoggers: Record<SystemEvent['domain'], (event: any) => void> = {
-  workflow: logWorkflowEvent,
-  agent: logAgentEvent,
-  graph: logGraphEvent,
-  llm: logLLMEvent,
-  error: logErrorEvent,
-  storage: logStorageEvent,
-  system: logSystemInfoEvent
+function logStateTransitionEvent(event: StateTransitionEvent): void
+{
+  logEventWithPayload(
+    event,
+    '#8b5cf6',
+    false,
+    (p) =>
+    {
+      return [`${p.previous} → ${p.current}`, `trigger: ${p.trigger}`]
+    },
+    (p) =>
+    {
+      if (p.stateData)
+      {
+        console.log('State:', p.stateData)
+      }
+    }
+  )
+}
+
+/**
+ * Map event domains to their logging functions
+ */
+const eventLoggers: Record<SystemEvent['domain'], (event: SystemEvent) => void> = {
+  workflow: logWorkflowEvent as (event: SystemEvent) => void,
+  agent: logAgentEvent as (event: SystemEvent) => void,
+  graph: logGraphEvent as (event: SystemEvent) => void,
+  llm: logLLMEvent as (event: SystemEvent) => void,
+  error: logErrorEvent as (event: SystemEvent) => void,
+  storage: logStorageEvent as (event: SystemEvent) => void,
+  system: logSystemInfoEvent as (event: SystemEvent) => void,
+  state: logStateTransitionEvent as (event: SystemEvent) => void
 }
 
 /**

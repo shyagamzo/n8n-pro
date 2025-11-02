@@ -16,6 +16,7 @@ import { filter, takeUntil, finalize, switchMap } from 'rxjs/operators'
 import { systemEvents, emitSystemInfo } from '@events/index'
 import { getBaseUrlOrDefault } from '@platform/settings'
 import type { BackgroundMessage } from '@shared/types/messaging'
+import type { StateTransitionEvent } from '@events/types'
 
 /**
  * Create workflow created message
@@ -110,8 +111,67 @@ export function setup(post: (msg: BackgroundMessage) => void): ConnectionHandle
 
   subscriptions.push(agentSub)
 
+  // Bridge error events → content script
+  // Critical for showing executor errors and other infrastructure failures
+  //
+  // NOTE: Validation errors from executor-tool are NOT forwarded to UI.
+  // These are expected errors that the LLM agent handles and explains naturally.
+  // Only forward actual infrastructure failures to the UI.
+  const errorSub = systemEvents.error$
+    .pipe(
+      filter(e =>
+      {
+        // Exclude validation errors from executor-tool
+        // These are handled by the LLM agent and explained to the user
+        const isExecutorValidation = e.type === 'validation' && e.payload.source === 'executor-tool'
+        return !isExecutorValidation
+      }),
+      takeUntil(destroy$),
+      finalize(() => emitSystemInfo('messaging', 'Error messaging subscription cleaned up', {}))
+    )
+    .subscribe(e =>
+    {
+      emitSystemInfo('messaging', 'Sending error message to content script', {
+        errorType: e.type,
+        source: e.payload.source,
+        message: e.payload.error.message
+      })
+
+      const message: BackgroundMessage = {
+        type: 'error',
+        error: e.payload.userMessage || e.payload.error.message
+      }
+      post(message)
+
+      // Always send 'done' after error to reset UI state
+      post({ type: 'done' })
+    })
+
+  subscriptions.push(errorSub)
+
+  // Bridge state transition events → content script
+  const stateSub = systemEvents.eventStream
+    .pipe(
+      filter((e): e is StateTransitionEvent => e.domain === 'state' && e.type === 'transition'),
+      takeUntil(destroy$),
+      finalize(() => emitSystemInfo('messaging', 'State transition messaging cleaned up', {}))
+    )
+    .subscribe(e =>
+    {
+      const message: BackgroundMessage = {
+        type: 'state_transition',
+        previous: e.payload.previous,
+        current: e.payload.current,
+        trigger: e.payload.trigger,
+        stateData: e.payload.stateData
+      }
+      post(message)
+    })
+
+  subscriptions.push(stateSub)
+
   return {
-    cleanup: () => 
+    cleanup: () =>
 {
       destroy$.next()
       destroy$.complete()
