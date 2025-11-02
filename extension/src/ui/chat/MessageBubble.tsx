@@ -4,6 +4,9 @@ import Markdown from './Markdown'
 import ErrorMessage from '@ui/feedback/ErrorMessage'
 import PlanMessage from './PlanMessage'
 import ThinkingAnimation from '@ui/feedback/ThinkingAnimation'
+import { ProgressStepper } from '@ui/feedback'
+import { getAgentMetadata } from '@ai/orchestrator/agent-metadata'
+import { useChatStore } from '@ui/chatStore'
 import { chat } from '@services/chat'
 import './MessageBubble.css'
 
@@ -11,30 +14,16 @@ type MessageBubbleProps = {
   message: ChatMessage
 }
 
-/**
- * Get user-friendly agent label and status message
- */
-function getAgentInfo(agent?: string): { label: string; statusMessage: string }
-{
-  switch (agent)
-  {
-    case 'enrichment':
-      return { label: 'Assistant', statusMessage: 'Understanding your requirements...' }
-    case 'planner':
-      return { label: 'Workflow Planner', statusMessage: 'Creating workflow plan...' }
-    case 'validator':
-      return { label: 'Validator', statusMessage: 'Validating workflow structure...' }
-    case 'executor':
-      return { label: 'Builder', statusMessage: 'Creating workflow in n8n...' }
-    default:
-      return { label: 'Assistant', statusMessage: 'Processing...' }
-  }
-}
-
 export default function MessageBubble({ message }: MessageBubbleProps): React.ReactElement
 {
   const bubbleClass = `message-bubble message-bubble--${message.role} ${message.streaming ? 'message-bubble--streaming' : ''}`
-  const agentInfo = getAgentInfo(message.agent)
+
+  // Get workflow state to determine if we should show progress stepper
+  const workflowState = useChatStore(state => state.workflowState)
+  const isWorkflowActive = workflowState && !['idle', 'completed', 'failed'].includes(workflowState.state)
+
+  // Get agent metadata for display (replaces hardcoded getAgentInfo)
+  const agentMeta = message.agent ? getAgentMetadata(message.agent) : null
 
   // Render error messages with ErrorMessage component
   if (message.error)
@@ -59,21 +48,36 @@ export default function MessageBubble({ message }: MessageBubbleProps): React.Re
     <div className={bubbleClass}>
       {message.streaming && !message.text ? (
         <>
-          {message.agent && (
+          {/* Agent header with metadata */}
+          {message.agent && agentMeta && (
             <div className="message-agent-label text-xs text-secondary mb-xs">
-              {agentInfo.label}
+              {agentMeta.displayName}
             </div>
           )}
           <ThinkingAnimation />
           {/* Screen reader announcement for accessibility */}
           <span className="sr-only" role="status" aria-live="polite">
-            {agentInfo.statusMessage}
+            {agentMeta?.workingMessage || 'Processing...'}
           </span>
         </>
       ) : (
         <>
+          {/* Show agent name for assistant messages */}
+          {message.role === 'assistant' && message.agent && agentMeta && (
+            <div className="message-agent-badge mb-xs">
+              <span className="agent-badge__name text-xs text-secondary">
+                {agentMeta.displayName}
+              </span>
+            </div>
+          )}
+
           <Markdown content={message.text} />
           {message.plan && <PlanMessage plan={message.plan} />}
+
+          {/* Show progress stepper on assistant messages during workflow */}
+          {message.role === 'assistant' && isWorkflowActive && !message.plan && (
+            <ProgressStepper workflowState={workflowState} className="mt-sm" />
+          )}
         </>
       )}
     </div>

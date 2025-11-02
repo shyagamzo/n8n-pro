@@ -1,0 +1,62 @@
+/**
+ * Loading Spinner Styles
+ *
+ * Hardware-accelerated animations using transform (GPU-accelerated).
+ * Supports 3 sizes (sm/md/lg) and respects prefers-reduced-motion.
+ */
+
+/* ─────────────────────────────────────────────────────────────
+   Spinner Container
+   ───────────────────────────────────────────────────────────── */
+
+.loading-spinner
+{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner--sm { width: 16px; height: 16px; }
+.loading-spinner--md { width: 24px; height: 24px; }
+.loading-spinner--lg { width: 40px; height: 40px; }
+
+.loading-spinner--inline
+{
+  margin-right: var(--space-sm);
+  vertical-align: middle;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SVG and Circle
+   ───────────────────────────────────────────────────────────── */
+
+.loading-spinner__svg
+{
+  width: 100%;
+  height: 100%;
+  color: var(--color-primary);
+}
+
+.loading-spinner__circle
+{
+  transform-origin: center;
+  animation: spinner-rotate 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spinner-rotate
+{
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Reduced Motion
+   ───────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce)
+{
+  .loading-spinner__circle
+  {
+    animation-duration: 1.5s; /* Slower, less dramatic */
+  }
+}

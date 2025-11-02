@@ -120,6 +120,43 @@
 }
 
 /* ============================================
+   FOCUS INDICATORS (WCAG 2.4.7)
+   ============================================ */
+
+/* Focus visible styles for all interactive elements */
+.btn:focus-visible,
+.btn-icon:focus-visible,
+.btn-small:focus-visible {
+  outline: 3px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Remove default outline for mouse users */
+.btn:focus:not(:focus-visible),
+.btn-icon:focus:not(:focus-visible),
+.btn-small:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Disabled buttons don't show focus */
+.btn:disabled:focus-visible,
+.btn-icon:disabled:focus-visible,
+.btn-small:disabled:focus-visible {
+  outline: none;
+}
+
+/* Links need focus too */
+a:focus-visible {
+  outline: 3px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================
    TEXT UTILITIES
    ============================================ */
 

@@ -1,5 +1,6 @@
 import type { ChatMessage } from '@shared/types/chat'
 import type { Plan } from '@shared/types/plan'
+import type { WorkflowState, WorkflowStateData } from '@shared/types/workflow-state'
 
 export type ChatRequest =
   | { type: 'chat'; messages: ChatMessage[] }
@@ -18,6 +19,13 @@ export type BackgroundMessage =
       status: 'started' | 'working' | 'complete' | 'error'
       id: string
       timestamp: number
+    }
+  | {
+      type: 'state_transition'
+      previous: WorkflowState
+      current: WorkflowState
+      trigger: string
+      stateData: WorkflowStateData
     }
 
 export type ApplyPlanRequest = { type: 'apply_plan'; plan: Plan }

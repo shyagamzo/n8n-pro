@@ -94,3 +94,106 @@
   background: var(--color-background-xlight, #3a3b4a);
   transform: translateX(2px);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Phase-Specific States (Week 3 Enhancement)
+   ───────────────────────────────────────────────────────────── */
+
+.plan-message-footer {
+  margin-top: var(--space-lg, 16px);
+  padding-top: var(--space-lg, 16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.plan-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md, 12px);
+  padding: var(--space-md, 12px);
+  border-radius: 8px;
+  animation: slide-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.plan-status--loading {
+  background: rgba(243, 244, 246, 0.1);
+}
+
+.plan-status--success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.plan-status--error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.plan-status__text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text, #1f2937);
+}
+
+.celebrate-icon {
+  font-size: 24px;
+  animation: celebrate 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes celebrate {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.error-icon {
+  font-size: 20px;
+  color: var(--color-error, #ef4444);
+}
+
+.plan-status__error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 8px);
+  flex: 1;
+}
+
+.btn-celebrate {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
+/* Reduced motion: disable celebrations */
+@media (prefers-reduced-motion: reduce) {
+  .celebrate-icon,
+  .btn-celebrate,
+  .plan-status {
+    animation: none;
+  }
+}

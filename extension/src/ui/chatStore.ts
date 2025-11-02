@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 import type { ChatMessage } from '@shared/types/chat'
-import type { Plan } from '@shared/types/plan'
 import type { ToastProps } from '@ui/primitives/Toast'
 import type { AgentType } from '@shared/types/messaging'
 import { STORAGE_KEYS } from '@shared/constants'
 import { storageGet, storageSet } from '@platform/storage'
+import type { WorkflowStateData } from '@shared/types/workflow-state'
+import { createInitialState, isWorkingState, canUserInteract, isTerminalState } from '@shared/types/workflow-state'
 
 export type AgentActivity = {
   id: string
@@ -19,7 +20,7 @@ type ChatState = {
   messages: ChatMessage[]
   sending: boolean
   assistantDraft: string
-  pendingPlan?: Plan | null
+  workflowState: WorkflowStateData
   activities: AgentActivity[]
   toasts: ToastProps[]
   setOpen: (open: boolean) => void
@@ -30,7 +31,7 @@ type ChatState = {
   clear: () => void
   clearSession: () => void
   setAssistantDraft: (t: string) => void
-  setPendingPlan: (p: Plan | null) => void
+  setWorkflowState: (state: WorkflowStateData) => void
   addActivity: (activity: AgentActivity) => void
   updateActivity: (id: string, updates: Partial<AgentActivity>) => void
   removeActivity: (id: string) => void
@@ -56,7 +57,7 @@ export const useChatStore = create<ChatState>((set) => ({
   messages: [],
   sending: false,
   assistantDraft: '',
-  pendingPlan: null,
+  workflowState: createInitialState(),
   activities: [],
   toasts: [],
   setOpen: (open) => set({ isOpen: open }),
@@ -95,11 +96,11 @@ export const useChatStore = create<ChatState>((set) => ({
   clear: () => set({ messages: [] }),
   clearSession: () =>
   {
-    set({ messages: [], assistantDraft: '', pendingPlan: null, sending: false, activities: [] })
+    set({ messages: [], assistantDraft: '', workflowState: createInitialState(), sending: false, activities: [] })
     saveMessages([])
   },
   setAssistantDraft: (t) => set({ assistantDraft: t }),
-  setPendingPlan: (p) => set({ pendingPlan: p }),
+  setWorkflowState: (state) => set({ workflowState: state }),
   addActivity: (activity) =>
   {
     set((s) => ({
@@ -144,3 +145,47 @@ export const useChatStore = create<ChatState>((set) => ({
     set({ messages })
   },
 }))
+
+// ─────────────────────────────────────────────────────────────
+// Derived Selectors
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Check if workflow is actively working (enrichment, planning, executing)
+ *
+ * @returns `true` if workflow is in a working state
+ */
+export const useIsWorkflowActive = (): boolean =>
+{
+  return useChatStore(state => isWorkingState(state.workflowState.state))
+}
+
+/**
+ * Check if user can interact (idle, awaiting_approval, completed, failed)
+ *
+ * @returns `true` if user can send messages or interact with UI
+ */
+export const useCanUserInteract = (): boolean =>
+{
+  return useChatStore(state => canUserInteract(state.workflowState.state))
+}
+
+/**
+ * Check if workflow has finished (completed or failed)
+ *
+ * @returns `true` if workflow is in a terminal state
+ */
+export const useIsWorkflowTerminal = (): boolean =>
+{
+  return useChatStore(state => isTerminalState(state.workflowState.state))
+}
+
+/**
+ * Get current workflow state (for debugging)
+ *
+ * @returns Current workflow state data
+ */
+export const useCurrentWorkflowState = (): WorkflowStateData =>
+{
+  return useChatStore(state => state.workflowState)
+}

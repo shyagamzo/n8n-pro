@@ -1,0 +1,273 @@
+/**
+ * Progress Stepper Styles
+ *
+ * Visual hierarchy, animations, and responsive layout for workflow progress stepper.
+ * Follows UX-guardian recommendations for professional, accessible design.
+ */
+
+/* ─────────────────────────────────────────────────────────────
+   CSS Variables
+   ───────────────────────────────────────────────────────────── */
+
+:root
+{
+  /* Spacing scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  /* Colors - WCAG AA Compliant */
+  --color-primary: #3b82f6;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-text: #1f2937;
+  --color-text-muted: #9ca3af; /* Updated from #6b7280 for 4.5:1 contrast */
+  --color-bg-gray: #e5e7eb;
+
+  /* Animation */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Progress Stepper Container
+   ───────────────────────────────────────────────────────────── */
+
+.progress-stepper
+{
+  width: 100%;
+  padding: var(--space-lg);
+  animation: slide-in 0.2s var(--easing-standard);
+}
+
+.progress-stepper__container
+{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+@keyframes slide-in
+{
+  from
+  {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to
+  {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Individual Progress Step
+   ───────────────────────────────────────────────────────────── */
+
+.progress-step
+{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  opacity: 0.4; /* De-emphasize future steps */
+  transform: scale(0.95);
+  transition: all 0.3s var(--easing-standard);
+}
+
+.progress-step--active,
+.progress-step--failed
+{
+  opacity: 1;
+  transform: scale(1);
+}
+
+.progress-step--completed
+{
+  opacity: 0.7;
+  transform: scale(0.98);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Step Indicator (Circle with Icon)
+   ───────────────────────────────────────────────────────────── */
+
+.progress-step__indicator
+{
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-gray);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.25s var(--easing-standard);
+  z-index: 1;
+}
+
+.progress-step__icon
+{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-step--active .progress-step__indicator
+{
+  background: var(--color-primary);
+  color: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.progress-step--completed .progress-step__indicator
+{
+  background: var(--color-success);
+  color: white;
+}
+
+.progress-step--failed .progress-step__indicator
+{
+  background: var(--color-error);
+  color: white;
+  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes shake
+{
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Connecting Line Between Steps
+   ───────────────────────────────────────────────────────────── */
+
+.progress-step__line
+{
+  position: absolute;
+  top: 16px;
+  left: calc(50% + 16px);
+  right: calc(-50% + 16px);
+  height: 2px;
+  background: var(--color-bg-gray);
+  transition: background 0.3s var(--easing-standard);
+}
+
+.progress-step--completed .progress-step__line
+{
+  background: var(--color-success);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Step Label
+   ───────────────────────────────────────────────────────────── */
+
+.progress-step__label
+{
+  margin-top: var(--space-sm);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.progress-step__text
+{
+  display: block;
+  white-space: nowrap;
+}
+
+.progress-step--active .progress-step__label
+{
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Screen Reader Only
+   ───────────────────────────────────────────────────────────── */
+
+.sr-only
+{
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Mobile: Vertical Layout
+   ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px)
+{
+  .progress-stepper__container
+  {
+    flex-direction: column;
+  }
+
+  .progress-step
+  {
+    flex-direction: row;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .progress-step__line
+  {
+    top: calc(50% + 16px);
+    bottom: calc(-50% + 16px);
+    left: 16px;
+    right: auto;
+    width: 2px;
+    height: auto;
+  }
+
+  .progress-step__label
+  {
+    margin-top: 0;
+    margin-left: var(--space-md);
+    text-align: left;
+  }
+
+  .progress-step__text
+  {
+    white-space: normal;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Reduced Motion
+   ───────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce)
+{
+  .progress-stepper,
+  .progress-step,
+  .progress-step__indicator,
+  .progress-step__line
+  {
+    animation: none;
+    transition: none;
+  }
+
+  .progress-step--failed .progress-step__indicator
+  {
+    animation: none;
+  }
+}
