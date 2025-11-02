@@ -132,3 +132,25 @@
   transform: translateY(0);
 }
 
+/* Focus indicators for accessibility (WCAG 2.1 AA) */
+.confirm-modal-btn:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.8);
+  outline-offset: 2px;
+}
+
+.confirm-modal-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .confirm-modal-overlay,
+  .confirm-modal {
+    animation: none;
+  }
+
+  .confirm-modal-btn {
+    transition: none;
+  }
+}
+
