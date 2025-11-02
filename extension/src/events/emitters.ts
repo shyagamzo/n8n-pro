@@ -12,7 +12,7 @@
 
 import { END } from '@langchain/langgraph'
 
-import { systemEvents } from './index'
+import { systemEvents } from './event-bus'
 import type {
   AgentType,
   Step,

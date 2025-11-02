@@ -29,23 +29,12 @@
  * and stronger type safety.
  */
 
-import type { N8nWorkflow } from './types'
 import { WorkflowWithConnectionValidationSchema } from './schemas'
 import { processZodError } from './validation-errors'
 
-// ─────────────────────────────────────────────────────────────
-// Validation Error Types
-// ─────────────────────────────────────────────────────────────
-
-export type ValidationError = {
-  field: string
-  message: string
-  fix?: string
-}
-
-export type ValidationResult =
-  | { success: true; workflow: N8nWorkflow }
-  | { success: false; errors: ValidationError[] }
+// Re-export validation types from shared types file
+export type { ValidationError, ValidationResult } from './validation.types'
+import type { ValidationResult } from './validation.types'
 
 // ─────────────────────────────────────────────────────────────
 // Workflow Builder Class

@@ -14,7 +14,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import type { ZodError, ZodIssue } from 'zod'
-import type { ValidationError } from './workflow-builder'
+import type { ValidationError } from './validation.types'
 
 // ─────────────────────────────────────────────────────────────
 // Zod Error Conversion

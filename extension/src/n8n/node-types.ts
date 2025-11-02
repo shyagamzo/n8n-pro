@@ -1,41 +1,9 @@
 import { emitSystemInfo } from '@events/emitters'
 import { HARDCODED_NODE_TYPES } from './hardcoded-node-types'
 
-export type NodeParameter = {
-  displayName: string
-  name: string
-  type: string
-  required?: boolean
-  default?: unknown
-  description?: string
-  options?: unknown[]
-}
-
-export type NodeType = {
-  name: string
-  displayName: string
-  description: string
-  version: number
-  defaults: {
-    name: string
-    color?: string
-  }
-  inputs: string[]
-  outputs: string[]
-  properties: NodeParameter[]
-  credentials?: Array<{
-    name: string
-    required?: boolean
-  }>
-  group?: string[]
-  codex?: {
-    categories?: string[]
-  }
-}
-
-export type NodeTypesResponse = {
-  [key: string]: NodeType
-}
+// Re-export types from shared types file
+export type { NodeParameter, NodeType, NodeTypesResponse } from './node-types.types'
+import type { NodeTypesResponse } from './node-types.types'
 
 // Cache for fetched node types
 let cachedNodeTypes: NodeTypesResponse | null = null

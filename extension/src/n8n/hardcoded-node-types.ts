@@ -8,7 +8,7 @@
  * Total nodes: 436
  */
 
-import type { NodeTypesResponse } from './node-types'
+import type { NodeTypesResponse } from './node-types.types'
 
 /**
  * All available n8n node types extracted from source code
