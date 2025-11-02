@@ -161,6 +161,96 @@ Chat state is managed via Zustand store with persistence:
 - **No telemetry or tracking**
 - **Credential references only** - never access actual credential values
 
+### Phase 2 Architecture Improvements (2025-11-02)
+
+**Phase 2 introduced type-safe state management and enhanced UX patterns.**
+
+#### Workflow State Machine
+
+Replaced implicit boolean flags (`pendingPlan`, `sending`) with explicit 7-state machine:
+
+```
+idle → enrichment → planning → awaiting_approval → executing → completed
+                                                             ↘ failed
+```
+
+**Benefits:**
+- ✅ Explicit state (always know which phase workflow is in)
+- ✅ Type-safe transitions (invalid transitions caught at compile-time)
+- ✅ Runtime validation (prevents race conditions)
+- ✅ Progress feedback (enables ProgressStepper, phase-specific UI)
+- ✅ Terminal states (distinguish success vs failure)
+
+**See:** `extension/src/shared/types/workflow-state/README.md`
+
+#### Agent Metadata Registry
+
+Centralized declarative configuration for all agents:
+
+```typescript
+import { getAgentMetadata } from '@ai/orchestrator/agent-metadata'
+
+const metadata = getAgentMetadata('planner')
+// {
+//   displayName: 'Planner',
+//   workingMessage: 'Creating workflow plan...',
+//   shouldShowTokens: false,
+//   shouldCreateMessage: true
+// }
+```
+
+**Benefits:**
+- ✅ Single source of truth (eliminates scattered special cases)
+- ✅ Easy to add new agents (1 registry entry)
+- ✅ Type-safe (TypeScript strict mode)
+
+**See:** `extension/src/ai/orchestrator/agent-metadata.ts`
+
+#### Enhanced UX Components
+
+**ProgressStepper** - 5-step workflow visualization:
+- Hardware-accelerated animations (60fps)
+- Responsive (horizontal desktop, vertical mobile)
+- WCAG 2.1 AA compliant
+
+**LoadingSpinner** - 3 sizes (sm, md, lg):
+- Hardware-accelerated rotation
+- Respects `prefers-reduced-motion`
+
+**SkeletonLoader** - 3 variants (plan-message, chat-message, inline-text):
+- Shimmer animation
+- Zero layout shifts
+
+**See:** `extension/src/ui/feedback/`
+
+#### WCAG 2.1 AA Compliance
+
+Full accessibility compliance achieved:
+- ✅ Focus indicators (3px solid outline, 2px offset)
+- ✅ Color contrast ≥4.5:1 (updated muted text color)
+- ✅ ARIA semantics (proper `role`, `aria-expanded`, `aria-describedby`)
+- ✅ Keyboard navigation (logical tab order, auto-focus)
+- ✅ Screen reader support (semantic HTML, announcements)
+
+**See:** `extension/PHASE-2-PROGRESS.md` (Week 4 Accessibility Audit)
+
+#### Event-Driven Validation (Development-Only)
+
+Catches coordination bugs during development:
+- ✅ Event sequence validation (agents follow proper flow)
+- ✅ Graph handoff validation (catch agent → END bugs)
+- ✅ Duplicate start validation (prevent state machine bugs)
+- ✅ Performance validation (warn on slow workflows >30s)
+- ✅ Zero production overhead (stripped from build)
+
+**See:** `extension/src/events/validation/`
+
+#### Migration Guide
+
+**Breaking Changes:** `pendingPlan` removed (use `workflowState` instead)
+
+**See:** `extension/PHASE-2-MIGRATION-GUIDE.md` for full migration details
+
 ## Usage Examples
 
 ### Create a Simple Workflow

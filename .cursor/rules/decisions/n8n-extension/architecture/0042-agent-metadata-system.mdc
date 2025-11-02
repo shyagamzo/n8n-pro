@@ -1,0 +1,397 @@
+# ADR 0042: Agent Metadata Registry System
+
+**Status:** Accepted
+**Date:** 2025-11-02
+**Context:** Phase 2 - Week 1 (Foundation - Type Systems)
+**Deciders:** Claude Code, reactive-system-architect agent
+
+---
+
+## Context and Problem Statement
+
+The n8n Pro extension uses a multi-agent architecture (enrichment, planner, validator, executor, orchestrator) with different behaviors for each agent:
+
+- **Planner/Validator:** Output Loom format (internal protocol) → tokens should NOT be shown in UI
+- **Enrichment/Executor:** Output human-readable text → tokens SHOULD be shown in UI
+- **Executor:** No message creation needed (shows toast notification instead)
+- **All Agents:** Different display names and working messages
+
+**Problems with Phase 1 approach:**
+
+1. **Hardcoded Special Cases:** Logic scattered across multiple files
+   ```typescript
+   // chat.ts
+   if (this.currentAgent === 'planner' || this.currentAgent === 'validator') {
+     return  // Don't show tokens
+   }
+
+   // MessageBubble.tsx
+   function getAgentInfo(agent: string) {
+     switch (agent) {
+       case 'planner': return { name: 'Planner', message: 'Creating plan...' }
+       case 'executor': return { name: 'Executor', message: 'Creating workflow...' }
+       // ...
+     }
+   }
+
+   // More special cases scattered throughout...
+   ```
+
+2. **Maintenance Burden:** Adding new agent requires updating 3-5 files
+3. **Inconsistency Risk:** Easy to miss one location when changing agent behavior
+4. **Poor Discoverability:** No single source of truth for agent configuration
+5. **Testing Difficulty:** Cannot test agent behavior without mocking multiple components
+
+**Goal:** Centralize agent configuration in a declarative metadata registry.
+
+---
+
+## Decision Drivers
+
+- **DRY Principle:** Eliminate duplicated special-case logic
+- **Single Source of Truth:** One place to configure all agent behavior
+- **Maintainability:** Adding new agents should be trivial
+- **Type Safety:** Full TypeScript strict mode compliance
+- **Discoverability:** Developers should easily find agent configuration
+- **Testability:** Metadata should be easily testable
+
+---
+
+## Considered Options
+
+### Option 1: Keep Hardcoded Special Cases (Status Quo)
+
+**Approach:** Continue Phase 1 pattern with scattered `if` statements
+
+**Pros:**
+- No migration needed
+- Familiar pattern
+
+**Cons:**
+- Maintenance burden (update 3-5 files per agent)
+- Inconsistency risk (easy to miss locations)
+- Poor discoverability (logic scattered)
+- Testing difficulty (multiple components to mock)
+
+**Decision:** ❌ **Rejected** - Doesn't solve the core problem
+
+---
+
+### Option 2: Configuration File (JSON/YAML)
+
+**Approach:** Store agent metadata in external config file
+
+```json
+{
+  "agents": {
+    "planner": {
+      "displayName": "Planner",
+      "workingMessage": "Creating workflow plan...",
+      "shouldShowTokens": false
+    }
+  }
+}
+```
+
+**Pros:**
+- Centralized configuration
+- Non-developers can edit
+- Could be hot-reloaded
+
+**Cons:**
+- No type safety (JSON has no types)
+- Runtime errors if config invalid
+- Extra file to maintain
+- Can't use TypeScript features (type guards, etc.)
+
+**Decision:** ❌ **Rejected** - Loses type safety, adds complexity
+
+---
+
+### Option 3: Declarative TypeScript Registry (Chosen)
+
+**Approach:** Single TypeScript file with typed metadata registry
+
+```typescript
+export const AGENT_METADATA: AgentMetadataRegistry = {
+  planner: {
+    displayName: 'Planner',
+    workingMessage: 'Creating workflow plan...',
+    shouldCreateMessage: true,
+    shouldShowTokens: false,  // Loom format (internal)
+    shouldPersist: true
+  },
+  executor: {
+    displayName: 'Executor',
+    workingMessage: 'Creating workflow in n8n...',
+    shouldCreateMessage: false,  // Toast notification instead
+    shouldShowTokens: false,
+    shouldPersist: false
+  }
+  // ...
+}
+```
+
+**Pros:**
+- Full type safety (TypeScript strict mode)
+- Compile-time validation (catch errors early)
+- Single source of truth (`agent-metadata.ts`)
+- Easy to add new agents (one entry)
+- Helper functions for common queries
+- Discoverable (import from `@ai/orchestrator/agent-metadata`)
+
+**Cons:**
+- Requires code change to update metadata (not config file)
+
+**Decision:** ✅ **Accepted** - Best balance of type safety, maintainability, and simplicity
+
+---
+
+## Decision
+
+**Implement a declarative TypeScript registry for agent metadata.**
+
+**Implementation:**
+
+1. **Create `src/ai/orchestrator/agent-metadata.ts`:**
+   ```typescript
+   export type AgentOutputMetadata = {
+     displayName: string
+     workingMessage: string
+     shouldCreateMessage: boolean
+     shouldShowTokens: boolean
+     shouldPersist: boolean
+   }
+
+   export type AgentMetadataRegistry = Record<AgentType, AgentOutputMetadata>
+
+   export const AGENT_METADATA: AgentMetadataRegistry = {
+     enrichment: {
+       displayName: 'Requirements Analyst',
+       workingMessage: 'Understanding your requirements...',
+       shouldCreateMessage: true,
+       shouldShowTokens: true,  // Human-readable
+       shouldPersist: true
+     },
+     planner: {
+       displayName: 'Planner',
+       workingMessage: 'Creating workflow plan...',
+       shouldCreateMessage: true,
+       shouldShowTokens: false,  // Loom format
+       shouldPersist: true
+     },
+     validator: {
+       displayName: 'Validator',
+       workingMessage: 'Validating workflow plan...',
+       shouldCreateMessage: true,
+       shouldShowTokens: false,  // Loom format
+       shouldPersist: true
+     },
+     executor: {
+       displayName: 'Executor',
+       workingMessage: 'Creating workflow in n8n...',
+       shouldCreateMessage: false,  // Toast instead
+       shouldShowTokens: false,
+       shouldPersist: false
+     },
+     orchestrator: {
+       displayName: 'Orchestrator',
+       workingMessage: 'Routing request...',
+       shouldCreateMessage: false,
+       shouldShowTokens: false,
+       shouldPersist: false
+     }
+   }
+   ```
+
+2. **Provide Helper Functions:**
+   ```typescript
+   export function getAgentMetadata(agent: AgentType): AgentOutputMetadata {
+     return AGENT_METADATA[agent]
+   }
+
+   export function shouldCreateMessage(agent: AgentType): boolean {
+     return AGENT_METADATA[agent].shouldCreateMessage
+   }
+
+   export function shouldShowTokens(agent: AgentType): boolean {
+     return AGENT_METADATA[agent].shouldShowTokens
+   }
+
+   export function shouldPersist(agent: AgentType): boolean {
+     return AGENT_METADATA[agent].shouldPersist
+   }
+   ```
+
+3. **Refactor Consumers:**
+   ```typescript
+   // Before (chat.ts)
+   if (this.currentAgent === 'planner' || this.currentAgent === 'validator') {
+     return  // Don't show tokens
+   }
+
+   // After (chat.ts)
+   import { shouldShowTokens } from '@ai/orchestrator/agent-metadata'
+
+   if (!shouldShowTokens(this.currentAgent)) {
+     return
+   }
+
+   // Before (MessageBubble.tsx)
+   function getAgentInfo(agent: string) {
+     switch (agent) { /* ... */ }
+   }
+
+   // After (MessageBubble.tsx)
+   import { getAgentMetadata } from '@ai/orchestrator/agent-metadata'
+
+   const metadata = getAgentMetadata(message.agent)
+   const { displayName, workingMessage } = metadata
+   ```
+
+---
+
+## Consequences
+
+### Positive
+
+✅ **Single Source of Truth:** All agent configuration in one file
+✅ **Type Safety:** Full TypeScript strict mode compliance (0 uses of `any`)
+✅ **Easy Maintenance:** Add new agent = 1 entry in registry
+✅ **No Special Cases:** Eliminates scattered `if` statements
+✅ **Discoverability:** Import from `@ai/orchestrator/agent-metadata`
+✅ **Testability:** Easy to unit test metadata lookups
+✅ **Consistency:** All consumers use same metadata source
+✅ **Documentation:** JSDoc comments explain each field
+
+### Negative
+
+⚠️ **Code Change Required:** Updating metadata requires code change (not config file)
+  - **Mitigation:** This is acceptable since agents are architectural components, not user configuration
+
+⚠️ **Rebuild Required:** Changes require rebuild
+  - **Mitigation:** Development mode has HMR (hot module reload)
+
+### Neutral
+
+- Metadata stored in TypeScript file (not JSON/YAML)
+- Helper functions provided for common queries
+- No runtime configuration (compile-time only)
+
+---
+
+## Implementation Impact
+
+### Files Created (1)
+- `src/ai/orchestrator/agent-metadata.ts` - Registry and helpers
+
+### Files Modified (2)
+- `src/services/chat.ts` - Use `shouldShowTokens()` instead of hardcoded checks
+- `src/ui/chat/MessageBubble.tsx` - Use `getAgentMetadata()` instead of `getAgentInfo()`
+
+### Files Removed (0)
+- No files removed (refactored existing code)
+
+### Migration Effort
+- **Complexity:** Low
+- **Breaking Changes:** None (internal refactoring only)
+- **Testing:** Manual testing (no unit tests yet)
+
+---
+
+## Alternatives Considered
+
+### Alternative 1: Class-Based Agent Registry
+
+**Approach:** Create `Agent` class with metadata as properties
+
+```typescript
+class Agent {
+  constructor(
+    public name: AgentType,
+    public displayName: string,
+    public workingMessage: string,
+    // ...
+  ) {}
+}
+
+const AGENTS = [
+  new Agent('planner', 'Planner', 'Creating plan...'),
+  // ...
+]
+```
+
+**Rejected Because:**
+- Adds unnecessary complexity (OOP overhead)
+- Doesn't provide additional benefits over plain objects
+- Harder to query (need to iterate array vs object lookup)
+
+---
+
+### Alternative 2: Decorator Pattern
+
+**Approach:** Use TypeScript decorators to annotate agent classes
+
+```typescript
+@Agent({
+  displayName: 'Planner',
+  shouldShowTokens: false
+})
+class PlannerAgent { /* ... */ }
+```
+
+**Rejected Because:**
+- Requires experimental TypeScript features
+- Agents are LangGraph nodes, not classes
+- Decorators add magic that hurts discoverability
+
+---
+
+## Validation
+
+### Type Safety
+✅ Full TypeScript strict mode compliance
+✅ Compile-time validation of metadata structure
+✅ IntelliSense autocomplete for all fields
+
+### Maintainability
+✅ Adding new agent = 1 registry entry
+✅ Changing agent behavior = 1 location to update
+✅ No scattered special-case logic
+
+### Performance
+✅ Object lookup: O(1)
+✅ No runtime overhead (compile-time only)
+✅ Helper functions inlined by bundler
+
+---
+
+## Related Decisions
+
+- **ADR 0043:** Workflow State Machine (companion decision for Phase 2)
+- **ADR 0028:** Multi-Agent Architecture (original agent system design)
+- **ADR 0035:** Loom Protocol (why planner/validator output isn't shown)
+
+---
+
+## References
+
+- **Implementation:** `src/ai/orchestrator/agent-metadata.ts`
+- **Usage:** `src/services/chat.ts`, `src/ui/chat/MessageBubble.tsx`
+- **Documentation:** `PHASE-2-PROGRESS.md` (Week 1 summary)
+- **Migration Guide:** `PHASE-2-MIGRATION-GUIDE.md`
+
+---
+
+## Notes
+
+**Design Principles Applied:**
+- **Simplicity First:** Plain TypeScript object (no classes, decorators, or frameworks)
+- **Type Safety:** Full TypeScript strict mode (0 uses of `any`)
+- **Single Source of Truth:** One registry for all agent configuration
+- **DRY:** Eliminates duplicated special-case logic
+
+**Future Enhancements:**
+- Add unit tests for metadata lookups
+- Consider adding `agentColor` for UI theming
+- Consider adding `agentIcon` for visual distinction

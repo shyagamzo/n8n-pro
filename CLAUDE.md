@@ -57,6 +57,9 @@ reactive-system-architect agent for this."  ← TOO LATE!
 - **agent-architect** - Multi-agent systems, LangGraph, orchestrator, agent coordination
 - **root-cause-enforcer** - Bug fix review, root cause analysis, patch detection
 - **project-documentor** - Documentation, ADRs, knowledge capture, README updates
+- **react-expert** - React component architecture, hooks, performance optimization, React 19 features
+- **system-architect** - Architectural decisions, system design, cross-module dependencies, separation of concerns
+- **typescript-type-architect** - TypeScript type systems, type safety, advanced types, eliminating 'any'
 - **Explore** - Codebase search, file discovery, code understanding
 
 ### **Agent Selection Guide**
@@ -65,10 +68,12 @@ reactive-system-architect agent for this."  ← TOO LATE!
 |-----------|--------------|------------------|
 | State management changes | reactive-system-architect | BEFORE modifying chatStore, events, subscribers |
 | UI/Component work | ux-guardian | BEFORE creating/modifying React components |
+| React-specific patterns | react-expert | BEFORE implementing hooks, performance optimization, React 19 features |
 | Error handling | error-infrastructure-architect | BEFORE adding try-catch, error boundaries |
 | Agent system changes | agent-architect | BEFORE modifying orchestrator, nodes, tools |
+| TypeScript type issues | typescript-type-architect | BEFORE adding types, WHEN encountering 'any', for type system design |
+| Architecture decisions | system-architect | BEFORE making design decisions, refactoring, cross-module changes |
 | Bug fixes | root-cause-enforcer | AFTER fix to verify root cause addressed |
-| Architecture decisions | Multiple agents | BEFORE making design decisions |
 
 ### **Delegation Checklist**
 
@@ -76,8 +81,11 @@ Before writing ANY code, ask yourself:
 
 - [ ] Does this involve state management? → **reactive-system-architect**
 - [ ] Does this involve UI/components? → **ux-guardian**
+- [ ] Does this involve React hooks, performance, or React 19 features? → **react-expert**
 - [ ] Does this involve error handling? → **error-infrastructure-architect**
 - [ ] Does this involve agents/orchestrator? → **agent-architect**
+- [ ] Does this involve TypeScript types or have 'any' types? → **typescript-type-architect**
+- [ ] Does this involve architectural decisions or cross-module changes? → **system-architect**
 - [ ] Is this fixing a bug? → **root-cause-enforcer** (after fix)
 - [ ] Should this be documented? → **project-documentor** (after implementation)
 
@@ -258,6 +266,185 @@ return { success: true, plan: parsed.data }
 - Duplicate state across multiple stores
 - Use store for temporary component state
 
+### Phase 2 Architectural Patterns (2025-11-02)
+
+**Phase 2 introduced type-safe workflow state management and enhanced UX patterns.**
+
+#### Workflow State Machine
+
+**DO:**
+- Use explicit state machine (`workflowState`) for workflow lifecycle
+- Check state before rendering UI (`state === 'awaiting_approval'`)
+- Use derived selectors (`useIsWorkflowActive`, `useCanUserInteract`)
+- Emit events for state transitions (not manual state updates)
+
+**DON'T:**
+- Use boolean flags (`isPending`, `isLoading`) for workflow state
+- Manually set state (`workflowState.state = 'executing'`)
+- Skip state validation (use transition functions)
+- Confuse transient (`workflowState.plan`) vs persistent (`message.plan`) storage
+
+**Example:**
+```typescript
+// ✅ CORRECT - Use state machine
+import { useChatStore, useIsWorkflowActive } from '@ui/chatStore'
+
+const workflowState = useChatStore(state => state.workflowState)
+const isActive = useIsWorkflowActive()
+
+if (workflowState.state === 'awaiting_approval') {
+  return <PlanMessage plan={workflowState.plan} />
+}
+
+// ❌ WRONG - Boolean flags
+const { pendingPlan, sending } = useChatStore.getState()
+if (pendingPlan && !sending) { /* ... */ }
+```
+
+**See:** `src/shared/types/workflow-state/README.md` for full state machine documentation
+
+#### Agent Metadata Registry
+
+**DO:**
+- Use `getAgentMetadata()` for agent configuration
+- Add new agents to `AGENT_METADATA` registry (not scattered logic)
+- Use helper functions (`shouldShowTokens`, `shouldCreateMessage`)
+
+**DON'T:**
+- Hardcode agent-specific logic in components
+- Use `switch` statements for agent behavior
+- Scatter special cases across multiple files
+
+**Example:**
+```typescript
+// ✅ CORRECT - Use metadata registry
+import { getAgentMetadata } from '@ai/orchestrator/agent-metadata'
+
+const metadata = getAgentMetadata('planner')
+const { displayName, workingMessage, shouldShowTokens } = metadata
+
+// ❌ WRONG - Hardcoded special cases
+if (agent === 'planner' || agent === 'validator') {
+  // Don't show tokens
+}
+```
+
+**See:** `src/ai/orchestrator/agent-metadata.ts` for registry
+
+#### Dual Storage Pattern
+
+**Transient State** (`workflowState.plan`):
+- Current active workflow plan
+- Cleared on new workflow
+- In-memory (Zustand store)
+
+**Persistent History** (`message.plan`):
+- Historical record of plans
+- Survives sessions
+- Stored in `chrome.storage.local`
+
+**Example:**
+```typescript
+// ✅ CORRECT - Use appropriate storage
+const currentPlan = workflowState.plan        // Transient
+const historicalPlan = message.plan           // Persistent
+
+// ❌ WRONG - Confusing the two
+await storageSet('currentPlan', workflowState.plan)  // Don't persist transient state
+```
+
+**See:** `PHASE-2-MIGRATION-GUIDE.md` for dual storage details
+
+## Accessibility Requirements (WCAG 2.1 AA)
+
+**Phase 2 achieved full WCAG 2.1 AA compliance. All new UI code must maintain this standard.**
+
+### Focus Indicators
+
+**REQUIRED:**
+```css
+/* All interactive elements MUST have visible focus indicators */
+.my-button:focus-visible {
+  outline: 3px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse users only */
+.my-button:focus:not(:focus-visible) {
+  outline: none;
+}
+```
+
+### Color Contrast
+
+**REQUIRED:**
+- Text on white background: ≥4.5:1 contrast ratio
+- Large text (18pt+): ≥3:1 contrast ratio
+- Use `--color-text-muted: #9ca3af` (4.52:1) instead of `#6b7280` (3.1:1)
+
+### ARIA Semantics
+
+**DO:**
+```tsx
+{/* Collapsible elements */}
+<button
+  aria-expanded={isExpanded}
+  aria-controls="panel-id"
+  aria-label="Toggle details"
+>
+  <span aria-hidden="true">▶</span> Details
+</button>
+<div id="panel-id">...</div>
+
+{/* Error messages */}
+<div role="alert" aria-describedby="error-msg">
+  <p id="error-msg">Error details</p>
+</div>
+
+{/* Decorative icons */}
+<span aria-hidden="true">✓</span>
+```
+
+**DON'T:**
+```tsx
+{/* Duplicate ARIA announcements */}
+<div role="status" aria-live="polite">
+  <div role="status" aria-live="polite">  {/* ❌ Duplicate */}
+    Loading...
+  </div>
+</div>
+
+{/* Missing ARIA for collapsible */}
+<button onClick={() => setExpanded(!expanded)}>  {/* ❌ No aria-expanded */}
+  Toggle
+</button>
+
+{/* Decorative icons not hidden */}
+<span>✓</span>  {/* ❌ Should have aria-hidden="true" */}
+```
+
+### Keyboard Navigation
+
+**REQUIRED:**
+- All interactive elements focusable (no `tabindex="-1"` on interactive elements)
+- Logical tab order (no `tabindex` > 0)
+- Auto-focus on critical actions (with delay: `setTimeout(() => ref.current?.focus(), 100)`)
+
+### Screen Readers
+
+**DO:**
+- Use semantic HTML (`<button>`, `<a>`, `<nav>`, `<main>`)
+- Provide `aria-label` for icon-only buttons
+- Use `sr-only` class for screen-reader-only text
+- Announce status changes with `role="status"` or `role="alert"`
+
+**Testing:**
+- VoiceOver (Mac): `Cmd+F5` to enable
+- NVDA (Windows): Free screen reader
+- Check announcements for all state transitions
+
+**See:** `PHASE-2-PROGRESS.md` (Week 4) for accessibility fixes
+
 ## Path Aliases
 
 Configured in `vite.config.ts` and `tsconfig.app.json`:
@@ -332,15 +519,33 @@ Configured in `vite.config.ts` and `tsconfig.app.json`:
 
 ## Common Pitfalls to Avoid
 
+### Process & Architecture
 ❌ **IMPLEMENTING BEFORE DELEGATING TO SPECIALIZED AGENTS** (see MANDATORY DELEGATION-FIRST WORKFLOW at top of file)
 ❌ Manual logging in orchestrator nodes (use LangGraph bridge)
-❌ Bypassing TypeScript with `any` (fix types properly)
+❌ Bypassing TypeScript with `any` (delegate to **typescript-type-architect** for proper types)
 ❌ Direct UI updates from services (emit events instead)
+❌ Implementing React components without consulting **react-expert** for patterns
+❌ Making architectural changes without **system-architect** review
 ❌ Premature abstraction (wait for 3 duplications)
-❌ Complex conditionals in orchestrator (use explicit state machine)
 ❌ Large files (split at 400+ lines)
+
+### Phase 2 Patterns (State Management)
+❌ Using boolean flags (`pendingPlan`, `isLoading`) for workflow state (use `workflowState` state machine)
+❌ Manually setting state (`workflowState.state = 'executing'`) (use transition functions)
+❌ Confusing transient (`workflowState.plan`) vs persistent (`message.plan`) storage
+❌ Hardcoding agent-specific logic (use `getAgentMetadata()` registry)
+❌ Skipping state validation (always use transition functions)
+
+### Security & Data
 ❌ Storing API keys in localStorage (use chrome.storage.local)
 ❌ Embedding credential values (use references only)
+
+### Accessibility (WCAG 2.1 AA)
+❌ Missing focus indicators on interactive elements
+❌ Color contrast below 4.5:1 (use `--color-text-muted: #9ca3af`)
+❌ Duplicate ARIA announcements (single `role="status"` per update)
+❌ Decorative icons without `aria-hidden="true"`
+❌ Missing `aria-expanded` on collapsible elements
 
 ## ESLint Style Rules
 

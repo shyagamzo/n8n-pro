@@ -7,7 +7,17 @@
       "Bash(node:*)",
       "WebSearch",
       "Bash(yarn lint:*)",
-      "Bash(yarn why:*)"
+      "Bash(yarn why:*)",
+      "Bash(find:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(yarn typecheck:*)",
+      "Bash(npx tsc:*)",
+      "Bash(yarn tsc:*)",
+      "Bash(awk:*)",
+      "Bash(wc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
