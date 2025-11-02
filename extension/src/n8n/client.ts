@@ -81,8 +81,7 @@ export class N8nClient
       const workflow = body as Record<string, unknown>
 
       // Remove read-only fields that n8n API rejects during creation
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { active, id, createdAt, updatedAt, versionId, ...rest } = workflow
+      const { active: _active, id: _id, createdAt: _createdAt, updatedAt: _updatedAt, versionId: _versionId, ...rest } = workflow
 
       // Ensure settings exists (required by n8n)
       payload = {
