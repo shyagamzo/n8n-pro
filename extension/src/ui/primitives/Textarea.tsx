@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, forwardRef } from 'react'
+import React, { useRef, useEffect, forwardRef, useCallback } from 'react'
 import './FormElements.css'
 
 type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
@@ -19,7 +19,10 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   const internalRef = useRef<HTMLTextAreaElement>(null)
   const textareaRef = (ref as React.RefObject<HTMLTextAreaElement>) || internalRef
 
-  const adjustHeight = () => 
+  // Generate stable ID for accessibility
+  const textareaId = props.id || `textarea-${React.useId()}`
+
+  const adjustHeight = useCallback(() =>
 {
     const textarea = textareaRef.current
     if (!textarea || !autoResize) return
@@ -36,28 +39,30 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
     // Set height within bounds
     const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight)
     textarea.style.height = `${newHeight}px`
-  }
+  }, [autoResize, minRows, maxRows])
 
   // Adjust height on mount and when value changes
-  useEffect(() => 
+  useEffect(() =>
 {
     adjustHeight()
-  }, [props.value])
+  }, [adjustHeight, props.value])
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => 
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
 {
     adjustHeight()
     props.onChange?.(e)
   }
 
   return (
-    <label className="form-label">
+    <label className="form-label" htmlFor={textareaId}>
       {label && <span className="form-label-text">{label}</span>}
       <textarea
         ref={textareaRef}
         {...props}
+        id={textareaId}
         onChange={handleChange}
         className="form-textarea"
+        aria-label={!label ? (props.placeholder || 'Text input field') : undefined}
         style={{
           minHeight: `${(parseInt(getComputedStyle(document.body).lineHeight) || 20) * minRows}px`,
           ...props.style
