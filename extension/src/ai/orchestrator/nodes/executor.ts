@@ -42,35 +42,14 @@ export async function executorNode(
   config?: RunnableConfig
 ): Promise<Command>
 {
-  // DEBUG: Log entry into executor node
-  console.log('[EXECUTOR NODE] Entered executor node')
-
   if (!state.plan)
   {
     throw new Error('No plan to execute')
   }
 
-  console.log('[EXECUTOR NODE] Plan validated, extracting config')
   const executionConfig = extractExecutorConfig(config)
-
-  console.log('[EXECUTOR NODE] Creating executor agent')
   const agent = createExecutorAgent(executionConfig)
-
-  console.log('[EXECUTOR NODE] Invoking executor agent with workflow:', state.plan.workflow.name)
   const result = await invokeExecutor(agent, state, executionConfig, config)
-
-  console.log('[EXECUTOR NODE] Executor completed, extracting results')
-  console.log('[EXECUTOR NODE] Result messages:', result.messages.length)
-
-  // Log the last few messages to see what the agent said
-  const lastMessages = result.messages.slice(-3)
-  lastMessages.forEach((msg: BaseMessage, idx: number) => {
-    console.log(`[EXECUTOR NODE] Message ${idx}:`, {
-      type: msg._getType(),
-      content: typeof msg.content === 'string' ? msg.content.substring(0, 200) : msg.content
-    })
-  })
-
   const executionResults = extractExecutionResults(result.messages)
 
   return new Command({
@@ -185,14 +164,10 @@ type ExecutionResults = {
  */
 function extractExecutionResults(messages: BaseMessage[]): ExecutionResults
 {
-  console.log('[EXECUTOR NODE] Extracting results from', messages.length, 'messages')
-
   const workflowResult = findLastToolResult<{ id: string; name: string; url: string }>(
     messages,
     'create_n8n_workflow'
   )
-
-  console.log('[EXECUTOR NODE] Workflow tool result:', workflowResult)
 
   const credentialResult = findLastToolResult<{
     available: string[]
