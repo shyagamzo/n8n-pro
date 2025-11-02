@@ -1,6 +1,11 @@
 import { apiFetch } from '@platform/api-fetch'
-import type { WorkflowSummary } from './types'
+import type { WorkflowSummary, N8nWorkflow } from './types'
 import { DEFAULTS } from '@shared/constants'
+import {
+  WorkflowSummaryArraySchema,
+  GetWorkflowResponseSchema,
+  WorkflowCreateResponseSchema
+} from './schemas'
 
 export type N8nClientOptions = {
   baseUrl?: string
@@ -28,21 +33,40 @@ export class N8nClient
   async getWorkflows(): Promise<WorkflowSummary[]>
   {
     const url = `${this.baseUrl}/api/v1/workflows`
-    return apiFetch<WorkflowSummary[]>(url, {
+    const response = await apiFetch<unknown>(url, {
       method: 'GET',
       headers: this.authHeaders,
       timeoutMs: 10_000,
     })
+
+    // Validate API response
+    const result = WorkflowSummaryArraySchema.safeParse(response)
+    if (!result.success)
+    {
+      throw new Error(`Invalid workflow list response from n8n API: ${result.error.message}`)
+    }
+
+    return result.data
   }
 
-  async getWorkflow(id: string): Promise<unknown>
+  async getWorkflow(id: string): Promise<N8nWorkflow>
   {
     const url = `${this.baseUrl}/api/v1/workflows/${encodeURIComponent(id)}`
-    return apiFetch<unknown>(url, {
+    const response = await apiFetch<unknown>(url, {
       method: 'GET',
       headers: this.authHeaders,
       timeoutMs: 10_000,
     })
+
+    // Validate API response
+    const result = GetWorkflowResponseSchema.safeParse(response)
+
+    if (!result.success)
+    {
+      throw new Error(`Invalid workflow response from n8n API: ${result.error.message}`)
+    }
+
+    return result.data
   }
 
   async createWorkflow(body: unknown): Promise<{ id: string }>
@@ -67,23 +91,43 @@ export class N8nClient
       }
     }
 
-    return apiFetch<{ id: string }>(url, {
+    const response = await apiFetch<unknown>(url, {
       method: 'POST',
       headers: this.authHeaders,
       body: payload,
       timeoutMs: 15_000,
     })
+
+    // Validate API response
+    const result = WorkflowCreateResponseSchema.safeParse(response)
+
+    if (!result.success)
+    {
+      throw new Error(`Invalid create workflow response from n8n API: ${result.error.message}`)
+    }
+
+    return result.data
   }
 
   async updateWorkflow(id: string, body: unknown): Promise<{ id: string }>
   {
     const url = `${this.baseUrl}/api/v1/workflows/${encodeURIComponent(id)}`
-    return apiFetch<{ id: string }>(url, {
+    const response = await apiFetch<unknown>(url, {
       method: 'PATCH',
       headers: this.authHeaders,
       body,
       timeoutMs: 15_000,
     })
+
+    // Validate API response
+    const result = WorkflowCreateResponseSchema.safeParse(response)
+
+    if (!result.success)
+    {
+      throw new Error(`Invalid update workflow response from n8n API: ${result.error.message}`)
+    }
+
+    return result.data
   }
 }
 

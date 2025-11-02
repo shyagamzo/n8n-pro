@@ -346,3 +346,46 @@ export const WorkflowWithConnectionValidationSchema = WorkflowSchema
       message: 'All connection source and target nodes must exist in the workflow'
     }
   )
+
+// ─────────────────────────────────────────────────────────────
+// API Response Schemas
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Workflow summary schema for list responses
+ *
+ * Used to validate GET /api/v1/workflows responses
+ */
+export const WorkflowSummarySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  active: z.boolean(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  tags: z.array(z.object({
+    id: z.string(),
+    name: z.string()
+  })).optional()
+})
+
+/**
+ * Array of workflow summaries
+ */
+export const WorkflowSummaryArraySchema = z.array(WorkflowSummarySchema)
+
+/**
+ * Create/update workflow response schema
+ *
+ * Used to validate POST /api/v1/workflows and PATCH /api/v1/workflows/:id responses
+ */
+export const WorkflowCreateResponseSchema = z.object({
+  id: z.string().min(1)
+})
+
+/**
+ * Get workflow response schema
+ *
+ * Used to validate GET /api/v1/workflows/:id responses
+ * Returns a full workflow object
+ */
+export const GetWorkflowResponseSchema = WorkflowSchema
