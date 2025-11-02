@@ -14,12 +14,10 @@
     "@langchain/langgraph": "^0.4.9",
     "@langchain/openai": "0.6.14",
     "dompurify": "^3.2.7",
-    "langchain": "0.3.35",
     "marked": "^16.4.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "rxjs": "^7.8.2",
-    "webextension-polyfill": "0.12.0",
     "zustand": "5.0.8"
   },
   "devDependencies": {
@@ -29,7 +27,6 @@
     "@types/node": "24.7.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.1",
-    "@types/webextension-polyfill": "^0",
     "@vitejs/plugin-react": "5.0.4",
     "eslint": "9.37.0",
     "eslint-plugin-react-hooks": "6.1.1",
