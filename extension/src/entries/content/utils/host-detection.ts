@@ -5,14 +5,14 @@
 /**
  * Check if current page is an n8n instance
  */
-export function isN8nHost(): boolean 
+export function isN8nHost(): boolean
 {
-  try 
+  try
 {
     const { hostname, port } = window.location
-    return hostname === 'localhost' && port === '5678'
+    return (hostname === 'localhost' || hostname === '127.0.0.1') && port === '5678'
   }
- catch 
+ catch
 {
     return false
   }
