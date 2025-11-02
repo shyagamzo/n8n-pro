@@ -30,6 +30,7 @@ import type {
   StorageValue
 } from './types'
 import type { Workflow } from '@n8n/types'
+import type { Plan } from '@shared/types/plan'
 
 /**
  * Low-level event emitters
@@ -102,6 +103,14 @@ export function emitWorkflowUpdated(workflow: Workflow | Partial<Workflow>, work
 export function emitWorkflowValidated(workflow: Workflow | Partial<Workflow>): void
 {
   emitWorkflowEvent('validated', { workflow })
+}
+
+export function emitPlanGenerated(plan: Plan, sessionId?: string): void
+{
+  emitWorkflowEvent('validated', {
+    workflow: { nodes: [] } as Partial<Workflow>,
+    metadata: { plan, sessionId }
+  })
 }
 
 export function emitWorkflowFailed(workflow: Workflow | Partial<Workflow>, error: Error): void

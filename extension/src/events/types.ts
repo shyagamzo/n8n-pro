@@ -5,6 +5,8 @@
  */
 
 import type { Workflow } from '@n8n/types'
+import type { WorkflowStateData, WorkflowState } from '@shared/types/workflow-state'
+import type { Plan } from '@shared/types/plan'
 
 export type AgentType = 'planner' | 'executor' | 'enrichment' | 'orchestrator' | 'validator'
 
@@ -16,11 +18,17 @@ export type SystemEvent =
   | ErrorEvent
   | StorageEvent
   | SystemInfoEvent
+  | StateTransitionEvent
 
 export type WorkflowEventPayload = {
   workflowId?: string
   workflow: Workflow | Partial<Workflow>
   error?: Error
+  metadata?: {
+    plan?: Plan
+    sessionId?: string
+    [key: string]: unknown
+  }
 }
 
 export type WorkflowEvent = {
@@ -55,8 +63,8 @@ export type AgentEvent = {
 export type Step = 'enrichment' | 'planner' | 'validator' | 'executor'
 
 export type GraphEventPayload = {
-  fromStep?: Step
-  toStep?: Step
+  fromStep?: string  // Node name (includes special nodes: orchestrator, __start__, __end__, END)
+  toStep?: string    // Node name (includes special nodes: orchestrator, __start__, __end__, END)
   reason?: string
   sessionId?: string
 }
@@ -141,6 +149,21 @@ export type SystemInfoEvent = {
   domain: 'system'
   type: 'info' | 'debug' | 'init'
   payload: SystemInfoEventPayload
+  timestamp: number
+}
+
+export type StateTransitionEventPayload = {
+  previous: WorkflowState
+  current: WorkflowState
+  trigger: string
+  stateData: WorkflowStateData
+  sessionId?: string
+}
+
+export type StateTransitionEvent = {
+  domain: 'state'
+  type: 'transition'
+  payload: StateTransitionEventPayload
   timestamp: number
 }
 

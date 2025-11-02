@@ -17,3 +17,6 @@ export type * from './types'
 
 // Event emission helpers
 export * from './emitters'
+
+// Validation (Week 2 - Phase 2)
+export * from './validation'

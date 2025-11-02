@@ -8,7 +8,7 @@
 
 import { Subject, filter, shareReplay } from 'rxjs'
 import type { Observable } from 'rxjs'
-import type { SystemEvent, WorkflowEvent, AgentEvent, GraphEvent, LLMEvent, ErrorEvent, StorageEvent, SystemInfoEvent } from './types'
+import type { SystemEvent, WorkflowEvent, AgentEvent, GraphEvent, LLMEvent, ErrorEvent, StorageEvent, SystemInfoEvent, StateTransitionEvent } from './types'
 
 export class SystemEvents
 {
@@ -45,6 +45,7 @@ export class SystemEvents
   error$    = this.createDomainStream<ErrorEvent>('error')
   storage$  = this.createDomainStream<StorageEvent>('storage')
   system$   = this.createDomainStream<SystemInfoEvent>('system')
+  state$    = this.createDomainStream<StateTransitionEvent>('state')
 
   /**
    * Emit an event to all subscribers
