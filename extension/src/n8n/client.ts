@@ -48,9 +48,25 @@ export class N8nClient
   async createWorkflow(body: unknown): Promise<{ id: string }>
   {
     const url = `${this.baseUrl}/api/v1/workflows`
-    const payload = (typeof body === 'object' && body !== null)
-      ? { ...(body as Record<string, unknown>), settings: (body as { settings?: unknown }).settings ?? {} }
-      : body
+
+    // Prepare payload and remove read-only fields
+    let payload = body
+
+    if (typeof body === 'object' && body !== null)
+    {
+      const workflow = body as Record<string, unknown>
+
+      // Remove read-only fields that n8n API rejects during creation
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { active, id, createdAt, updatedAt, versionId, ...rest } = workflow
+
+      // Ensure settings exists (required by n8n)
+      payload = {
+        ...rest,
+        settings: workflow.settings ?? {}
+      }
+    }
+
     return apiFetch<{ id: string }>(url, {
       method: 'POST',
       headers: this.authHeaders,

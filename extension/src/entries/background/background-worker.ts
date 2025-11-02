@@ -21,18 +21,23 @@ import {
   systemEvents,
   emitUnhandledError,
   emitApiError,
-  emitSystemInit
+  emitSystemInit,
+  emitPlanGenerated
 } from '@events'
 import * as logger from '@events/subscribers/logger'
 import * as persistence from '@events/subscribers/persistence'
 import * as tracing from '@events/subscribers/tracing'
 import * as messaging from '@events/subscribers/messaging'
+import * as workflowState from '@events/subscribers/workflow-state'
+import * as validation from '@events/subscribers/validation'
 
 // Initialize event subscribers (background context only)
 // Note: chat and activity subscribers run in content script (not here)
 logger.setup()
 persistence.setup()
 tracing.setup()
+workflowState.setup()
+validation.setup()  // Now safe - validation logs directly, doesn't emit events
 
 // Messaging subscriber will be set up per-port connection (needs post function)
 
@@ -131,8 +136,12 @@ chrome.runtime.onConnect.addListener((port) =>
       }, (token) => post({ type: 'token', token }))
 
       // Send results (workflow_created sent automatically via messaging subscriber)
-      if (result.plan) 
+      if (result.plan)
 {
+        // Emit plan event to event bus (triggers state transition: planning → awaiting_approval)
+        emitPlanGenerated(result.plan)
+
+        // Send plan to content script for UI display
         post({ type: 'plan', plan: result.plan })
       }
 

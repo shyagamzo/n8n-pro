@@ -188,6 +188,53 @@ const isTrigger = isTriggerNode(nodeTypes, 'n8n-nodes-base.scheduleTrigger')
 // Returns: true
 ```
 
+## Type System
+
+**Strict, type-safe TypeScript definitions for n8n workflows.**
+
+```typescript
+import type { N8nWorkflow, N8nNode, N8nConnections } from '@n8n/types'
+import { isN8nNode, isN8nConnections } from '@n8n/types'
+
+// Create a type-safe workflow
+const workflow: N8nWorkflow = {
+  name: "My Workflow",
+  active: false,
+  nodes: [
+    {
+      id: "uuid-123",
+      name: "HTTP Request",
+      type: "n8n-nodes-base.httpRequest",
+      typeVersion: 4.2,
+      position: [100, 200],  // Strict [x, y] tuple
+      parameters: {
+        url: "https://api.example.com",
+        method: "GET"
+      }
+    }
+  ],
+  connections: {},
+  settings: {}
+}
+
+// Validate unknown data
+if (isN8nNode(unknownData)) {
+  // TypeScript knows unknownData is N8nNode
+  const { id, name, type } = unknownData
+}
+```
+
+**Features:**
+- ✅ Zero `any` types - All structures have precise types
+- ✅ Strict tuple types - `[number, number]` not `number[]`
+- ✅ Runtime validation - Type guards for safe parsing
+- ✅ Excellent IDE support - Full autocomplete and docs
+
+**Documentation:**
+- **[TYPES-GUIDE.md](./TYPES-GUIDE.md)** - Comprehensive usage guide
+- **[types.examples.ts](./types.examples.ts)** - Working code examples
+- **[TYPE-SYSTEM-IMPROVEMENTS.md](./TYPE-SYSTEM-IMPROVEMENTS.md)** - Migration guide
+
 ## References
 
 - **[n8n Public API](https://docs.n8n.io/api/)** - Official API documentation
