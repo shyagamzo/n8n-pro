@@ -1,10 +1,32 @@
 import { ChatPort } from '@platform/messaging'
 import { useChatStore } from '@ui/chatStore'
 import { generateId } from '@shared/utils/id'
+import { DEFAULTS } from '@shared/constants'
 import type { ChatMessage, ErrorDetails } from '@shared/types/chat'
 import type { BackgroundMessage, ApplyPlanRequest } from '@shared/types/messaging'
 import type { Plan } from '@shared/types/plan'
 import type { WorkflowState, WorkflowStateData } from '@shared/types/workflow-state'
+
+// ─────────────────────────────────────────────────────────────
+// Type-safe message handlers
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Extract message type from BackgroundMessage union
+ */
+type ExtractMessage<T extends BackgroundMessage['type']> = Extract<BackgroundMessage, { type: T }>
+
+/**
+ * Type-safe message handler registry (partial - not all message types need handlers)
+ */
+type MessageHandlers = {
+  token: (msg: ExtractMessage<'token'>) => void
+  workflow_created: (msg: ExtractMessage<'workflow_created'>) => void
+  done: (msg: ExtractMessage<'done'>) => void
+  error: (msg: ExtractMessage<'error'>) => void
+  agent_activity: (msg: ExtractMessage<'agent_activity'>) => void
+  state_transition: (msg: ExtractMessage<'state_transition'>) => void
+}
 
 export class ChatService
 {
@@ -13,9 +35,9 @@ export class ChatService
   private streamingMessageId: string | null = null
   private currentAgent: string | null = null
 
-  private messageHandlers: Record<string, (msg: any) => void> = {
+  private messageHandlers: MessageHandlers = {
     token: (msg) => this.handleToken(msg),
-    workflow_created: (msg) => this.handleWorkflowCreated(msg),  // Toast notification
+    workflow_created: (msg) => this.handleWorkflowCreated(msg),
     done: () => this.handleDone(),
     error: (msg) => this.handleError(msg),
     agent_activity: (msg) => this.handleAgentActivity(msg),
@@ -26,7 +48,11 @@ export class ChatService
   {
     this.port.onMessage((message: BackgroundMessage) =>
     {
-      this.messageHandlers[message.type]?.(message)
+      const handler = this.messageHandlers[message.type as keyof MessageHandlers]
+      if (handler)
+      {
+        handler(message as never) // Type assertion needed due to discriminated union complexity
+      }
     })
   }
 
@@ -60,7 +86,7 @@ export class ChatService
         label: 'Open in n8n',
         onClick: () => window.open(message.workflowUrl, '_blank')
       },
-      duration: 7000
+      duration: DEFAULTS.TOAST_DURATION_SUCCESS
     })
   }
 
