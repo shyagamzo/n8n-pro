@@ -181,13 +181,4 @@ export function setup(post: (msg: BackgroundMessage) => void): ConnectionHandle
   }
 }
 
-/**
- * Cleanup messaging subscriptions
- * @deprecated Use the ConnectionHandle.cleanup() returned from setup() instead
- */
-export function cleanup(): void 
-{
-  // No-op: cleanup is now handled per-connection via ConnectionHandle
-  // This function kept for backwards compatibility but does nothing
-}
 
