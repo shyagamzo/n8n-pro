@@ -14,7 +14,12 @@ const manifest: ManifestV3Export = {
   },
   content_scripts: [
     {
-      matches: ['http://localhost:5678/*', 'https://localhost:5678/*'],
+      matches: [
+        'http://localhost:5678/*',
+        'https://localhost:5678/*',
+        'http://127.0.0.1:5678/*',
+        'https://127.0.0.1:5678/*'
+      ],
       js: ['src/entries/content/index.ts'],
       run_at: 'document_idle'
     }
@@ -29,10 +34,18 @@ const manifest: ManifestV3Export = {
   permissions: ['storage', 'scripting'],
   web_accessible_resources: [
     {
-      resources: ['assets/*', 'src/*'],
-      matches: ['<all_urls>']
+      resources: ['assets/*'],
+      matches: [
+        'http://localhost:5678/*',
+        'https://localhost:5678/*',
+        'http://127.0.0.1:5678/*',
+        'https://127.0.0.1:5678/*'
+      ]
     }
-  ]
+  ],
+  content_security_policy: {
+    extension_pages: "script-src 'self'; object-src 'self'"
+  }
 }
 
 export default manifest
