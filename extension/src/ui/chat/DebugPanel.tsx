@@ -17,38 +17,61 @@ export default function DebugPanel({ plan }: DebugPanelProps): React.ReactElemen
   {
     return (
       <div className="debug-panel-collapsed border-top">
-        <button onClick={() => setExpanded(true)} className="debug-panel-toggle w-full btn border rounded">
-          🐛 Show Debug Info
+        <button
+          onClick={() => setExpanded(true)}
+          className="debug-panel-toggle w-full btn border rounded"
+          aria-expanded="false"
+          aria-controls="debug-panel-content"
+        >
+          <span aria-hidden="true">🐛</span> Show Debug Info
         </button>
       </div>
     )
   }
 
   return (
-    <div className="debug-panel container-card flex-column">
+    <div className="debug-panel container-card flex-column" id="debug-panel-content">
       <div className="debug-panel-header section-header">
-        <span className="debug-panel-title section-header-title">🐛 Debug Information</span>
-        <button onClick={() => setExpanded(false)} className="debug-panel-close btn-icon">
-          ✕
+        <span className="debug-panel-title section-header-title">
+          <span aria-hidden="true">🐛</span> Debug Information
+        </span>
+        <button
+          onClick={() => setExpanded(false)}
+          className="debug-panel-close btn-icon"
+          aria-label="Close debug panel"
+        >
+          <span aria-hidden="true">✕</span>
         </button>
       </div>
 
-      <div className="debug-panel-tabs">
+      <div className="debug-panel-tabs" role="tablist" aria-label="Debug information tabs">
         <button
           onClick={() => setActiveTab('plan')}
           className={`debug-panel-tab btn ${activeTab === 'plan' ? 'debug-panel-tab--active' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'plan'}
+          aria-controls="panel-plan"
+          id="tab-plan"
         >
           Plan
         </button>
         <button
           onClick={() => setActiveTab('workflow')}
           className={`debug-panel-tab btn ${activeTab === 'workflow' ? 'debug-panel-tab--active' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'workflow'}
+          aria-controls="panel-workflow"
+          id="tab-workflow"
         >
           Workflow JSON
         </button>
         <button
           onClick={() => setActiveTab('validation')}
           className={`debug-panel-tab btn ${activeTab === 'validation' ? 'debug-panel-tab--active' : ''}`}
+          role="tab"
+          aria-selected={activeTab === 'validation'}
+          aria-controls="panel-validation"
+          id="tab-validation"
         >
           Validation
         </button>
@@ -56,7 +79,12 @@ export default function DebugPanel({ plan }: DebugPanelProps): React.ReactElemen
 
       <div className="debug-panel-content flex-1 overflow-auto">
         {activeTab === 'plan' && (
-          <div className="debug-panel-code-block container-elevated">
+          <div
+            role="tabpanel"
+            id="panel-plan"
+            aria-labelledby="tab-plan"
+            className="debug-panel-code-block container-elevated"
+          >
             <div className="debug-panel-label text-bold text-xs">Full Plan Object:</div>
             <pre className="debug-panel-pre code-block">
               {JSON.stringify(plan, null, 2)}
@@ -65,19 +93,29 @@ export default function DebugPanel({ plan }: DebugPanelProps): React.ReactElemen
         )}
 
         {activeTab === 'workflow' && (
-          <div className="debug-panel-code-block container-elevated">
+          <div
+            role="tabpanel"
+            id="panel-workflow"
+            aria-labelledby="tab-workflow"
+            className="debug-panel-code-block container-elevated"
+          >
             <div className="debug-panel-label text-bold text-xs">Workflow Structure (sent to n8n API):</div>
             <pre className="debug-panel-pre code-block">
               {JSON.stringify(plan.workflow, null, 2)}
             </pre>
             <div className="debug-panel-help">
-              💡 Copy this JSON to test directly with n8n's API
+              <span aria-hidden="true">💡</span> Copy this JSON to test directly with n8n's API
             </div>
           </div>
         )}
 
         {activeTab === 'validation' && (
-          <div className="debug-panel-code-block container-elevated">
+          <div
+            role="tabpanel"
+            id="panel-validation"
+            aria-labelledby="tab-validation"
+            className="debug-panel-code-block container-elevated"
+          >
             <div className="debug-panel-label">Validation Summary:</div>
             <div className="debug-panel-validation-info">
               <div><strong>Workflow Name:</strong> {plan.workflow.name}</div>
