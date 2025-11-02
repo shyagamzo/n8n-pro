@@ -8,10 +8,15 @@
  */
 export async function storageGet<T>(key: string): Promise<T | undefined>
 {
-  return new Promise((resolve) =>
+  return new Promise((resolve, reject) =>
   {
     chrome.storage.local.get([key], (result) =>
     {
+      if (chrome.runtime.lastError)
+      {
+        reject(new Error(chrome.runtime.lastError.message))
+        return
+      }
       resolve(result?.[key] as T | undefined)
     })
   })
@@ -31,10 +36,15 @@ export async function storageGetString(key: string): Promise<string>
  */
 export async function storageGetMany<T extends Record<string, unknown>>(keys: string[]): Promise<Partial<T>>
 {
-  return new Promise((resolve) =>
+  return new Promise((resolve, reject) =>
   {
     chrome.storage.local.get(keys, (result) =>
     {
+      if (chrome.runtime.lastError)
+      {
+        reject(new Error(chrome.runtime.lastError.message))
+        return
+      }
       resolve(result as Partial<T>)
     })
   })
@@ -45,9 +55,18 @@ export async function storageGetMany<T extends Record<string, unknown>>(keys: st
  */
 export async function storageSet<T>(key: string, value: T): Promise<void>
 {
-  return new Promise((resolve) =>
+  return new Promise((resolve, reject) =>
   {
-    chrome.storage.local.set({ [key]: value }, () => resolve())
+    chrome.storage.local.set({ [key]: value }, () =>
+    {
+      if (chrome.runtime.lastError)
+      {
+        reject(new Error(chrome.runtime.lastError.message))
+        return
+      }
+
+      resolve()
+    })
   })
 }
 
@@ -56,9 +75,18 @@ export async function storageSet<T>(key: string, value: T): Promise<void>
  */
 export async function storageSetMany(items: Record<string, unknown>): Promise<void>
 {
-  return new Promise((resolve) =>
+  return new Promise((resolve, reject) =>
   {
-    chrome.storage.local.set(items, () => resolve())
+    chrome.storage.local.set(items, () =>
+    {
+      if (chrome.runtime.lastError)
+      {
+        reject(new Error(chrome.runtime.lastError.message))
+        return
+      }
+
+      resolve()
+    })
   })
 }
 
@@ -67,9 +95,18 @@ export async function storageSetMany(items: Record<string, unknown>): Promise<vo
  */
 export async function storageRemove(key: string): Promise<void>
 {
-  return new Promise((resolve) =>
+  return new Promise((resolve, reject) =>
   {
-    chrome.storage.local.remove([key], () => resolve())
+    chrome.storage.local.remove([key], () =>
+    {
+      if (chrome.runtime.lastError)
+      {
+        reject(new Error(chrome.runtime.lastError.message))
+        return
+      }
+
+      resolve()
+    })
   })
 }
 
@@ -78,9 +115,18 @@ export async function storageRemove(key: string): Promise<void>
  */
 export async function storageRemoveMany(keys: string[]): Promise<void>
 {
-  return new Promise((resolve) =>
+  return new Promise((resolve, reject) =>
   {
-    chrome.storage.local.remove(keys, () => resolve())
+    chrome.storage.local.remove(keys, () =>
+    {
+      if (chrome.runtime.lastError)
+      {
+        reject(new Error(chrome.runtime.lastError.message))
+        return
+      }
+
+      resolve()
+    })
   })
 }
 
@@ -89,9 +135,18 @@ export async function storageRemoveMany(keys: string[]): Promise<void>
  */
 export async function storageClear(): Promise<void>
 {
-  return new Promise((resolve) =>
+  return new Promise((resolve, reject) =>
   {
-    chrome.storage.local.clear(() => resolve())
+    chrome.storage.local.clear(() =>
+    {
+      if (chrome.runtime.lastError)
+      {
+        reject(new Error(chrome.runtime.lastError.message))
+        return
+      }
+
+      resolve()
+    })
   })
 }
 
