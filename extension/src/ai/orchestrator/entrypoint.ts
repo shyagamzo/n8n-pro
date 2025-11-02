@@ -5,7 +5,7 @@ import type { Plan } from '@shared/types/plan'
 import { workflowGraph } from './graph'
 import { TokenStreamHandler } from './streaming'
 import { emitLangGraphEvent } from '@events/langchain-bridge'
-import { emitSystemError, emitAgentStarted, emitWorkflowCreated, emitApiError, emitSystemInfo } from '@events/emitters'
+import { emitSystemError, emitAgentStarted, emitWorkflowCreated, emitApiError } from '@events/emitters'
 
 /**
  * Input for graph execution
@@ -127,9 +127,6 @@ export async function runGraph(
       // Emit agent started event manually (stream() won't emit on_chain_start for resume)
       emitAgentStarted('executor', 'creating workflow in n8n', {}, input.sessionId)
 
-      // DEBUG: Log before stream creation
-      emitSystemInfo('entrypoint', 'Creating LangGraph stream for executor resume', { sessionId: input.sessionId })
-
       // Resume from checkpoint using stream() for proper event emission
       // stream() properly handles checkpoint resumption AND emits state updates
       const streamResult = await workflowGraph.stream(null, {
@@ -137,39 +134,23 @@ export async function runGraph(
         streamMode: ['values']  // Stream complete state after each node
       })
 
-      // DEBUG: Log after stream creation
-      emitSystemInfo('entrypoint', 'Stream created, beginning iteration', { sessionId: input.sessionId })
-
       let finalState: any = null
-      let streamError: Error | null = null
 
-      // Iterate through state updates (should only be one - executor completion)
+      // Iterate through state updates with proper error handling
       // Wrap in try-catch to catch errors during stream iteration
       try
 {
-        // DEBUG: Log before entering loop
-        emitSystemInfo('entrypoint', 'Entering for-await loop over stream', { sessionId: input.sessionId })
-
         for await (const stateSnapshot of streamResult)
 {
-          // DEBUG: Log each iteration
-          emitSystemInfo('entrypoint', 'Stream iteration received state snapshot', { sessionId: input.sessionId })
-
           // Each iteration is a complete state snapshot after a node executes
           // For resumption from executor interrupt, we get one snapshot: post-executor state
           finalState = stateSnapshot
         }
-
-        // DEBUG: Log after loop completes
-        emitSystemInfo('entrypoint', 'Stream iteration completed', {
-          sessionId: input.sessionId,
-          hasFinalState: !!finalState
-        })
       }
  catch (error)
 {
         // Executor failed during workflow creation
-        streamError = error instanceof Error ? error : new Error(String(error))
+        const streamError = error instanceof Error ? error : new Error(String(error))
 
         // Emit API error if it's an n8n API failure
         if (streamError.message.includes('n8n') || streamError.message.includes('API') || streamError.message.includes('fetch'))
@@ -198,8 +179,7 @@ export async function runGraph(
 {
         const err = new Error('Executor completed but returned no state. This may indicate a timeout or silent failure.')
         emitSystemError(err, 'executor-resume', {
-          sessionId: input.sessionId,
-          hadStreamError: !!streamError
+          sessionId: input.sessionId
         })
         throw err
       }
