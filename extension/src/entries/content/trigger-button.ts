@@ -15,7 +15,20 @@ export function createTriggerButton(mountId: string): HTMLButtonElement
 
   const trigger = document.createElement('button')
   trigger.id = 'n8n-pro-trigger'
-  trigger.innerHTML = '<span style="font-size: 1.2em; margin-right: 6px;">🤖</span><span>n8n Assistant</span>'
+
+  // Create icon span
+  const iconSpan = document.createElement('span')
+  iconSpan.textContent = '🤖'
+  iconSpan.style.fontSize = '1.2em'
+  iconSpan.style.marginRight = '6px'
+
+  // Create text span
+  const textSpan = document.createElement('span')
+  textSpan.textContent = 'n8n Assistant'
+
+  // Append to button
+  trigger.appendChild(iconSpan)
+  trigger.appendChild(textSpan)
 
   // Apply styles
   applyTriggerStyles(trigger)
