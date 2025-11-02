@@ -24,7 +24,10 @@
       "Bash(npx madge:*)",
       "Bash(sort:*)",
       "Bash(yarn:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(git rm:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
