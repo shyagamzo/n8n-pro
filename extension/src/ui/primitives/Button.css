@@ -80,3 +80,22 @@
 .button:disabled:hover {
   box-shadow: none;
 }
+
+/* Focus indicators for accessibility (WCAG 2.1 AA) */
+.button:focus-visible {
+  outline: 3px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+.button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .button::before {
+    animation: none;
+    transition: none;
+  }
+}
