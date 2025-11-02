@@ -31,6 +31,7 @@ import type {
 } from './types'
 import type { Workflow } from '@n8n/types'
 import type { Plan } from '@shared/types/plan'
+import { normalizeError } from '@shared/utils/error-normalization'
 
 /**
  * Low-level event emitters
@@ -193,31 +194,31 @@ export function emitLLMToken(runId?: string): void
 
 export function emitApiError(error: unknown, source: string, context?: ErrorContext): void
 {
-  const errorObj = error instanceof Error ? error : new Error(String(error))
+  const errorObj = normalizeError(error)
   emitErrorEvent('api', { error: errorObj, source, context, userMessage: `API error in ${source}: ${errorObj.message}` })
 }
 
 export function emitUnhandledError(error: unknown, source: string, context?: ErrorContext): void
 {
-  const errorObj = error instanceof Error ? error : new Error(String(error))
+  const errorObj = normalizeError(error)
   emitErrorEvent('unhandled', { error: errorObj, source, context, userMessage: 'An unexpected error occurred' })
 }
 
 export function emitSubscriberError(error: unknown, subscriberName: string, context?: ErrorContext): void
 {
-  const errorObj = error instanceof Error ? error : new Error(String(error))
+  const errorObj = normalizeError(error)
   emitErrorEvent('subscriber', { error: errorObj, source: subscriberName, context, userMessage: `${subscriberName} encountered an error` })
 }
 
 export function emitValidationError(error: unknown, source: string, context?: ErrorContext): void
 {
-  const errorObj = error instanceof Error ? error : new Error(String(error))
+  const errorObj = normalizeError(error)
   emitErrorEvent('validation', { error: errorObj, source, context, userMessage: `Validation error: ${errorObj.message}` })
 }
 
 export function emitSystemError(error: unknown, source: string, context?: ErrorContext): void
 {
-  const errorObj = error instanceof Error ? error : new Error(String(error))
+  const errorObj = normalizeError(error)
   emitErrorEvent('system', { error: errorObj, source, context, userMessage: 'A system error occurred' })
 }
 

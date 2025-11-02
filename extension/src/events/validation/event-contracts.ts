@@ -22,6 +22,7 @@
  */
 
 import type { SystemEvent, AgentType } from '@events/types'
+import { formatEventSignature } from '@events/utils'
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -278,7 +279,7 @@ export function validateSequence(
   const errors: string[] = []
   const warnings: string[] = []
   const actualSequence = events.map(e => ({
-    event: formatEvent(e),
+    event: formatEventSignature(e),
     timestamp: e.timestamp
   }))
 
@@ -338,7 +339,7 @@ export function validateSequence(
 
     // Required event doesn't match
     errors.push(
-      `Unexpected event: got ${formatEvent(actual)}, expected ${expected.domain}:${expected.type}` +
+      `Unexpected event: got ${formatEventSignature(actual)}, expected ${expected.domain}:${expected.type}` +
       (expected.agent ? ` (${expected.agent})` : '') +
       (expected.step ? ` (→ ${expected.step})` : '')
     )
@@ -365,25 +366,4 @@ export function validateSequence(
 // Helper Functions
 // ─────────────────────────────────────────────────────────────
 
-/**
- * Format event as human-readable string for logging
- *
- * @param event - Event to format
- * @returns Formatted string (e.g., "agent:started (enrichment)")
- */
-function formatEvent(event: SystemEvent): string
-{
-  let formatted = `${event.domain}:${event.type}`
-
-  if ('agent' in event.payload && event.payload.agent)
-  {
-    formatted += ` (${event.payload.agent})`
-  }
-
-  if ('toStep' in event.payload && event.payload.toStep)
-  {
-    formatted += ` (→ ${event.payload.toStep})`
-  }
-
-  return formatted
-}
+// formatEvent() moved to @events/utils/event-formatters.ts as formatEventSignature()

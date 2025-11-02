@@ -20,12 +20,13 @@
  * ```
  */
 
-import { Observable, type OperatorFunction, EMPTY } from 'rxjs'
-import { tap, scan, filter, catchError } from 'rxjs/operators'
+import { Observable, type OperatorFunction } from 'rxjs'
+import { tap, scan, filter } from 'rxjs/operators'
 
 import type { SystemEvent, AgentEvent, GraphEvent } from '@events/types'
 import type { EventSequenceContract } from './event-contracts'
 import { validateSequence } from './event-contracts'
+import { logAndContinue } from '@events/utils'
 
 // ─────────────────────────────────────────────────────────────
 // Validation Operators
@@ -103,11 +104,7 @@ export function validateEventSequence(
 
         return event
       }),
-      catchError(err =>
-      {
-        console.error('[Validation] Stream error:', err, { contract: contract.name })
-        return EMPTY // Don't break the stream on validation errors
-      })
+      logAndContinue('Validation')
     )
   }
 }
@@ -190,11 +187,7 @@ export function validateGraphHandoffs(): OperatorFunction<GraphEvent, GraphEvent
           }
         }
       }),
-      catchError(err =>
-      {
-        console.error('[Validation] Stream error:', err)
-        return EMPTY // Don't break the stream
-      })
+      logAndContinue('GraphHandoff')
     )
   }
 }
@@ -248,11 +241,7 @@ export function validateNoDuplicateStarts(): OperatorFunction<AgentEvent, AgentE
           activeAgents.delete(agent)
         }
       }),
-      catchError(err =>
-      {
-        console.error('[Validation] Stream error:', err)
-        return EMPTY
-      })
+      logAndContinue('DuplicateStarts')
     )
   }
 }
@@ -317,11 +306,7 @@ export function validateCreationPerformance(
           }
         }
       }),
-      catchError(err =>
-      {
-        console.error('[Validation] Stream error:', err)
-        return EMPTY
-      })
+      logAndContinue('CreationPerformance')
     )
   }
 }

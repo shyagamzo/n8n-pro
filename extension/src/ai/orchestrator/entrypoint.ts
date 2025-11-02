@@ -6,6 +6,7 @@ import { workflowGraph } from './graph'
 import { TokenStreamHandler } from './streaming'
 import { emitLangGraphEvent } from '@events/langchain-bridge'
 import { emitSystemError, emitAgentStarted, emitWorkflowCreated, emitApiError } from '@events/emitters'
+import { normalizeError } from '@shared/utils/error-normalization'
 
 /**
  * Input for graph execution
@@ -150,7 +151,7 @@ export async function runGraph(
  catch (error)
 {
         // Executor failed during workflow creation
-        const streamError = error instanceof Error ? error : new Error(String(error))
+        const streamError = normalizeError(error)
 
         // Emit API error if it's an n8n API failure
         if (streamError.message.includes('n8n') || streamError.message.includes('API') || streamError.message.includes('fetch'))

@@ -16,6 +16,8 @@ import { buildPrompt, buildRequest } from '@ai/prompts'
 import { findLastToolResult } from '@shared/utils/langchain-messages'
 import { emitApiError } from '@events/emitters'
 import { withTimeout, TIMEOUTS } from '@shared/utils/timeout'
+import { normalizeError } from '@shared/utils/error-normalization'
+import { classifyError } from '@shared/utils/error-classifier'
 
 // ==========================================
 // Constants
@@ -143,64 +145,25 @@ async function invokeExecutor(
   }
  catch (error)
 {
-    // Classify and emit error based on failure type
-    const err = error instanceof Error ? error : new Error(String(error))
-    const errorMessage = err.message.toLowerCase()
+    // Normalize and classify error
+    const err = normalizeError(error)
+    const classification = classifyError(err, executionConfig.n8nBaseUrl)
 
     // Determine error context for better user messaging
     const errorContext = {
       workflowName: plan.workflow.name,
       nodeCount: plan.workflow.nodes?.length || 0,
       n8nBaseUrl: executionConfig.n8nBaseUrl,
-      errorType: err.name
+      errorType: err.name,
+      errorCategory: classification.category
     }
 
-    // Classify error type for proper infrastructure handling
-    if (errorMessage.includes('timeout') || errorMessage.includes('econnaborted'))
-{
-      emitApiError(
-        new Error(`n8n API request timed out. Check if n8n is running at ${executionConfig.n8nBaseUrl}`),
-        'executor',
-        { ...errorContext, errorCategory: 'timeout' }
-      )
-    }
- else if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('econnrefused'))
-{
-      emitApiError(
-        new Error(`Failed to connect to n8n at ${executionConfig.n8nBaseUrl}. Ensure n8n is running.`),
-        'executor',
-        { ...errorContext, errorCategory: 'network' }
-      )
-    }
- else if (errorMessage.includes('401') || errorMessage.includes('unauthorized'))
-{
-      emitApiError(
-        new Error('n8n API key is invalid or missing. Check your API key in extension options.'),
-        'executor',
-        { ...errorContext, errorCategory: 'authentication' }
-      )
-    }
- else if (errorMessage.includes('403') || errorMessage.includes('forbidden'))
-{
-      emitApiError(
-        new Error('n8n API key does not have permission to create workflows.'),
-        'executor',
-        { ...errorContext, errorCategory: 'authorization' }
-      )
-    }
- else if (errorMessage.includes('500') || errorMessage.includes('internal server'))
-{
-      emitApiError(
-        new Error('n8n server error. Check n8n logs for details.'),
-        'executor',
-        { ...errorContext, errorCategory: 'server_error' }
-      )
-    }
- else
-{
-      // Unknown error - emit with full context
-      emitApiError(err, 'executor', { ...errorContext, errorCategory: 'unknown' })
-    }
+    // Emit error with classified user message
+    emitApiError(
+      new Error(classification.userMessage),
+      'executor',
+      errorContext
+    )
 
     // Re-throw to halt workflow creation
     throw err
