@@ -205,3 +205,28 @@
 .panel-resize-handle:hover {
   opacity: 1;
 }
+
+/* Focus indicators for accessibility (WCAG 2.1 AA) */
+.panel-control-btn:focus-visible,
+.panel-button:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.panel-control-btn:focus:not(:focus-visible),
+.panel-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .panel-header,
+  .panel-header::before,
+  .panel-icon,
+  .panel-control-btn,
+  .panel-button,
+  .panel-resize-handle {
+    animation: none;
+    transition: none;
+  }
+}

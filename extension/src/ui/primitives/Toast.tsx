@@ -40,9 +40,14 @@ export default function Toast({ id, message, type, action, duration = 5000, onCl
   }
 
   return (
-    <div className={`toast toast--${type}`}>
+    <div
+      className={`toast toast--${type}`}
+      role={type === 'error' ? 'alert' : 'status'}
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div className="toast__content">
-        <span className="toast__icon">{getIcon()}</span>
+        <span className="toast__icon" aria-hidden="true">{getIcon()}</span>
         <span className="toast__message">{message}</span>
       </div>
       <div className="toast__actions">
@@ -51,8 +56,8 @@ export default function Toast({ id, message, type, action, duration = 5000, onCl
             {action.label}
           </button>
         )}
-        <button className="toast__close" onClick={() => onClose(id)} aria-label="Close">
-          ✕
+        <button className="toast__close" onClick={() => onClose(id)} aria-label="Close notification">
+          <span aria-hidden="true">✕</span>
         </button>
       </div>
     </div>

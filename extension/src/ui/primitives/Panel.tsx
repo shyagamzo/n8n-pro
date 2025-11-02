@@ -132,7 +132,7 @@ export default function Panel({ title, onClose, onNewSession, children, showConn
         }}
       >
         <div className="panel-title">
-          <span className="panel-icon">🤖</span>
+          <span className="panel-icon" aria-hidden="true">🤖</span>
           <span className="panel-title-text">{title}</span>
         </div>
         <div className="panel-controls">
@@ -145,25 +145,32 @@ export default function Panel({ title, onClose, onNewSession, children, showConn
                 e.stopPropagation()
                 onNewSession()
               }}
+              aria-label="Start a new conversation"
               title="Start a new conversation"
             >
-              <span className="panel-button-icon">✨</span>
+              <span className="panel-button-icon" aria-hidden="true">✨</span>
               <span className="panel-button-text">New Session</span>
             </button>
           )}
           <button
             className="panel-control-btn"
-            onClick={(e) => 
+            onClick={(e) =>
 {
               e.stopPropagation()
               setIsMinimized(!isMinimized)
             }}
+            aria-label={isMinimized ? 'Maximize panel' : 'Minimize panel'}
             title={isMinimized ? 'Maximize' : 'Minimize'}
           >
-            {isMinimized ? '▲' : '▼'}
+            <span aria-hidden="true">{isMinimized ? '▲' : '▼'}</span>
           </button>
-          <button className="panel-control-btn panel-close" onClick={onClose} title="Close">
-            ×
+          <button
+            className="panel-control-btn panel-close"
+            onClick={onClose}
+            aria-label="Close panel"
+            title="Close"
+          >
+            <span aria-hidden="true">×</span>
           </button>
         </div>
       </div>
