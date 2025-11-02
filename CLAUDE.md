@@ -60,6 +60,10 @@ reactive-system-architect agent for this."  ← TOO LATE!
 - **react-expert** - React component architecture, hooks, performance optimization, React 19 features
 - **system-architect** - Architectural decisions, system design, cross-module dependencies, separation of concerns
 - **typescript-type-architect** - TypeScript type systems, type safety, advanced types, eliminating 'any'
+- **chrome-extension-expert** - Chrome Extension APIs (chrome.*), Manifest V3, service workers, content scripts, message passing, permissions, CSP
+- **n8n-internals-expert** - n8n source code authority, API specifications, workflow JSON schema, node configurations, credential handling
+- **git-commit-organizer** - Dependency-aware commit organization, atomic commits, emoji-based commit messages, branch context awareness
+- **code-cleaner** - Technical debt removal, unused code detection, deprecated pattern cleanup, pre-release codebase preparation
 - **Explore** - Codebase search, file discovery, code understanding
 
 ### **Agent Selection Guide**
@@ -73,6 +77,10 @@ reactive-system-architect agent for this."  ← TOO LATE!
 | Agent system changes | agent-architect | BEFORE modifying orchestrator, nodes, tools |
 | TypeScript type issues | typescript-type-architect | BEFORE adding types, WHEN encountering 'any', for type system design |
 | Architecture decisions | system-architect | BEFORE making design decisions, refactoring, cross-module changes |
+| Chrome extension features | chrome-extension-expert | BEFORE using chrome.* APIs, message passing, service workers, permissions, CSP issues |
+| n8n integration work | n8n-internals-expert | BEFORE implementing workflow creation, n8n API calls, node configurations, WHEN uncertain about n8n behavior |
+| Git commits | git-commit-organizer | WHEN ready to commit changes, for organizing complex changesets into atomic commits |
+| Code cleanup | code-cleaner | BEFORE releases, WHEN removing deprecated code, for technical debt cleanup |
 | Bug fixes | root-cause-enforcer | AFTER fix to verify root cause addressed |
 
 ### **Delegation Checklist**
@@ -86,8 +94,13 @@ Before writing ANY code, ask yourself:
 - [ ] Does this involve agents/orchestrator? → **agent-architect**
 - [ ] Does this involve TypeScript types or have 'any' types? → **typescript-type-architect**
 - [ ] Does this involve architectural decisions or cross-module changes? → **system-architect**
+- [ ] Does this involve chrome.* APIs, extension messaging, service workers, or permissions? → **chrome-extension-expert**
+- [ ] Does this involve n8n API integration, workflow creation, or node configurations? → **n8n-internals-expert**
+- [ ] Am I uncertain about how n8n behaves or what format it expects? → **n8n-internals-expert**
 - [ ] Is this fixing a bug? → **root-cause-enforcer** (after fix)
 - [ ] Should this be documented? → **project-documentor** (after implementation)
+- [ ] Am I ready to commit changes? → **git-commit-organizer**
+- [ ] Do we need to clean up deprecated code or technical debt? → **code-cleaner**
 
 **If you answered YES to any question above, STOP and delegate FIRST.**
 
@@ -528,6 +541,13 @@ Configured in `vite.config.ts` and `tsconfig.app.json`:
 ❌ Making architectural changes without **system-architect** review
 ❌ Premature abstraction (wait for 3 duplications)
 ❌ Large files (split at 400+ lines)
+
+### Extension & Integration
+❌ Using chrome.* APIs without consulting **chrome-extension-expert** (easy to violate CSP or permissions)
+❌ Assuming n8n API behavior without verifying via **n8n-internals-expert** (leads to incorrect workflow JSON)
+❌ Guessing n8n data formats or expected values (always verify against source code)
+❌ Making large uncommitted changesets without using **git-commit-organizer** (results in messy git history)
+❌ Leaving deprecated code in codebase before releases (use **code-cleaner** proactively)
 
 ### Phase 2 Patterns (State Management)
 ❌ Using boolean flags (`pendingPlan`, `isLoading`) for workflow state (use `workflowState` state machine)
