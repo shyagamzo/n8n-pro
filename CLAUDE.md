@@ -2,38 +2,94 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+# ⚠️ **MANDATORY DELEGATION-FIRST WORKFLOW** ⚠️
+
+## **STOP BEFORE EVERY TASK**
+
+**YOU MUST DELEGATE TO SPECIALIZED AGENTS BEFORE IMPLEMENTING ANY CODE OR MAKING ANY DECISIONS.**
+
+### **The Correct Workflow**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. ✅ READ the user's request                              │
+│  2. ✅ IDENTIFY which specialized agent(s) should handle it │
+│  3. ✅ DELEGATE to agent(s) and GET their guidance         │
+│  4. ✅ IMPLEMENT based on agent recommendations             │
+│                                                              │
+│  ❌ NEVER: Implement code first, then mention delegation    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### **DO ✅ and DON'T ❌ Examples**
+
+#### ✅ **CORRECT - Delegate BEFORE Implementation**
+```
+User: "Update the chatStore to integrate workflow state"
+Assistant: "I need to integrate workflow state with Zustand store.
+Before implementing, I'll delegate to the reactive-system-architect
+agent to get guidance on the proper reactive patterns."
+
+[Uses Task tool to launch reactive-system-architect agent]
+[Waits for agent's response]
+[Implements based on agent's recommendations]
+```
+
+#### ❌ **WRONG - Implement then mention delegation**
+```
+User: "Update the chatStore to integrate workflow state"
+Assistant: "Let me update the chatStore..."
+[Implements changes]
+[Updates files]
+Assistant: "Build passes ✅. I should have consulted the
+reactive-system-architect agent for this."  ← TOO LATE!
+```
+
+### **Available Specialized Agents**
+
+**ALWAYS CHECK THIS LIST BEFORE STARTING ANY TASK:**
+
+- **reactive-system-architect** - Event system, RxJS, Zustand, state management, reactive patterns
+- **ux-guardian** - UI/UX, components, animations, user feedback, accessibility
+- **error-infrastructure-architect** - Error handling, error propagation, error boundaries
+- **agent-architect** - Multi-agent systems, LangGraph, orchestrator, agent coordination
+- **root-cause-enforcer** - Bug fix review, root cause analysis, patch detection
+- **project-documentor** - Documentation, ADRs, knowledge capture, README updates
+- **Explore** - Codebase search, file discovery, code understanding
+
+### **Agent Selection Guide**
+
+| Task Type | Agent to Use | When to Delegate |
+|-----------|--------------|------------------|
+| State management changes | reactive-system-architect | BEFORE modifying chatStore, events, subscribers |
+| UI/Component work | ux-guardian | BEFORE creating/modifying React components |
+| Error handling | error-infrastructure-architect | BEFORE adding try-catch, error boundaries |
+| Agent system changes | agent-architect | BEFORE modifying orchestrator, nodes, tools |
+| Bug fixes | root-cause-enforcer | AFTER fix to verify root cause addressed |
+| Architecture decisions | Multiple agents | BEFORE making design decisions |
+
+### **Delegation Checklist**
+
+Before writing ANY code, ask yourself:
+
+- [ ] Does this involve state management? → **reactive-system-architect**
+- [ ] Does this involve UI/components? → **ux-guardian**
+- [ ] Does this involve error handling? → **error-infrastructure-architect**
+- [ ] Does this involve agents/orchestrator? → **agent-architect**
+- [ ] Is this fixing a bug? → **root-cause-enforcer** (after fix)
+- [ ] Should this be documented? → **project-documentor** (after implementation)
+
+**If you answered YES to any question above, STOP and delegate FIRST.**
+
+---
+
 ## Project Overview
 
 **n8n Pro Extension** is a Chrome/Edge Manifest V3 browser extension that provides AI-powered workflow assistance for n8n. It injects a chatbot interface into local n8n instances (localhost:5678), enabling users to create and optimize workflows using natural language.
 
 **Status:** MVP Complete (Phase 1) - Ready for user testing
-
-## Working with Claude Code Agents
-
-**CRITICAL: Always check if there are specialized agents available to delegate tasks and questions to before performing them yourself.**
-
-This project has multiple specialized agents configured in Claude Code:
-- **reactive-system-architect** - Event system, RxJS streams, event bus architecture
-- **ux-guardian** - UI/UX implementation, animations, user feedback
-- **error-infrastructure-architect** - Error handling infrastructure, event-driven error propagation
-- **agent-architect** - Multi-agent infrastructure, LangGraph workflows, orchestrator routing
-- **root-cause-enforcer** - Reviewing bug fixes to ensure root causes are addressed
-- **project-documentor** - Documentation creation, architecture decisions, knowledge persistence
-- **Explore** - Fast codebase exploration and search
-
-**Delegation Protocol:**
-1. **Before starting any task**, consider if a specialized agent should handle it
-2. **For complex decisions**, brainstorm with multiple agents in parallel to gather different perspectives
-3. **For architectural changes**, always consult the relevant specialist agent
-4. **For implementation work**, delegate to the appropriate domain expert
-
-**Examples:**
-- UI changes → Use ux-guardian agent
-- Event system modifications → Use reactive-system-architect agent
-- Bug fixes → Use root-cause-enforcer agent after fix
-- Codebase exploration → Use Explore agent
-- New agent development → Use agent-architect agent
-- Documentation updates → Use project-documentor agent after significant changes
 
 ## Core Architecture
 
@@ -276,6 +332,7 @@ Configured in `vite.config.ts` and `tsconfig.app.json`:
 
 ## Common Pitfalls to Avoid
 
+❌ **IMPLEMENTING BEFORE DELEGATING TO SPECIALIZED AGENTS** (see MANDATORY DELEGATION-FIRST WORKFLOW at top of file)
 ❌ Manual logging in orchestrator nodes (use LangGraph bridge)
 ❌ Bypassing TypeScript with `any` (fix types properly)
 ❌ Direct UI updates from services (emit events instead)
