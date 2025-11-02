@@ -1,0 +1,114 @@
+# ADR-0044: Add Four New Specialized Agents to Delegation Workflow
+
+**Status:** Accepted
+**Date:** 2025-11-02
+**Domain:** Governance
+**Related ADRs:** 0003-agent-and-ux-principles, 0022-documentation-standards
+
+## Context
+
+The n8n Pro Extension project uses a mandatory delegation-first workflow where developers must consult specialized agents before implementing code. While we had documented nine core agents (reactive-system-architect, ux-guardian, error-infrastructure-architect, agent-architect, root-cause-enforcer, project-documentor, react-expert, system-architect, typescript-type-architect), four additional specialized agents existed in `.claude/agents/` but were not documented in CLAUDE.md:
+
+1. **chrome-extension-expert** - Chrome Extension API expertise
+2. **n8n-internals-expert** - Authoritative n8n source code knowledge
+3. **git-commit-organizer** - Dependency-aware commit organization
+4. **code-cleaner** - Technical debt and deprecated code removal
+
+This created a documentation gap where developers were unaware of these agents and their capabilities, potentially leading to:
+- Chrome Extension API misuse (CSP violations, permission errors)
+- Incorrect assumptions about n8n API behavior and data formats
+- Messy git history from poorly organized commits
+- Accumulated technical debt not being cleaned up before releases
+
+## Decision
+
+We added comprehensive documentation for all four agents to CLAUDE.md in three key sections:
+
+### 1. Available Specialized Agents List
+
+Added concise descriptions:
+- **chrome-extension-expert** - Chrome Extension APIs (chrome.*), Manifest V3, service workers, content scripts, message passing, permissions, CSP
+- **n8n-internals-expert** - n8n source code authority, API specifications, workflow JSON schema, node configurations, credential handling
+- **git-commit-organizer** - Dependency-aware commit organization, atomic commits, emoji-based commit messages, branch context awareness
+- **code-cleaner** - Technical debt removal, unused code detection, deprecated pattern cleanup, pre-release codebase preparation
+
+### 2. Agent Selection Guide Table
+
+Added task-to-agent mappings:
+- Chrome extension features → chrome-extension-expert (BEFORE using chrome.* APIs, message passing, service workers, permissions, CSP issues)
+- n8n integration work → n8n-internals-expert (BEFORE implementing workflow creation, n8n API calls, node configurations, WHEN uncertain about n8n behavior)
+- Git commits → git-commit-organizer (WHEN ready to commit changes, for organizing complex changesets into atomic commits)
+- Code cleanup → code-cleaner (BEFORE releases, WHEN removing deprecated code, for technical debt cleanup)
+
+### 3. Delegation Checklist
+
+Added four new checklist questions:
+- [ ] Does this involve chrome.* APIs, extension messaging, service workers, or permissions? → **chrome-extension-expert**
+- [ ] Does this involve n8n API integration, workflow creation, or node configurations? → **n8n-internals-expert**
+- [ ] Am I uncertain about how n8n behaves or what format it expects? → **n8n-internals-expert**
+- [ ] Am I ready to commit changes? → **git-commit-organizer**
+- [ ] Do we need to clean up deprecated code or technical debt? → **code-cleaner**
+
+### 4. Common Pitfalls Section
+
+Added new "Extension & Integration" subsection:
+- Using chrome.* APIs without consulting chrome-extension-expert
+- Assuming n8n API behavior without verifying via n8n-internals-expert
+- Guessing n8n data formats or expected values
+- Making large uncommitted changesets without using git-commit-organizer
+- Leaving deprecated code in codebase before releases
+
+## Rationale
+
+**Why These Four Agents?**
+
+1. **chrome-extension-expert**: Chrome Extension development has unique constraints (Manifest V3, service worker lifecycle, CSP, message passing) that are easy to mishandle. This agent prevents common pitfalls.
+
+2. **n8n-internals-expert**: n8n has complex internal data structures and API expectations. Guessing these leads to bugs. This agent has access to n8n source code and provides authoritative guidance.
+
+3. **git-commit-organizer**: Clean git history is crucial for debugging and code review. This agent enforces atomic commits, dependency ordering, and consistent emoji-based commit messages.
+
+4. **code-cleaner**: Technical debt accumulates during rapid development. This agent provides systematic cleanup before releases.
+
+**Why Document in CLAUDE.md?**
+
+CLAUDE.md serves as the primary reference for the delegation-first workflow. Having undocumented agents meant:
+- Developers wouldn't know to consult them
+- The delegation checklist was incomplete
+- Common mistakes weren't being prevented proactively
+
+## Consequences
+
+### Positive
+
+- **Complete Delegation Coverage**: All specialized agents now documented in one place
+- **Proactive Error Prevention**: Developers will consult chrome-extension-expert before chrome.* API usage, preventing CSP and permission issues
+- **Authoritative n8n Guidance**: n8n-internals-expert will eliminate guesswork about API formats and behavior
+- **Cleaner Git History**: git-commit-organizer ensures well-organized commits from the start
+- **Reduced Technical Debt**: code-cleaner agent is now part of the pre-release workflow
+- **Consistent Documentation**: All agents follow same documentation pattern (list → table → checklist → pitfalls)
+
+### Neutral
+
+- Slightly longer CLAUDE.md file (added ~15 lines total across sections)
+- Developers have more checklist items to consider (but these prevent mistakes)
+
+### Negative
+
+- None identified. This change closes a documentation gap without downsides.
+
+## Implementation Notes
+
+The documentation follows the existing pattern:
+1. **Brief description** in the agents list (focus on key capabilities)
+2. **Task mapping** in the selection guide (when to use each agent)
+3. **Question format** in the checklist (helps developers self-identify need)
+4. **Mistake patterns** in pitfalls section (what to avoid)
+
+Each agent's full system prompt remains in `.claude/agents/[agent-name].md` for detailed implementation guidance.
+
+## Future Considerations
+
+- Monitor usage patterns to see if additional agents should be documented
+- Consider adding example scenarios for each agent (similar to agent description frontmatter)
+- May want to create a visual decision tree for agent selection if the list grows beyond ~15 agents
