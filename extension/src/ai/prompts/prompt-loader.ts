@@ -228,8 +228,26 @@ export function validatePrompts(): { valid: boolean; missing: string[] }
 export function getRequestTemplate(agent: AgentType): string | undefined
 {
   const prompt = agentPrompts[agent]
-  const match = prompt.match(/^# Request Template\s*\n\n([\s\S]+?)(?:\n\n---|\n*$)/m)
-  return match ? match[1].trim() : undefined
+  // Match from "# Request Template" header until end of file
+  // Use greedy matcher (+) to capture entire template, not just first line
+  const match = prompt.match(/^# Request Template\s*\n\n([\s\S]+)$/m)
+
+  if (!match) return undefined
+
+  const template = match[1].trim()
+
+  // Validate template has variables (development-only warning)
+  if (import.meta.env.DEV)
+  {
+    const hasVariables = /\{\{.+?\}\}/.test(template)
+
+    if (!hasVariables)
+    {
+      console.warn(`[prompt-loader] Template for ${agent} has no variables`)
+    }
+  }
+
+  return template
 }
 
 /**
@@ -247,7 +265,7 @@ export function getRequestTemplate(agent: AgentType): string | undefined
  * })
  * ```
  */
-export function buildRequest(agent: AgentType, variables: Record<string, any> = {}): string
+export function buildRequest(agent: AgentType, variables: Record<string, string | number | boolean> = {}): string
 {
   const template = getRequestTemplate(agent)
 
@@ -275,7 +293,7 @@ export function buildRequest(agent: AgentType, variables: Record<string, any> = 
  * // Returns: "Process 5 items from database"
  * ```
  */
-export function buildRequestTemplate(template: string, variables: Record<string, any> = {}): string
+export function buildRequestTemplate(template: string, variables: Record<string, string | number | boolean> = {}): string
 {
   let result = template
 

@@ -271,8 +271,21 @@ Workflow: {{workflowName}}
 Nodes: {{nodeCount}}
 Required Credentials: {{credentialsNeeded}}
 
-n8n API Key: {{n8nApiKey}}
-n8n Base URL: {{n8nBaseUrl}}
+**n8n Configuration:**
+- API Key: `{{n8nApiKey}}`
+- Base URL: `{{n8nBaseUrl}}`
 
-First check credentials, then create the workflow. Respond to the user with the result.
+**Workflow JSON:**
+```json
+{{workflowJson}}
+```
+
+**ACTION REQUIRED:**
+
+Call the `create_n8n_workflow` tool now with these parameters:
+- workflow: The workflow JSON shown above
+- apiKey: Copy the API key value from the n8n Configuration section above
+- baseUrl: Copy the Base URL value from the n8n Configuration section above
+
+After the workflow is created, tell the user the result.
 

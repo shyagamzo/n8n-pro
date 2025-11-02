@@ -35,6 +35,20 @@ Choose from n8n's node library (see `shared/n8n-nodes-reference.md`):
 - Parallel: Multiple outputs from one node
 - Merge: Multiple inputs into one node
 
+**CRITICAL: n8n Connection Format**
+- **Keys**: Use node NAMES (not IDs) as connection keys
+- **Structure**: `main` must be a **double-nested array**: `main: [[{...}]]`
+- **Target**: Use node NAME in the `node` field (not ID)
+- **Example**:
+  ```yaml
+  connections:
+    Source Node Name:    # ← Node NAME
+      main:              # ← Output type
+        - - node: Target Node Name   # ← Double-nested array!
+            type: main
+            index: 0
+  ```
+
 ### 4. Configure Parameters
 - Set required parameters for each node
 - Use expressions for dynamic data: `{{ $json.fieldName }}`
@@ -91,11 +105,11 @@ workflow:
         - 250
         - 300
   connections:
-    Schedule Trigger:
+    Every Day at 9 AM:
       main:
-        - node: Send Slack Message
-          type: main
-          index: 0
+        - - node: Send Message
+            type: main
+            index: 0
 
 **Important:** Include `nodeId` and `nodeName` for each credential in `credentialsNeeded`.
 This enables deep linking directly to the node that needs the credential.
@@ -162,9 +176,9 @@ workflow:
   connections:
     Every Day at 9 AM:
       main:
-        - node: Send Message
-          type: main
-          index: 0
+        - - node: Send Message
+            type: main
+            index: 0
 
 ### Example 2: Webhook with Data Processing (Credential Available)
 
@@ -222,14 +236,14 @@ workflow:
   connections:
     Webhook Trigger:
       main:
-        - node: Transform Data
-          type: main
-          index: 0
+        - - node: Transform Data
+            type: main
+            index: 0
     Transform Data:
       main:
-        - node: Save to Airtable
-          type: main
-          index: 0
+        - - node: Save to Airtable
+            type: main
+            index: 0
 
 ## Best Practices
 

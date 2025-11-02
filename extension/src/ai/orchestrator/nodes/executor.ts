@@ -14,6 +14,8 @@ import { extractExecutorConfig } from '@ai/orchestrator/config'
 import { executorTools } from '@ai/orchestrator/tools/executor'
 import { buildPrompt, buildRequest } from '@ai/prompts'
 import { findLastToolResult } from '@shared/utils/langchain-messages'
+import { emitApiError } from '@events/emitters'
+import { withTimeout, TIMEOUTS } from '@shared/utils/timeout'
 
 // ==========================================
 // Constants
@@ -38,14 +40,35 @@ export async function executorNode(
   config?: RunnableConfig
 ): Promise<Command>
 {
+  // DEBUG: Log entry into executor node
+  console.log('[EXECUTOR NODE] Entered executor node')
+
   if (!state.plan)
   {
     throw new Error('No plan to execute')
   }
 
+  console.log('[EXECUTOR NODE] Plan validated, extracting config')
   const executionConfig = extractExecutorConfig(config)
+
+  console.log('[EXECUTOR NODE] Creating executor agent')
   const agent = createExecutorAgent(executionConfig)
+
+  console.log('[EXECUTOR NODE] Invoking executor agent with workflow:', state.plan.workflow.name)
   const result = await invokeExecutor(agent, state, executionConfig, config)
+
+  console.log('[EXECUTOR NODE] Executor completed, extracting results')
+  console.log('[EXECUTOR NODE] Result messages:', result.messages.length)
+
+  // Log the last few messages to see what the agent said
+  const lastMessages = result.messages.slice(-3)
+  lastMessages.forEach((msg: BaseMessage, idx: number) => {
+    console.log(`[EXECUTOR NODE] Message ${idx}:`, {
+      type: msg._getType(),
+      content: typeof msg.content === 'string' ? msg.content.substring(0, 200) : msg.content
+    })
+  })
+
   const executionResults = extractExecutionResults(result.messages)
 
   return new Command({
@@ -100,15 +123,88 @@ async function invokeExecutor(
       workflowName: plan.workflow.name,
       nodeCount: plan.workflow.nodes?.length || 0,
       credentialsNeeded: plan.credentialsNeeded?.map(c => c.type).join(', ') || 'none',
+      workflowJson: JSON.stringify(plan.workflow, null, 2),
       n8nApiKey: executionConfig.n8nApiKey,
       n8nBaseUrl: executionConfig.n8nBaseUrl
     })
   )
 
-  return await agent.invoke(
-    { messages: [...state.messages, executionRequest] },
-    config
-  )
+  try
+{
+    // Wrap agent invocation with timeout to prevent infinite hangs
+    return await withTimeout(
+      agent.invoke(
+        { messages: [...state.messages, executionRequest] },
+        config
+      ),
+      TIMEOUTS.EXECUTOR,
+      `executor creating workflow "${plan.workflow.name}"`
+    )
+  }
+ catch (error)
+{
+    // Classify and emit error based on failure type
+    const err = error instanceof Error ? error : new Error(String(error))
+    const errorMessage = err.message.toLowerCase()
+
+    // Determine error context for better user messaging
+    const errorContext = {
+      workflowName: plan.workflow.name,
+      nodeCount: plan.workflow.nodes?.length || 0,
+      n8nBaseUrl: executionConfig.n8nBaseUrl,
+      errorType: err.name
+    }
+
+    // Classify error type for proper infrastructure handling
+    if (errorMessage.includes('timeout') || errorMessage.includes('econnaborted'))
+{
+      emitApiError(
+        new Error(`n8n API request timed out. Check if n8n is running at ${executionConfig.n8nBaseUrl}`),
+        'executor',
+        { ...errorContext, errorCategory: 'timeout' }
+      )
+    }
+ else if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('econnrefused'))
+{
+      emitApiError(
+        new Error(`Failed to connect to n8n at ${executionConfig.n8nBaseUrl}. Ensure n8n is running.`),
+        'executor',
+        { ...errorContext, errorCategory: 'network' }
+      )
+    }
+ else if (errorMessage.includes('401') || errorMessage.includes('unauthorized'))
+{
+      emitApiError(
+        new Error('n8n API key is invalid or missing. Check your API key in extension options.'),
+        'executor',
+        { ...errorContext, errorCategory: 'authentication' }
+      )
+    }
+ else if (errorMessage.includes('403') || errorMessage.includes('forbidden'))
+{
+      emitApiError(
+        new Error('n8n API key does not have permission to create workflows.'),
+        'executor',
+        { ...errorContext, errorCategory: 'authorization' }
+      )
+    }
+ else if (errorMessage.includes('500') || errorMessage.includes('internal server'))
+{
+      emitApiError(
+        new Error('n8n server error. Check n8n logs for details.'),
+        'executor',
+        { ...errorContext, errorCategory: 'server_error' }
+      )
+    }
+ else
+{
+      // Unknown error - emit with full context
+      emitApiError(err, 'executor', { ...errorContext, errorCategory: 'unknown' })
+    }
+
+    // Re-throw to halt workflow creation
+    throw err
+  }
 }
 
 // ==========================================
@@ -126,10 +222,14 @@ type ExecutionResults = {
  */
 function extractExecutionResults(messages: BaseMessage[]): ExecutionResults
 {
+  console.log('[EXECUTOR NODE] Extracting results from', messages.length, 'messages')
+
   const workflowResult = findLastToolResult<{ id: string; name: string; url: string }>(
     messages,
     'create_n8n_workflow'
   )
+
+  console.log('[EXECUTOR NODE] Workflow tool result:', workflowResult)
 
   const credentialResult = findLastToolResult<{
     available: string[]

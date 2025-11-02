@@ -4,6 +4,7 @@ import { generateId } from '@shared/utils/id'
 import type { ChatMessage, ErrorDetails } from '@shared/types/chat'
 import type { BackgroundMessage, ApplyPlanRequest } from '@shared/types/messaging'
 import type { Plan } from '@shared/types/plan'
+import type { WorkflowState, WorkflowStateData } from '@shared/types/workflow-state'
 
 export class ChatService
 {
@@ -17,8 +18,8 @@ export class ChatService
     workflow_created: (msg) => this.handleWorkflowCreated(msg),  // Toast notification
     done: () => this.handleDone(),
     error: (msg) => this.handleError(msg),
-    plan: (msg) => this.handlePlan(msg),
-    agent_activity: (msg) => this.handleAgentActivity(msg)
+    agent_activity: (msg) => this.handleAgentActivity(msg),
+    state_transition: (msg) => this.handleStateTransition(msg)
   }
 
   public constructor()
@@ -50,9 +51,6 @@ export class ChatService
 
   private handleWorkflowCreated(message: { type: 'workflow_created'; workflowId: string; workflowUrl: string }): void
   {
-    // Clear pending plan to prevent re-attachment to subsequent messages
-    useChatStore.getState().setPendingPlan(null)
-
     // Show success toast (UI-only feedback, not business logic)
     useChatStore.getState().addToast({
       id: `workflow-${message.workflowId}`,
@@ -68,7 +66,7 @@ export class ChatService
 
   private handleDone(): void
   {
-    const { pendingPlan, updateMessage, setPendingPlan, finishSending, messages } = useChatStore.getState()
+    const { workflowState, updateMessage, finishSending, messages } = useChatStore.getState()
 
     // Mark the streaming message as complete
     if (this.streamingMessageId)
@@ -77,23 +75,22 @@ export class ChatService
 
       // If we have a plan, clear the text to hide the Loom-formatted internal communication
       // The plan will be shown in a nice UI format via PlanMessage component
-      const shouldClearText = !!pendingPlan && currentMessage?.text
+      const shouldClearText = !!workflowState.plan && currentMessage?.text
 
       updateMessage(this.streamingMessageId, {
         streaming: false,
-        plan: pendingPlan || undefined,
+        plan: workflowState.plan || undefined,
         ...(shouldClearText ? { text: '' } : {})
       })
       this.streamingMessageId = null
     }
 
-    setPendingPlan(null)
     finishSending()
   }
 
   private handleError(message: { type: 'error'; error: string }): void
   {
-    const { setPendingPlan, finishSending, addMessage, messages } = useChatStore.getState()
+    const { finishSending, addMessage, messages } = useChatStore.getState()
 
     // Remove streaming message if it exists
     if (this.streamingMessageId)
@@ -109,7 +106,6 @@ export class ChatService
       this.streamingMessageId = null
     }
 
-    setPendingPlan(null)
     finishSending()
 
     const errorDetails: ErrorDetails = {
@@ -129,9 +125,27 @@ export class ChatService
     })
   }
 
-  private handlePlan(message: { type: 'plan'; plan: Plan }): void
+  private handleStateTransition(message: {
+    type: 'state_transition'
+    previous: WorkflowState
+    current: WorkflowState
+    trigger: string
+    stateData: WorkflowStateData
+  }): void
   {
-    useChatStore.getState().setPendingPlan(message.plan)
+    const { setWorkflowState } = useChatStore.getState()
+
+    // Update chatStore with new workflow state
+    setWorkflowState(message.stateData)
+
+    // Development-only: Log state transitions
+    if (import.meta.env.DEV)
+    {
+      console.info(`[WorkflowState] ${message.previous} → ${message.current}`, {
+        trigger: message.trigger,
+        state: message.stateData
+      })
+    }
   }
 
   private handleAgentActivity(message: { type: 'agent_activity'; agent: string; status: 'started' | 'working' | 'complete' | 'error' }): void

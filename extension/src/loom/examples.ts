@@ -129,7 +129,7 @@ export function example5_WorkflowPlan(): void
         }
       ],
       connections: {
-        schedule: { main: [{ node: 'slack', type: 'main', index: 0 }] }
+        'Every Day at 9 AM': { main: [[{ node: 'Send Message', type: 'main', index: 0 }]] }
       }
     }
   }
