@@ -2,8 +2,8 @@
  * Loom Protocol - Usage Examples
  */
 
-import { parse, format, validate, schema } from './index'
-import type { LoomValue, LoomObject } from './types'
+import { parse, format, validate, schema } from '../index'
+import type { LoomValue, LoomObject } from '../types'
 
 // ============================================
 // Example 1: Simple Key-Value Pairs

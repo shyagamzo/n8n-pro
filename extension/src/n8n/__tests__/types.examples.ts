@@ -15,13 +15,13 @@ import type {
   N8nCredentials,
   N8nNodeParameters,
   N8nConnectionItem,
-} from './types'
+} from '../types'
 import {
   isPosition,
   isN8nNode,
   isConnectionItem,
   isN8nConnections,
-} from './types'
+} from '../types'
 import { v4 as uuid } from 'uuid'
 
 // ─────────────────────────────────────────────────────────────

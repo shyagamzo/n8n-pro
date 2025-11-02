@@ -3,8 +3,8 @@
  * Run with: npx tsx src/lib/loom/test.ts
  */
 
-import { parse, format, validate, schema } from './index'
-import type { LoomObject } from './types'
+import { parse, format, validate, schema } from '../index'
+import type { LoomObject } from '../types'
 
 // ANSI colors
 const GREEN = '\x1b[32m'
